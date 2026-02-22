@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "sourceMap": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "strict": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@/shared/*": ["./shared/*"]
+    }
+  },
+  "include": ["client/src/**/*.ts", "server/src/**/*.ts", "shared/src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

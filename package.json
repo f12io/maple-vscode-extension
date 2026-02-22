@@ -1,0 +1,137 @@
+{
+  "name": "maple-intellisense",
+  "displayName": "Maple Intellisense",
+  "description": "IntelliSense, hover, semantic highlighting and conflict detection for the Maple runtime CSS engine.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "contributes": {
+    "semanticTokenTypes": [
+      {
+        "id": "maple-mediaQuery",
+        "description": "Media query"
+      },
+      {
+        "id": "maple-utility",
+        "description": "Utility classes like flex, block"
+      },
+      {
+        "id": "maple-value",
+        "description": "Numeric or color values like 4, red-500"
+      },
+      {
+        "id": "maple-parent-selector",
+        "description": "Parent element selectors"
+      },
+      {
+        "id": "maple-self-selector",
+        "description": "Self element selectors"
+      },
+      {
+        "id": "maple-child-selector",
+        "description": "Child element selectors"
+      },
+      {
+        "id": "maple-separator",
+        "description": "separator"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "scopes": {
+          "maple-mediaQuery": [
+            "keyword.control.at-rule.media.css",
+            "keyword.control",
+            "keyword"
+          ],
+          "maple-utility": [
+            "support.type.property-name.css"
+          ],
+          "maple-value": [
+            "string.quoted.single.css",
+            "string.quoted.double.html",
+            "meta.attribute.class.html"
+          ],
+          "maple-parent-selector": [
+            "entity.other.attribute-name.class.css"
+          ],
+          "maple-self-selector": [
+            "entity.other.attribute-name.class.css"
+          ],
+          "maple-child-selector": [
+            "entity.other.attribute-name.class.css"
+          ],
+          "maple-separator": [
+            "meta.embedded"
+          ]
+        }
+      }
+    ],
+    "commands": [
+      {
+        "command": "maple-intellisense.restart",
+        "title": "Maple: Restart Language Server"
+      }
+    ],
+    "configuration": {
+      "title": "Maple",
+      "properties": {
+        "maple.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable the Maple Intellisense extension."
+        },
+        "maple.documentSelector": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Glob pattern that restricts which files Maple activates on.\n\nExamples:\n- `**/*.{html,tsx}` — only HTML and TSX files\n- `src/**/*.vue` — Vue files inside `src/`\n\nLeave empty to activate on all supported languages (HTML, JS, TS, JSX, TSX, Vue, Svelte)."
+        }
+      }
+    }
+  },
+  "activationEvents": [
+    "onLanguage:html",
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescriptreact",
+    "onLanguage:vue",
+    "onLanguage:svelte"
+  ],
+  "main": "./dist/client/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.109.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.39.2",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "dependencies": {
+    "@f12io/coco": "^2.1.4",
+    "@f12io/maple": "file:../maple/f12io-maple-0.1.0.tgz",
+    "minimatch": "^9.0.5",
+    "prettier": "^3.8.1"
+  }
+}

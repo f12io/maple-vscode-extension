@@ -5,11 +5,7 @@ import { COLOR_MID_TONE } from '../constants';
  * findNamedColorAndTone
  * Reverse engineers a target HEX back to your design system
  */
-export function findNamedColorAndTone(
-  targetHex: string,
-  toneFactor = 1,
-  lightnessFactor = 1,
-) {
+export function findNamedColorAndTone(targetHex: string) {
   const targetOklch = coco(targetHex, 'oklch');
   const targetRgb = coco(targetHex, 'rgb');
   const target = parse(targetOklch);

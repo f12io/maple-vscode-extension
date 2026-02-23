@@ -1,4 +1,3 @@
-import * as prettier from 'prettier';
 /**
  * Convert camelCase to kebab-case
  */

@@ -1,48 +1,61 @@
-import { coco, namedColors, parse } from '@f12io/coco';
-import { COLOR_MID_TONE } from '../constants';
+import { coco, namedColors, parse } from "@f12io/coco";
+import { COLOR_MAX_TONE, COLOR_MID_TONE, COLOR_MIN_TONE } from "../constants";
+import { createConnection, ProposedFeatures } from "vscode-languageserver/node";
+const connection = createConnection(ProposedFeatures.all);
 
-/**
- * findNamedColorAndTone
- * Reverse engineers a target HEX back to your design system
- */
 export function findNamedColorAndTone(targetHex: string) {
-  const targetOklch = coco(targetHex, 'oklch');
-  const targetRgb = coco(targetHex, 'rgb');
+  const targetOklch = coco(targetHex, "oklch");
+  const targetRgb = coco(targetHex, "rgb");
   const target = parse(targetOklch);
-  const tRGB = parse(targetRgb);
-  if (!target || !tRGB) {
-    return;
+  if (!target) {
+    return null;
   }
-  const tarRGB = tRGB?.coords;
-  const [_, _1, h] = target.coords;
-  const alpha = Math.round(target.alpha * 100);
+  const [targetL, targetC, targetH] = target?.coords;
+  const MIN = COLOR_MIN_TONE; // 50
+  const MAX = COLOR_MAX_TONE; // 950
+  const MID = (MIN + MAX) / 2; // 500
 
-  let bestMatch = { name: '', tone: 500, distance: Infinity };
-  for (const [name, hex] of Object.entries(namedColors).sort(() => 1)) {
-    if (!bestMatch.distance) {
-      break;
-    }
-    const oklch = coco(`#${hex}`, 'oklch');
-    const baseOklch = parse(oklch);
-    if (!baseOklch) {
+  let bestMatch = { name: "", tone: 500, score: Infinity };
+
+  const alpha = Math.round(target.alpha * 100);
+  const library = Object.entries(namedColors).map(([name, hex]) => {
+    const [l, h, c] = parse(coco(`#${hex}`, "oklch"))?.coords ?? [];
+    return { name, l, h, c };
+  });
+  // 1. Convert namedColors library to OKLCH objects
+  // Using standard console.log here so the objects appear expandible in the 'Debug Console' when you Attach to Server!
+  for (const baseColor of library) {
+    if (!baseColor.h || !baseColor.c) {
       continue;
     }
-    const base = {
-      l: baseOklch.coords[0],
-      c: baseOklch.coords[1],
-      h: baseOklch.coords[2],
-    };
+    // 2. Calculate Hue Distance (Circular)
+    const dH = Math.min(
+      Math.abs(targetH - baseColor.h),
+      360 - Math.abs(targetH - baseColor.h),
+    );
 
-    // 1. QUICK FILTER: If Hue is significantly different, skip it.
-    // OKLCH Hue is 0-360. We check if they are within 15 degrees.
-    const hDiff = Math.abs(base.h - h);
-    const hueDistance = Math.min(hDiff, 360 - hDiff);
-    if (hueDistance > 30) continue;
+    // If hue is too different, this base color isn't a candidate (unless it's a gray)
+    if (targetC > 0.02 && dH > 40) {
+      continue;
+    }
 
-    const canBestMatch = searchForTones(name, tarRGB, base);
+    /**
+     * 3. Solve for Tone
+     * Your logic: Tone 50 = Lightness 1.0 (High), Tone 950 = Lightness 0.0 (Low)
+     * We map the targetL (0-1) to the 950-50 range.
+     */
+    const relativeL = 1 - targetL; // Invert because higher tone = darker
+    let predictedTone = Math.round((relativeL * (MAX - MIN) + MIN) / 10) * 10;
 
-    if (canBestMatch.distance < bestMatch.distance) {
-      bestMatch = { ...canBestMatch };
+    // Clamp to your constants
+    predictedTone = Math.max(MIN, Math.min(MAX, predictedTone));
+
+    // 4. Score the match
+    // We prioritize Hue and Chroma similarity to find the best 'Name'
+    const score = dH * 2 + Math.abs(targetC - baseColor.c) * 100;
+
+    if (score < bestMatch.score) {
+      bestMatch = { name: baseColor.name, tone: predictedTone, score };
     }
   }
 
@@ -50,52 +63,8 @@ export function findNamedColorAndTone(targetHex: string) {
     ? {
         name: bestMatch.name,
         tone: bestMatch.tone,
-        id: `${bestMatch.name}-${bestMatch.tone}${alpha != 100 ? '/' : ''}${alpha !== 100 ? alpha : ''}`,
-        distance: bestMatch.distance,
+        id: `${bestMatch.name}-${bestMatch.tone}${alpha !== 100 ? "/" : ""}${alpha !== 100 ? alpha : ""}`,
+        distance: bestMatch.score,
       }
     : null;
-}
-
-function searchForTones(name: string, tarRGB: Array<number>, base: any) {
-  let bestMatch = { name: '', tone: 500, distance: Infinity };
-  let localBestTone = 500;
-  let minLDiff = Infinity;
-  let prevDist = Infinity;
-  for (let i = 0; i < 1000; i += 2) {
-    const midTone = i;
-
-    const amount = (COLOR_MID_TONE - midTone) / COLOR_MID_TONE;
-    const adjAmount = amount;
-
-    let simulatedL;
-    if (amount === 0) {
-      simulatedL = base.l;
-    } else {
-      const lCalc = amount > 0 ? (1 - base.l) * adjAmount : base.l * adjAmount;
-      simulatedL = base.l + lCalc;
-    }
-
-    const simulatedRgb = coco(
-      `oklch(${simulatedL} ${base.c} ${base.h})`,
-      'rgb',
-    );
-    const simRGB = parse(simulatedRgb);
-    const diff = tarRGB.reduce(
-      (acc, v, i) => {
-        acc += Math.abs(v - (simRGB?.coords?.[i] || 0));
-        return acc;
-      },
-      (midTone % 100) / 1000,
-    );
-
-    if (diff < minLDiff) {
-      if (prevDist < diff) {
-        return bestMatch;
-      }
-      bestMatch = { name, tone: midTone, distance: diff };
-      localBestTone = midTone;
-      minLDiff = diff;
-    }
-  }
-  return bestMatch;
 }

@@ -1,0 +1,135 @@
+import * as vscode from "vscode";
+import * as fs from "fs";
+
+/**
+ * A workspace-wide cache that scans files for custom Maple aliases
+ * and stores them per WorkspaceFolder to ensure isolation.
+ */
+export class AliasCache {
+  // Map of workspaceFolder.uri.toString() -> Map<fileUri.toString(), Map<aliasName, expansionString>>
+  private static cache = new Map<string, Map<string, Map<string, string>>>();
+
+  // Regular expression used to extract aliases from file content
+  private static readonly ALIAS_REGEX = /--alias-([a-zA-Z0-9\-]+)=([^"'\s]+)/g;
+
+  public static init(context: vscode.ExtensionContext) {
+    // Initial scan
+    this.scanAllWorkspaces();
+
+    // Setup File Watchers for all supported file types
+    const watcher = vscode.workspace.createFileSystemWatcher(
+      "**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}",
+    );
+
+    context.subscriptions.push(watcher);
+
+    watcher.onDidChange((uri) => this.processFile(uri));
+    watcher.onDidCreate((uri) => this.processFile(uri));
+    watcher.onDidDelete((uri) => this.removeFile(uri));
+
+    // When workspace folders change, do a full rescan
+    context.subscriptions.push(
+      vscode.workspace.onDidChangeWorkspaceFolders(() => {
+        this.scanAllWorkspaces();
+      }),
+    );
+  }
+
+  /**
+   * Get aliases for a specific document URI.
+   * Looks up the workspace folder the document belongs to.
+   */
+  public static getAliases(uri: vscode.Uri): Map<string, string> {
+    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    if (!folder) {
+      return new Map<string, string>();
+    }
+
+    const folderCache = this.cache.get(folder.uri.toString());
+    if (!folderCache) return new Map<string, string>();
+
+    // Flatten all file caches into a single map for this folder
+    const allAliases = new Map<string, string>();
+    for (const fileMap of folderCache.values()) {
+      for (const [alias, expansion] of fileMap.entries()) {
+        allAliases.set(alias, expansion);
+      }
+    }
+    return allAliases;
+  }
+
+  private static async scanAllWorkspaces() {
+    this.cache.clear();
+
+    const folders = vscode.workspace.workspaceFolders;
+    if (!folders) return;
+
+    // Initialize maps for all folders
+    for (const folder of folders) {
+      this.cache.set(
+        folder.uri.toString(),
+        new Map<string, Map<string, string>>(),
+      );
+    }
+
+    try {
+      // Find files but exclude node_modules and .git
+      const files = await vscode.workspace.findFiles(
+        "**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}",
+        "**/{node_modules,.git}/**",
+      );
+
+      for (const file of files) {
+        await this.processFile(file);
+      }
+    } catch (error) {
+      console.error("Error scanning workspace for aliases:", error);
+    }
+  }
+
+  private static async processFile(uri: vscode.Uri) {
+    try {
+      const folder = vscode.workspace.getWorkspaceFolder(uri);
+      if (!folder) return;
+
+      const folderKey = folder.uri.toString();
+      if (!this.cache.has(folderKey)) {
+        this.cache.set(folderKey, new Map<string, Map<string, string>>());
+      }
+
+      const folderMap = this.cache.get(folderKey)!;
+
+      // Read file content
+      const content = await fs.promises.readFile(uri.fsPath, "utf-8");
+
+      const fileMap = new Map<string, string>();
+      this.parseContentIntoMap(content, fileMap);
+
+      folderMap.set(uri.toString(), fileMap);
+    } catch (error) {
+      // Ignore file read errors (e.g. file locked or deleted)
+    }
+  }
+
+  private static removeFile(uri: vscode.Uri) {
+    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    if (!folder) return;
+
+    const folderKey = folder.uri.toString();
+    const folderMap = this.cache.get(folderKey);
+    if (folderMap) {
+      folderMap.delete(uri.toString());
+    }
+  }
+
+  private static parseContentIntoMap(
+    content: string,
+    map: Map<string, string>,
+  ) {
+    this.ALIAS_REGEX.lastIndex = 0;
+    let match;
+    while ((match = this.ALIAS_REGEX.exec(content)) !== null) {
+      map.set(match[1], match[2]);
+    }
+  }
+}

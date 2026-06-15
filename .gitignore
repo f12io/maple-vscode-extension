@@ -1,3 +1,21 @@
-node_modules/*
 skills/*
 out/*
+dist/*
+
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+.yarn
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VS Code Extension
+*.vsix
+.vscode-test/
+
+# Testing
+coverage/
+.nyc_output/

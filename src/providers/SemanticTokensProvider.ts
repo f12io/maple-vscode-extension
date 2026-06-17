@@ -6,6 +6,7 @@ import {
 } from "../helpers/class-extractor";
 import { getUtilKey } from "../helpers/get-util-key";
 import { isExtensionEnabled } from "../helpers/config";
+import { AliasCache } from "../helpers/alias-cache";
 
 export const tokenTypes = [
   "maple-mediaQuery",
@@ -153,12 +154,23 @@ export class MapleSemanticTokensProvider
           continue;
         }
 
+        const parsedClass = parseClass(className);
+        if (!parsedClass) continue;
+
+        let isAlias = false;
+        let coreUtil = parsedClass.utilKey || "";
+        if (coreUtil.startsWith("@")) {
+          const aliasName = coreUtil.substring(1);
+          if (AliasCache.getAliases(document.uri).has(aliasName)) {
+            isAlias = true;
+          }
+        }
+
         const converted = convert(className);
-        if (!converted) {
+        if (!converted && !isAlias) {
           continue;
         }
 
-        const parsedClass = parseClass(className);
         const srcClass = parsedClass.srcClass || className;
         let mediaQuery = "";
         let parentSel = "";
@@ -304,7 +316,7 @@ export class MapleSemanticTokensProvider
               line: utilPos.line,
               character: utilPos.character,
               length: util.length,
-              tokenType: semanticTokenIndexes.mapleUtility,
+              tokenType: isAlias ? semanticTokenIndexes.mapleAlias : semanticTokenIndexes.mapleUtility,
               tokenModifiers: 0,
             });
           }

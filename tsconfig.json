@@ -13,6 +13,9 @@
   },
   "exclude": [
     "node_modules",
-    ".vscode-test"
+    ".vscode-test",
+    "tests",
+    "__mocks__",
+    "vitest.config.ts"
   ]
 }

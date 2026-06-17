@@ -1,19 +1,20 @@
 import * as vscode from "vscode";
-import { MapleHoverProvider } from "./providers/HoverProvider";
-import { MapleCompletionProvider } from "./providers/CompletionProvider";
+import { AliasCache } from "./helpers/alias-cache";
+import { isExtensionEnabled } from "./helpers/config";
 import { MapleColorProvider } from "./providers/ColorProvider";
+import { MapleCompletionProvider } from "./providers/CompletionProvider";
 import { subscribeToDocumentChanges } from "./providers/DiagnosticsProvider";
+import { MapleHoverProvider } from "./providers/HoverProvider";
 import {
   MapleSemanticTokensProvider,
   semanticTokensLegend,
 } from "./providers/SemanticTokensProvider";
-import { isExtensionEnabled } from "./helpers/config";
-import { AliasCache } from "./helpers/alias-cache";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "maple-vscode-extension" is now active!',
   );
+  vscode.window.showInformationMessage("Maple Extension is now Active!");
 
   AliasCache.init(context);
 

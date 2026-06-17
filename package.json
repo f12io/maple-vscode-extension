@@ -48,7 +48,7 @@
       },
       {
         "id": "maple-selector-operator",
-        "description": "Selector operators (^, &, /, *)"
+        "description": "Selector operators (^, &, /)"
       },
       {
         "id": "maple-separator",

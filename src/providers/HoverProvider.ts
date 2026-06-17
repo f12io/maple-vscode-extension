@@ -1,10 +1,10 @@
-import * as vscode from "vscode";
-import { MAPLE_CLASS_REGEX_NON_GLOBAL } from "../helpers/class-extractor";
-import { convert } from "@f12io/maple";
+import { convert, parseClass } from "@f12io/maple";
 import * as prettier from "prettier";
+import * as vscode from "vscode";
+import { AliasCache } from "../helpers/alias-cache";
+import { MAPLE_CLASS_REGEX_NON_GLOBAL } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
 import { parseMapleToken } from "../helpers/maple-parser";
-import { AliasCache } from "../helpers/alias-cache";
 
 export class MapleHoverProvider implements vscode.HoverProvider {
   async provideHover(
@@ -22,30 +22,66 @@ export class MapleHoverProvider implements vscode.HoverProvider {
 
     const word = document.getText(range);
 
-    // Handle custom aliases
-    if (word.startsWith("@")) {
-      const aliasName = word.substring(1);
-      const customAliases = AliasCache.getAliases(document.uri);
-      if (customAliases.has(aliasName)) {
-        const expansion = customAliases.get(aliasName);
-        const markdown = new vscode.MarkdownString();
-        markdown.appendMarkdown(
-          `**Custom Maple Alias**\n\nExpands to: \`${expansion}\``,
-        );
-        return new vscode.Hover(markdown);
+    // 1. Try to parse the class to separate prefixes from the core utility
+    const parsedClass = parseClass(word);
+    if (parsedClass) {
+      let coreUtil = parsedClass.utilKey || "";
+
+      // Check if it's an alias
+      if (coreUtil.startsWith("@")) {
+        const aliasName = coreUtil.substring(1);
+        const customAliases = AliasCache.getAliases(document.uri);
+
+        if (customAliases.has(aliasName)) {
+          const aliasExpansion = customAliases.get(aliasName)!;
+          const utilities = aliasExpansion.split("|");
+
+          // Re-attach original prefixes (e.g. "@dark:^hover:")
+          const srcClass = parsedClass.srcClass || word;
+          const prefixEndIdx = srcClass.lastIndexOf(coreUtil);
+          const prefix =
+            prefixEndIdx > 0 ? srcClass.substring(0, prefixEndIdx) : "";
+
+          let expandedCss = "";
+          const expandedUtils: string[] = [];
+
+          for (const util of utilities) {
+            const fullUtil = prefix + util;
+            expandedUtils.push(fullUtil);
+            const css = convert(fullUtil);
+            if (css) {
+              expandedCss += css + "\n";
+            }
+          }
+
+          const markdown = new vscode.MarkdownString();
+          markdown.appendMarkdown(
+            `**Custom Maple Alias**\n\nExpands to: \`${expandedUtils.join(" ")}\``,
+          );
+
+          if (expandedCss) {
+            try {
+              const formattedCss = await prettier.format(expandedCss, {
+                parser: "css",
+                printWidth: 80,
+                tabWidth: 2,
+                useTabs: false,
+              });
+              markdown.appendCodeblock(formattedCss, "css");
+            } catch (e) {
+              markdown.appendCodeblock(expandedCss, "css");
+            }
+          }
+
+          return new vscode.Hover(markdown);
+        }
       }
     }
 
-    // Parse prefixes like @md:hover:bgc-red-500
+    // 2. Standard class handling
     let { isMapleIntent } = parseMapleToken(word);
 
-    if (isMapleIntent) {
-      // Wait, we need to pass the raw string into convert.
-      // If it starts with `--`, it is a css variable, which is valid in maple class strings.
-      if (word.startsWith("--")) {
-        isMapleIntent = true;
-      }
-
+    if (isMapleIntent || word.startsWith("--")) {
       const css = convert(word);
       if (css) {
         const markdown = new vscode.MarkdownString();

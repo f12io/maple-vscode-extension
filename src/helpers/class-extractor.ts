@@ -126,5 +126,7 @@ export function isInsideClassAttribute(
   return true;
 }
 
-export const MAPLE_CLASS_REGEX = /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\*]+/g;
-export const MAPLE_CLASS_REGEX_NON_GLOBAL = /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\*]+/;
+export const MAPLE_CLASS_REGEX =
+  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\*\;\'\"]+/g;
+export const MAPLE_CLASS_REGEX_NON_GLOBAL =
+  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\*\;\'\"]+/;

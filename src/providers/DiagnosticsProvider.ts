@@ -1,12 +1,14 @@
+import { buildRule, convert, PRECALCULATED_PROP_TYPES } from "@f12io/maple";
 import * as vscode from "vscode";
-import { ABBREVIATIONS, BUILTIN_ALIASES } from "../mapleEngine/data";
 import {
   extractAllClasses,
   MAPLE_CLASS_REGEX,
 } from "../helpers/class-extractor";
-import { convert, buildRule } from "@f12io/maple";
 import { isExtensionEnabled } from "../helpers/config";
 import { parseMapleToken } from "../helpers/maple-parser";
+import { ABBREVIATIONS, BUILTIN_ALIASES } from "../mapleEngine/data";
+
+const validProperties = Object.keys(PRECALCULATED_PROP_TYPES || {});
 
 export function refreshDiagnostics(
   doc: vscode.TextDocument,
@@ -58,9 +60,17 @@ export function refreshDiagnostics(
         if ((!rule || !rule.content) && !converted) {
           hasError = true;
           errorMsg = `Invalid maple class: '${cls}'`;
-        } else if (!BUILTIN_ALIASES[activeWord] && activeWord.includes("-")) {
+        } else if (
+          !BUILTIN_ALIASES[activeWord] &&
+          activeWord.includes("-") &&
+          !activeWord.startsWith("--")
+        ) {
           // Check for abbreviation typos if rule parses
-          if (!ABBREVIATIONS[activePrefix] && prefixes.length > 0) {
+          if (
+            !ABBREVIATIONS[activePrefix] &&
+            !validProperties.includes(activePrefix) &&
+            prefixes.length > 0
+          ) {
             hasError = true;
             errorMsg = `Unknown maple abbreviation: '${activePrefix}'`;
           } else if (ABBREVIATIONS[activePrefix]) {

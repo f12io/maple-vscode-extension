@@ -55,6 +55,10 @@
         "description": "Separator"
       },
       {
+        "id": "maple-underscore",
+        "description": "Underscore separator"
+      },
+      {
         "id": "maple-alias",
         "description": "Custom alias"
       },
@@ -96,6 +100,12 @@
             "keyword.operator.css"
           ],
           "maple-separator": [
+            "meta.embedded"
+          ],
+          "maple-underscore": [
+            "punctuation.definition.tag",
+            "punctuation.separator",
+            "punctuation",
             "meta.embedded"
           ],
           "maple-alias": [

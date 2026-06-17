@@ -34,22 +34,27 @@ export class MapleHoverProvider implements vscode.HoverProvider {
 
         if (customAliases.has(aliasName)) {
           const aliasExpansion = customAliases.get(aliasName)!;
-          const utilities = aliasExpansion.split("|");
-
+          const utilities = aliasExpansion.split(";");
+          
           // Re-attach original prefixes (e.g. "@dark:^hover:")
           const srcClass = parsedClass.srcClass || word;
           const prefixEndIdx = srcClass.lastIndexOf(coreUtil);
-          const prefix =
-            prefixEndIdx > 0 ? srcClass.substring(0, prefixEndIdx) : "";
+          const prefix = prefixEndIdx > 0 ? srcClass.substring(0, prefixEndIdx) : "";
 
           let expandedCss = "";
           const expandedUtils: string[] = [];
 
           for (const util of utilities) {
+            if (!util) continue;
             const fullUtil = prefix + util;
             expandedUtils.push(fullUtil);
-            const css = convert(fullUtil);
+            let css = convert(fullUtil);
             if (css) {
+              const targetSelector = parseClass(fullUtil)?.srcSel;
+              const originalSelector = parsedClass.srcSel;
+              if (targetSelector && originalSelector) {
+                css = css.split(targetSelector).join(originalSelector);
+              }
               expandedCss += css + "\n";
             }
           }

@@ -15,10 +15,11 @@ export const tokenTypes = [
   "maple-parent-selector",
   "maple-self-selector",
   "maple-child-selector",
+  "maple-selector-operator",
   "maple-separator",
+  "maple-underscore",
   "maple-alias",
   "maple-variable",
-  "maple-selector-operator",
   "maple-important",
 ];
 
@@ -35,11 +36,12 @@ const semanticTokenIndexes = {
   mapleParentSelector: 3,
   mapleSelfSelector: 4,
   mapleChildSelector: 5,
-  mapleSeparator: 6,
-  mapleAlias: 7,
-  mapleVariable: 8,
-  mapleSelectorOperator: 9,
-  mapleImportant: 10,
+  mapleSelectorOperator: 6,
+  mapleSeparator: 7,
+  mapleUnderscore: 8,
+  mapleAlias: 9,
+  mapleVariable: 10,
+  mapleImportant: 11,
 };
 
 export class MapleSemanticTokensProvider
@@ -180,6 +182,16 @@ export class MapleSemanticTokensProvider
         let childSel = "";
         let utilKey = "";
 
+        if (parsedClass.isImportant) {
+          tokens.push({
+            line: startPos.line,
+            character: startPos.character,
+            length: 1,
+            tokenType: semanticTokenIndexes.mapleImportant,
+            tokenModifiers: 0,
+          });
+        }
+
         if (parsedClass.mediaQuery) {
           mediaQuery = `${parsedClass.mediaQuery}:`;
           const relativeOffset = srcClass.indexOf(mediaQuery);
@@ -208,8 +220,39 @@ export class MapleSemanticTokensProvider
           }
         }
 
+        const pushTokensWithUnderscores = (
+          str: string,
+          startOffset: number,
+          defaultTokenType: number,
+        ) => {
+          let currentOffset = startOffset;
+          const parts = str.split(/(_)/);
+          for (const part of parts) {
+            if (part.length === 0) continue;
+            const pos = document.positionAt(currentOffset);
+            if (part === "_") {
+              tokens.push({
+                line: pos.line,
+                character: pos.character,
+                length: 1,
+                tokenType: semanticTokenIndexes.mapleUnderscore,
+                tokenModifiers: 0,
+              });
+            } else {
+              tokens.push({
+                line: pos.line,
+                character: pos.character,
+                length: part.length,
+                tokenType: defaultTokenType,
+                tokenModifiers: 0,
+              });
+            }
+            currentOffset += part.length;
+          }
+        };
+
         if (parsedClass.parentSel) {
-          parentSel = `^${parsedClass.parentSel}`;
+          parentSel = `^${parsedClass.parentSel.replace(/ /g, "_")}`;
           const relativeOffset = srcClass.indexOf(parentSel);
           if (relativeOffset !== -1) {
             const wordOffset = currentClassNameOffset + relativeOffset;
@@ -223,19 +266,16 @@ export class MapleSemanticTokensProvider
               tokenModifiers: 0,
             });
 
-            const selPos = document.positionAt(wordOffset + 1);
-            tokens.push({
-              line: selPos.line,
-              character: selPos.character,
-              length: parsedClass.parentSel.length,
-              tokenType: semanticTokenIndexes.mapleParentSelector,
-              tokenModifiers: 0,
-            });
+            pushTokensWithUnderscores(
+              parsedClass.parentSel.replace(/ /g, "_"),
+              wordOffset + 1,
+              semanticTokenIndexes.mapleParentSelector,
+            );
           }
         }
 
         if (parsedClass.selfSel) {
-          selfSel = `&${parsedClass.selfSel}`;
+          selfSel = `&${parsedClass.selfSel.replace(/ /g, "_")}`;
           const relativeOffset = srcClass.indexOf(selfSel);
           if (relativeOffset !== -1) {
             const wordOffset = currentClassNameOffset + relativeOffset;
@@ -249,19 +289,16 @@ export class MapleSemanticTokensProvider
               tokenModifiers: 0,
             });
 
-            const selPos = document.positionAt(wordOffset + 1);
-            tokens.push({
-              line: selPos.line,
-              character: selPos.character,
-              length: parsedClass.selfSel.length,
-              tokenType: semanticTokenIndexes.mapleSelfSelector,
-              tokenModifiers: 0,
-            });
+            pushTokensWithUnderscores(
+              parsedClass.selfSel.replace(/ /g, "_"),
+              wordOffset + 1,
+              semanticTokenIndexes.mapleSelfSelector,
+            );
           }
         }
 
         if (parsedClass.childSel) {
-          childSel = `/${parsedClass.childSel}`;
+          childSel = `/${parsedClass.childSel.replace(/ /g, "_")}`;
           const relativeOffset = srcClass.indexOf(childSel);
           if (relativeOffset !== -1) {
             const wordOffset = currentClassNameOffset + relativeOffset;
@@ -275,30 +312,33 @@ export class MapleSemanticTokensProvider
               tokenModifiers: 0,
             });
 
-            const selPos = document.positionAt(wordOffset + 1);
-            tokens.push({
-              line: selPos.line,
-              character: selPos.character,
-              length: parsedClass.childSel.length,
-              tokenType: semanticTokenIndexes.mapleChildSelector,
-              tokenModifiers: 0,
-            });
+            pushTokensWithUnderscores(
+              parsedClass.childSel.replace(/ /g, "_"),
+              wordOffset + 1,
+              semanticTokenIndexes.mapleChildSelector,
+            );
           }
         }
 
         if (parsedClass.utilKey) {
           const util = getUtilKey(parsedClass);
           if (util) {
-            let importantLength = parsedClass.isImportant ? 1 : 0;
+            const importantOffset = parsedClass.isImportant ? 1 : 0;
             const othersLength =
               mediaQuery.length +
               parentSel.length +
               selfSel.length +
-              childSel.length;
-            utilKey = `${othersLength && othersLength !== mediaQuery.length ? ":" : ""}${parsedClass.isImportant ? "!" : ""}${util}`;
+              childSel.length +
+              importantOffset;
+
+            const expectsSeparator =
+              othersLength > 0 &&
+              othersLength !== mediaQuery.length + importantOffset;
+
+            utilKey = `${expectsSeparator ? ":" : ""}${util}`;
             const wordOffset = currentClassNameOffset + othersLength;
 
-            if (othersLength && othersLength !== mediaQuery.length) {
+            if (expectsSeparator) {
               const sepPos = document.positionAt(wordOffset);
               tokens.push({
                 line: sepPos.line,
@@ -309,35 +349,13 @@ export class MapleSemanticTokensProvider
               });
             }
 
-            if (parsedClass.isImportant) {
-              const importantPos = document.positionAt(
-                othersLength && othersLength !== mediaQuery.length
-                  ? wordOffset + 1
-                  : wordOffset,
-              );
-              tokens.push({
-                line: importantPos.line,
-                character: importantPos.character,
-                length: 1,
-                tokenType: semanticTokenIndexes.mapleImportant,
-                tokenModifiers: 0,
-              });
-            }
-
-            const utilPos = document.positionAt(
-              (othersLength && othersLength !== mediaQuery.length
-                ? wordOffset + 1
-                : wordOffset) + importantLength,
-            );
-            tokens.push({
-              line: utilPos.line,
-              character: utilPos.character,
-              length: util.length,
-              tokenType: isAlias
+            pushTokensWithUnderscores(
+              util,
+              expectsSeparator ? wordOffset + 1 : wordOffset,
+              isAlias
                 ? semanticTokenIndexes.mapleAlias
                 : semanticTokenIndexes.mapleUtility,
-              tokenModifiers: 0,
-            });
+            );
           }
         }
 
@@ -347,7 +365,8 @@ export class MapleSemanticTokensProvider
             parentSel.length +
             selfSel.length +
             childSel.length +
-            utilKey.length;
+            utilKey.length +
+            (parsedClass.isImportant ? 1 : 0);
           const wordOffset = currentClassNameOffset + othersLength;
 
           const sepPos = document.positionAt(wordOffset);
@@ -359,14 +378,11 @@ export class MapleSemanticTokensProvider
             tokenModifiers: 0,
           });
 
-          const valPos = document.positionAt(wordOffset + 1);
-          tokens.push({
-            line: valPos.line,
-            character: valPos.character,
-            length: parsedClass.utilVal.length,
-            tokenType: semanticTokenIndexes.mapleValue,
-            tokenModifiers: 0,
-          });
+          pushTokensWithUnderscores(
+            parsedClass.utilVal,
+            wordOffset + 1,
+            semanticTokenIndexes.mapleValue,
+          );
         }
       }
     }

@@ -1,12 +1,12 @@
 <!doctype html>
-<html class="--alias-btn=bgc-red-500">
+<html class="--alias-btn=bgc-red-500;p-2 @dark:--l-shift=-0.7">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Maple Extension Visual Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@f12io/maple/dist/maple.js"></script>
   </head>
   <body>
-    <div class="bgc-primary"></div>
     <div class="bgc-primary"></div>
     <div class="bgc-red-500"></div>
     <div class="bgc-#00f"></div>
@@ -14,9 +14,11 @@
     <div class="bgc=[#00f]"></div>
     <div class="bgc=#00f"></div>
     <div class="^.parent:bgc-primary"></div>
+    <div class="^.parent_.child:bgc-primary"></div>
     <div class="&:hover:bgc-primary"></div>
     <div class="/span:bgc-primary"></div>
     <div class="^.parent&:hover/span:bgc-primary"></div>
+    <div class="!^.parent&:hover/span:bgc-primary"></div>
 
     <div class="@dark:bgc-blue-500/10"></div>
     <div class="@dark:^.parent:bgc-blue-500/10"></div>
@@ -33,9 +35,13 @@
     <div class="p-2_4"></div>
     <div class="!p-2"></div>
     <div class="@md:p-2"></div>
+    <div class="!@md:p-2"></div>
     <div class="md:p-2"></div>
+    <div class="!md:p-2"></div>
 
     <div class="@btn"></div>
     <div class="@dark:@btn"></div>
+
+    <div class="&:before:content='test_abc'"></div>
   </body>
 </html>

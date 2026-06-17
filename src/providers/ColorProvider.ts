@@ -35,12 +35,12 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
         if (word.startsWith("--") && word.includes("=")) {
           const equalsIdx = word.indexOf("=");
           const rightSide = word.substring(equalsIdx + 1);
-          const utilities = rightSide.split("|");
-
+          const utilities = rightSide.split(";");
+          
           let currentOffset = wordOffset + equalsIdx + 1;
           for (const util of utilities) {
             extractColorFromUtility(util, currentOffset, document, colors);
-            currentOffset += util.length + 1; // +1 for the '|' character
+            currentOffset += util.length + 1; // +1 for the ';' character
           }
         } else {
           extractColorFromUtility(word, wordOffset, document, colors);

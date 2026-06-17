@@ -40,13 +40,17 @@ describe("MapleSemanticTokensProvider", () => {
     // tokenType 6 (mapleSeparator) for '-'
     // tokenType 2 (mapleValue) for 'red-500'
     // tokenType 0 (mapleMediaQuery) for '@md'
-    
+
     // Check if 'bgc' utility token exists
-    const hasBgcToken = result.data.some((t: any) => t.tokenType === 1 && t.length === 3);
+    const hasBgcToken = result.data.some(
+      (t: any) => t.tokenType === 1 && t.length === 3,
+    );
     expect(hasBgcToken).toBe(true);
 
     // Check if 'red-500' value token exists (this tests the color token!)
-    const hasRed500Token = result.data.some((t: any) => t.tokenType === 2 && t.length === 7);
+    const hasRed500Token = result.data.some(
+      (t: any) => t.tokenType === 2 && t.length === 7,
+    );
     expect(hasRed500Token).toBe(true);
   });
 

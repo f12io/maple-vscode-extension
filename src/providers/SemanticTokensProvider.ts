@@ -1,12 +1,12 @@
+import { convert, parseClass } from "@f12io/maple";
 import * as vscode from "vscode";
-import { parseClass, convert } from "@f12io/maple";
+import { AliasCache } from "../helpers/alias-cache";
 import {
   extractAllClasses,
   MAPLE_CLASS_REGEX,
 } from "../helpers/class-extractor";
-import { getUtilKey } from "../helpers/get-util-key";
 import { isExtensionEnabled } from "../helpers/config";
-import { AliasCache } from "../helpers/alias-cache";
+import { getUtilKey } from "../helpers/get-util-key";
 
 export const tokenTypes = [
   "maple-mediaQuery",
@@ -19,6 +19,7 @@ export const tokenTypes = [
   "maple-alias",
   "maple-variable",
   "maple-selector-operator",
+  "maple-important",
 ];
 
 export const tokenModifiers: string[] = [];
@@ -38,6 +39,7 @@ const semanticTokenIndexes = {
   mapleAlias: 7,
   mapleVariable: 8,
   mapleSelectorOperator: 9,
+  mapleImportant: 10,
 };
 
 export class MapleSemanticTokensProvider
@@ -287,13 +289,13 @@ export class MapleSemanticTokensProvider
         if (parsedClass.utilKey) {
           const util = getUtilKey(parsedClass);
           if (util) {
-            // Estimate the start of the util key by adding the lengths of previous parts
+            let importantLength = parsedClass.isImportant ? 1 : 0;
             const othersLength =
               mediaQuery.length +
               parentSel.length +
               selfSel.length +
               childSel.length;
-            utilKey = `${othersLength && othersLength !== mediaQuery.length ? ":" : ""}${util}`;
+            utilKey = `${othersLength && othersLength !== mediaQuery.length ? ":" : ""}${parsedClass.isImportant ? "!" : ""}${util}`;
             const wordOffset = currentClassNameOffset + othersLength;
 
             if (othersLength && othersLength !== mediaQuery.length) {
@@ -307,16 +309,33 @@ export class MapleSemanticTokensProvider
               });
             }
 
+            if (parsedClass.isImportant) {
+              const importantPos = document.positionAt(
+                othersLength && othersLength !== mediaQuery.length
+                  ? wordOffset + 1
+                  : wordOffset,
+              );
+              tokens.push({
+                line: importantPos.line,
+                character: importantPos.character,
+                length: 1,
+                tokenType: semanticTokenIndexes.mapleImportant,
+                tokenModifiers: 0,
+              });
+            }
+
             const utilPos = document.positionAt(
-              othersLength && othersLength !== mediaQuery.length
+              (othersLength && othersLength !== mediaQuery.length
                 ? wordOffset + 1
-                : wordOffset,
+                : wordOffset) + importantLength,
             );
             tokens.push({
               line: utilPos.line,
               character: utilPos.character,
               length: util.length,
-              tokenType: isAlias ? semanticTokenIndexes.mapleAlias : semanticTokenIndexes.mapleUtility,
+              tokenType: isAlias
+                ? semanticTokenIndexes.mapleAlias
+                : semanticTokenIndexes.mapleUtility,
               tokenModifiers: 0,
             });
           }

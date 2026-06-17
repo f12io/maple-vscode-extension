@@ -61,6 +61,10 @@
       {
         "id": "maple-variable",
         "description": "Custom variable"
+      },
+      {
+        "id": "maple-important",
+        "description": "Important prefix (!)"
       }
     ],
     "semanticTokenScopes": [
@@ -100,6 +104,11 @@
           "maple-variable": [
             "variable.css",
             "variable.other.customproperty.css"
+          ],
+          "maple-important": [
+            "keyword.other.important.css",
+            "keyword.other.important",
+            "keyword"
           ]
         }
       }

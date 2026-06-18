@@ -36,7 +36,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
           const equalsIdx = word.indexOf("=");
           const rightSide = word.substring(equalsIdx + 1);
           const utilities = rightSide.split(";");
-          
+
           let currentOffset = wordOffset + equalsIdx + 1;
           for (const util of utilities) {
             extractColorFromUtility(util, currentOffset, document, colors);
@@ -78,6 +78,9 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     }
 
     const hexStr = coco(rgbaStr, "hex8") || rgbaStr;
+    const oklchStrRaw = coco(rgbaStr, "oklch");
+    const oklchStr = oklchStrRaw ? oklchStrRaw.replace(/ /g, "_") : "";
+
     const formats: string[] = [];
 
     const startOffset = context.document.offsetAt(context.range.start);
@@ -109,11 +112,50 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
         )
       : context.range;
 
-    if (namedStr) {
+    let canUseNamedColor = false;
+    let operatorChar = "";
+
+    if (isSurroundedByBrackets && startOffset > 1) {
+      operatorChar = context.document.getText(
+        new vscode.Range(
+          context.document.positionAt(startOffset - 2),
+          context.document.positionAt(startOffset - 1),
+        ),
+      );
+    } else if (!isSurroundedByBrackets && startOffset > 0) {
+      operatorChar = context.document.getText(
+        new vscode.Range(
+          context.document.positionAt(startOffset - 1),
+          context.document.positionAt(startOffset),
+        ),
+      );
+    }
+
+    if (
+      operatorChar === "-" ||
+      operatorChar === "_" ||
+      operatorChar === "|" ||
+      operatorChar === "("
+    ) {
+      canUseNamedColor = true;
+    }
+
+    const originalText = context.document.getText(context.range);
+    let preferredFormat = "hex";
+    if (originalText.startsWith("oklch")) preferredFormat = "oklch";
+    else if (originalText.startsWith("rgb")) preferredFormat = "rgb";
+
+    if (namedStr && canUseNamedColor) {
       formats.push(namedStr);
     }
-    formats.push(`[${hexStr}]`);
-    formats.push(`[${rgbaStr}]`);
+
+    if (preferredFormat === "oklch" && oklchStr) formats.push(`[${oklchStr}]`);
+    else if (preferredFormat === "rgb") formats.push(`[${rgbaStr}]`);
+    else formats.push(`[${hexStr}]`);
+
+    if (preferredFormat !== "hex") formats.push(`[${hexStr}]`);
+    if (preferredFormat !== "rgb") formats.push(`[${rgbaStr}]`);
+    if (preferredFormat !== "oklch" && oklchStr) formats.push(`[${oklchStr}]`);
 
     return formats.map((f) => {
       const presentation = new vscode.ColorPresentation(f);
@@ -157,7 +199,7 @@ function extractColorFromUtility(
             bracketOffset = 1;
           }
 
-          let rgbString = cocoWithResolver(colorPart, "rgb");
+          let rgbString = cocoWithResolver(colorPart.replace(/_/g, " "), "rgb");
           if (rgbString) {
             const rgbMatch = rgbString.match(
               /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,
@@ -195,7 +237,7 @@ function extractColorFromUtility(
         }
 
         // Parse with coco
-        let rgbString = cocoWithResolver(colorStr, "rgb");
+        let rgbString = cocoWithResolver(colorStr.replace(/_/g, " "), "rgb");
         if (rgbString) {
           const rgbMatch = rgbString.match(
             /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,

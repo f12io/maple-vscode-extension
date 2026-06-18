@@ -378,8 +378,9 @@ export class MapleSemanticTokensProvider
             tokenModifiers: 0,
           });
 
+          const rawUtilVal = className.substring(othersLength + 1);
           pushTokensWithUnderscores(
-            parsedClass.utilVal,
+            rawUtilVal,
             wordOffset + 1,
             semanticTokenIndexes.mapleValue,
           );

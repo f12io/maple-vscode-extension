@@ -49,9 +49,11 @@ export function parseMapleToken(word: string): MapleTokenInfo {
   const activePrefix = parsed.utilKey;
   const activeParts = [parsed.utilKey, ...utilVal.split("-")];
 
+  const cleanActiveWord = activeWord.startsWith("@") ? activeWord.substring(1) : activeWord;
   const isMaplePrefix =
-    !!ABBREVIATIONS[activePrefix] || !!BUILTIN_ALIASES[activeWord];
-  const isMapleIntent = prefixes.length > 0 || isMaplePrefix;
+    !!ABBREVIATIONS[activePrefix] || !!BUILTIN_ALIASES[cleanActiveWord];
+  const isMapleIntent =
+    prefixes.length > 0 || isMaplePrefix || activeWord.startsWith("--alias-");
 
   return {
     activeWord,

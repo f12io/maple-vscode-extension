@@ -1,4 +1,12 @@
-import { buildRule, convert, PRECALCULATED_PROP_TYPES } from "@f12io/maple";
+import {
+  buildRule,
+  COLOR_MAX_TONE,
+  COLOR_MIN_TONE,
+  convert,
+  PRECALCULATED_PROP_TYPES,
+  REGEX_COLOR_TOKEN,
+  REGEX_RESERVED_KEYWORDS,
+} from "@f12io/maple";
 import * as vscode from "vscode";
 import {
   extractAllClasses,
@@ -57,7 +65,15 @@ export function refreshDiagnostics(
         const rule = buildRule(cls);
         const converted = convert(cls);
 
-        if ((!rule || !rule.content) && !converted) {
+        if (
+          activeWord.startsWith("--alias-") &&
+          activeWord.includes("=") &&
+          instance.tagName &&
+          instance.tagName !== "html"
+        ) {
+          hasError = true;
+          errorMsg = `Maple aliases can only be defined on the 'html' element. Found on '${instance.tagName}'.`;
+        } else if ((!rule || !rule.content) && !converted) {
           hasError = true;
           errorMsg = `Invalid maple class: '${cls}'`;
         } else if (
@@ -82,20 +98,22 @@ export function refreshDiagnostics(
               prop.includes("stroke");
 
             if (isColorProp) {
-              const colorName = activeParts[1];
-              const tone = activeParts[2];
+              const utilVal = activeParts.slice(1).join("-");
+              const colorMatch = REGEX_COLOR_TOKEN.exec(utilVal);
 
-              if (
-                colorName &&
-                !["white", "black", "transparent", "current"].includes(
-                  colorName,
-                )
-              ) {
-                if (tone) {
-                  const numTone = parseInt(tone, 10);
-                  if (isNaN(numTone) || numTone < 0 || numTone > 999) {
+              if (colorMatch) {
+                const colorName = colorMatch[1];
+                const tonePart = colorMatch[2];
+
+                if (
+                  colorName &&
+                  !REGEX_RESERVED_KEYWORDS.test(colorName) &&
+                  tonePart
+                ) {
+                  const numTone = Number(tonePart);
+                  if (numTone < COLOR_MIN_TONE || numTone > COLOR_MAX_TONE) {
                     hasError = true;
-                    errorMsg = `Invalid color tone: '${tone}'. Must be between 0 and 999.`;
+                    errorMsg = `Invalid color tone: '${tonePart}'. Must be between ${COLOR_MIN_TONE} and ${COLOR_MAX_TONE}.`;
                   }
                 }
               }

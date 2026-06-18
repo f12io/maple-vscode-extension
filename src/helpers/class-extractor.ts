@@ -2,6 +2,20 @@ export interface ClassInstance {
   value: string;
   start: number; // Absolute offset in document
   end: number;
+  tagName?: string;
+}
+
+function getTagNameBackwards(text: string, index: number): string | undefined {
+  const prefix = text.substring(0, index);
+  const lastOpen = prefix.lastIndexOf('<');
+  const lastClose = prefix.lastIndexOf('>');
+  if (lastOpen !== -1 && lastOpen > lastClose) {
+    const match = text.substring(lastOpen + 1).match(/^\s*([a-zA-Z0-9\-]+)/);
+    if (match) {
+      return match[1].toLowerCase();
+    }
+  }
+  return undefined;
 }
 
 export function extractAllClasses(text: string): ClassInstance[] {
@@ -17,6 +31,7 @@ export function extractAllClasses(text: string): ClassInstance[] {
       value: match[2],
       start: start,
       end: start + match[2].length,
+      tagName: getTagNameBackwards(text, match.index),
     });
   }
 
@@ -36,6 +51,7 @@ export function extractAllClasses(text: string): ClassInstance[] {
         value: strMatch[2],
         start: start,
         end: start + strMatch[2].length,
+        tagName: getTagNameBackwards(text, match.index),
       });
     }
   }
@@ -57,6 +73,7 @@ export function extractAllClasses(text: string): ClassInstance[] {
         value: hcMatch[2],
         start: start,
         end: start + hcMatch[2].length,
+        tagName: getTagNameBackwards(text, match.index),
       });
     }
   }
@@ -70,6 +87,7 @@ export function extractAllClasses(text: string): ClassInstance[] {
       value: match[1],
       start: match.index + match[0].indexOf(match[1]),
       end: match.index + match[0].indexOf(match[1]) + match[1].length,
+      tagName: getTagNameBackwards(text, match.index),
     });
   }
 

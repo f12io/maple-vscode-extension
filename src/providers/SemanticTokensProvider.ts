@@ -1,4 +1,4 @@
-import { convert, parseClass } from "@f12io/maple";
+import { BUILTIN_ALIASES, convert, parseClass } from "@f12io/maple";
 import * as vscode from "vscode";
 import { AliasCache } from "../helpers/alias-cache";
 import {
@@ -163,11 +163,17 @@ export class MapleSemanticTokensProvider
 
         let isAlias = false;
         let coreUtil = parsedClass.utilKey || "";
-        if (coreUtil.startsWith("@")) {
-          const aliasName = coreUtil.substring(1);
-          if (AliasCache.getAliases(document.uri).has(aliasName)) {
-            isAlias = true;
-          }
+        const aliasName = coreUtil.startsWith("@")
+          ? coreUtil.substring(1)
+          : coreUtil;
+
+        if (
+          coreUtil.startsWith("@") &&
+          AliasCache.getAliases(document.uri).has(aliasName)
+        ) {
+          isAlias = true;
+        } else if (BUILTIN_ALIASES[aliasName]) {
+          isAlias = true;
         }
 
         const converted = convert(className);

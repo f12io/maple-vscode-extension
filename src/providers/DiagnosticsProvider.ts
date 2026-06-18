@@ -76,6 +76,9 @@ export function refreshDiagnostics(
         } else if ((!rule || !rule.content) && !converted) {
           hasError = true;
           errorMsg = `Invalid maple class: '${cls}'`;
+        } else if (rule && rule.parsed && rule.parsed.utilOp === "-" && !rule.parsed.utilVal.startsWith("[") && rule.parsed.utilVal.includes("_!important")) {
+          hasError = true;
+          errorMsg = `Invalid usage of '!important'. Use '=' operator or '[]' brackets for string literals.`;
         } else if (
           !BUILTIN_ALIASES[activeWord] &&
           activeWord.includes("-") &&

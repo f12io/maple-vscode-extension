@@ -176,10 +176,16 @@ export class MapleSemanticTokensProvider
           isAlias = true;
         }
 
+        if (parsedClass.utilOp === "-" && !parsedClass.utilVal?.startsWith("[") && parsedClass.utilVal?.includes("_!important")) {
+          continue;
+        }
+
         const converted = convert(className);
         if (!converted && !isAlias) {
           continue;
         }
+
+
 
         const srcClass = parsedClass.srcClass || className;
         let mediaQuery = "";
@@ -242,6 +248,29 @@ export class MapleSemanticTokensProvider
                 character: pos.character,
                 length: 1,
                 tokenType: semanticTokenIndexes.mapleUnderscore,
+                tokenModifiers: 0,
+              });
+            } else if (part === "!important") {
+              tokens.push({
+                line: pos.line,
+                character: pos.character,
+                length: part.length,
+                tokenType: semanticTokenIndexes.mapleImportant,
+                tokenModifiers: 0,
+              });
+            } else if (part === "!important]") {
+              tokens.push({
+                line: pos.line,
+                character: pos.character,
+                length: part.length - 1,
+                tokenType: semanticTokenIndexes.mapleImportant,
+                tokenModifiers: 0,
+              });
+              tokens.push({
+                line: pos.line,
+                character: pos.character + part.length - 1,
+                length: 1,
+                tokenType: defaultTokenType,
                 tokenModifiers: 0,
               });
             } else {

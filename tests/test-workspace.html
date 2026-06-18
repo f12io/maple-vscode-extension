@@ -18,6 +18,9 @@
     <div class="bgc=[#00f]"></div>
     <div class="bgc=#00f"></div>
     <div class="bgc=[oklch(0.273_0.13_273.634_/_0.891)]"></div>
+    <div class="!bgc=#00f"></div>
+    <div class="bgc=#00f_!important"></div>
+    <div class="bgc-[#00f_!important]"></div>
     <div class="^.parent:bgc-primary"></div>
     <div class="^.parent_.child:bgc-primary"></div>
     <div class="&:hover:bgc-primary"></div>
@@ -47,7 +50,10 @@
 
     <div class="@btn"></div>
     <div class="@dark:@btn"></div>
-    <div class="@space(4)"><!-- Undefined alias, no highlight--></div>
+    <div class="md:@card"></div>
+    <div class="@md:@card"></div>
+    <div class="&:hover:@card"></div>
+    <div class="&:before:@card"></div>
 
     <div class="@fx"></div>
     <div class="fx"></div>
@@ -90,10 +96,7 @@
     <div class="brye"></div>
     <div class="cnt"></div>
     <div class="truncate"></div>
-    <div class="md:@card"></div>
-    <div class="@md:@card"></div>
-    <div class="&:hover:@card"></div>
-    <div class="&:before:@card"></div>
+
     <div class="fade-in"></div>
     <div class="spin"></div>
     <div class="fade-out-up"></div>
@@ -1006,8 +1009,33 @@
     <div class="&[data-foo]:--bg=black"></div>
     <div class="&[data-foo]:--bg-hero-gradient=linear-gradient(blue,red)"></div>
 
-    <div class="--alias-card=p-4"><!-- Expected warning --></div>
-    <div class="@md:--alias-card=p-4"><!-- Expected warning --></div>
-    <div class="bgc-red-10"><!-- Expected warning --></div>
+    <div class="--alias-card=p-4">
+      <!-- Expected warning: Invalid alias definition -->
+    </div>
+    <div class="@md:--alias-card=p-4">
+      <!-- Expected warning: Invalid alias definition -->
+    </div>
+    <div class="bgc-#00f_!important"><!-- Expexted important warning --></div>
+    <div class="bgc-red-10"><!-- Expected warning: Invalid shade --></div>
+    <div class="md:invalid-maple-class-name">
+      <!-- Expected warning: Unknown maple abbreviation -->
+    </div>
+    <div class="p-2 p-4">
+      <!-- Expected warnings: Conflicted utility usage (2x) -->
+    </div>
+    <div class="md:bgc-red-500 md:bgc-blue-500">
+      <!-- Expected warnings: Conflicted utility usage (2x) -->
+    </div>
+    <div class="md:bgc-red-500 hover:bgc-blue-500">
+      <!-- No warning (different prefixes) -->
+    </div>
+
+    <div class="invalid=maple-class-name">
+      <!-- Expected warning: Unknown maple abbreviation -->
+    </div>
+    <div class="@space(4)"><!-- Undefined alias, no highlight--></div>
+    <div class="invalid-maple-class-name">
+      <!-- Regular class, no highlight -->
+    </div>
   </body>
 </html>

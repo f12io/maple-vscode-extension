@@ -1,5 +1,11 @@
 import { coco } from "@f12io/coco";
-import { buildRule } from "@f12io/maple";
+import {
+  buildRule,
+  COLOR_MAX_TONE,
+  COLOR_MIN_TONE,
+  REGEX_COLOR_TOKEN,
+  REGEX_RESERVED_KEYWORDS,
+} from "@f12io/maple";
 import * as vscode from "vscode";
 import {
   extractAllClasses,
@@ -165,6 +171,24 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
   }
 }
 
+function isValidColorTone(colorStr: string): boolean {
+  if (colorStr.startsWith("[") && colorStr.endsWith("]")) return true;
+
+  const colorMatch = REGEX_COLOR_TOKEN.exec(colorStr);
+  if (colorMatch) {
+    const colorName = colorMatch[1];
+    const tonePart = colorMatch[2];
+
+    if (colorName && !REGEX_RESERVED_KEYWORDS.test(colorName) && tonePart) {
+      const numTone = Number(tonePart);
+      if (numTone < COLOR_MIN_TONE || numTone > COLOR_MAX_TONE) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 function extractColorFromUtility(
   utilStr: string,
   absoluteIndex: number,
@@ -192,6 +216,8 @@ function extractColorFromUtility(
         for (const arg of args) {
           const argParts = arg.split("_");
           let colorPart = argParts[0];
+
+          if (!isValidColorTone(colorPart)) continue;
 
           let bracketOffset = 0;
           if (colorPart.startsWith("[") && colorPart.endsWith("]")) {
@@ -229,6 +255,8 @@ function extractColorFromUtility(
           currentOffset += arg.length + 1;
         }
       } else {
+        if (!isValidColorTone(value)) return;
+
         let colorStr = value;
         let bracketOffset = 0;
         if (colorStr.startsWith("[") && colorStr.endsWith("]")) {

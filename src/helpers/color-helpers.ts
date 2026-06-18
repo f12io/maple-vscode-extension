@@ -1,4 +1,4 @@
-import { parse, coco, namedColors, createCoco } from "@f12io/coco";
+import { coco, createCoco, namedColors, parse } from "@f12io/coco";
 import { ABBREVIATIONS } from "../mapleEngine/data";
 
 const COLOR_MID_TONE = 500;

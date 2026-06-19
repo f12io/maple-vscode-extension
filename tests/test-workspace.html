@@ -11,8 +11,16 @@
   <body>
     <div class="bgc-primary"></div>
     <div class="bgc-primary-muted"></div>
+    <div class="bgc-primary-muted/50"></div>
     <div class="bgc-primary-muted-500"></div>
+    <div class="bgc-primary-muted-500/50"></div>
+    <div class="bgc-red"></div>
+    <div class="bgc-red/50"></div>
     <div class="bgc-red-500"></div>
+    <div class="!bgc-red-500"></div>
+    <div class="bgc-red-500/50"></div>
+    <div class="bgc-[red]"></div>
+    <div class="bgc-rgba(255,0,0,1)"></div>
     <div class="bgc-#00f"></div>
     <div class="bgc-[#00f]"></div>
     <div class="bgc=[#00f]"></div>
@@ -21,6 +29,12 @@
     <div class="!bgc=#00f"></div>
     <div class="bgc=#00f_!important"></div>
     <div class="bgc-[#00f_!important]"></div>
+    <div class="backgroundColor-red"></div>
+    <div class="brc-gray-300"></div>
+    <div class="brc-gray-300_blue-200"></div>
+    <div class="brc-gray-300_[red]"></div>
+    <div class="bg-blue-600"></div>
+    <div class="bg-blue-600__no-repeat"></div>
     <div class="^.parent:bgc-primary"></div>
     <div class="^.parent_.child:bgc-primary"></div>
     <div class="&:hover:bgc-primary"></div>
@@ -31,22 +45,6 @@
 
     <div class="@dark:bgc-blue-500/10"></div>
     <div class="@dark:^.parent:bgc-blue-500/10"></div>
-
-    <div class="p-0"></div>
-    <div class="p-2"></div>
-    <div class="p-2"></div>
-    <div class="p-2.5"></div>
-    <div class="p-md"></div>
-    <div class="p-16px"></div>
-    <div class="p-[4px]"></div>
-    <div class="p=2rem"></div>
-    <div class="p=[2rem]"></div>
-    <div class="p-2_4"></div>
-    <div class="!p-2"></div>
-    <div class="@md:p-2"></div>
-    <div class="!@md:p-2"></div>
-    <div class="md:p-2"></div>
-    <div class="!md:p-2"></div>
 
     <div class="@btn"></div>
     <div class="@dark:@btn"></div>
@@ -490,6 +488,7 @@
     <div class="area=span_2/span_some-grid-area"></div>
     <div class="area=1/-1"></div>
     <div class="md:o-0"></div>
+    <div class="!md:o-0"></div>
     <div class="md(section):o-0"></div>
     <div class="not-md:o-0"></div>
     <div class="not-md(section):o-0"></div>
@@ -520,6 +519,7 @@
     <div class="style(section)=[opacity:0]:o-0"></div>
     <div class="not-style(section)=[opacity:0]:o-0"></div>
     <div class="@md:o-0"></div>
+    <div class="!@md:o-0"></div>
     <div class="@not-md:o-0"></div>
     <div class="@mxw-md:o-0"></div>
     <div class="@not-mxw-md:o-0"></div>
@@ -788,47 +788,26 @@
     <div class="tsdel-300"></div>
     <div class="tstf-ease"></div>
     <div class="ts-300_colors_linear"></div>
-    <div class="c-primary"></div>
-    <div class="bgc-primary"></div>
-    <div class="bg-primary"></div>
-    <div class="c-red"></div>
-    <div class="c-red/50"></div>
-    <div class="color-red"></div>
-    <div class="c-red-500"></div>
-    <div class="c-brand-blue"></div>
-    <div class="c-brand-blue/50"></div>
-    <div class="c-brand-blue-600"></div>
-    <div class="c-brand-blue-600/50"></div>
-    <div class="!c-red-500"></div>
-    <div class="bgc-blue-600/0"></div>
-    <div class="bg-blue-600"></div>
-    <div class="bg-blue-600__no-repeat"></div>
-    <div class="brc-gray-300"></div>
-    <div class="brc-gray-300_blue-200"></div>
-    <div class="brc-gray-300_[red]"></div>
-    <div class="c-#ff0000"></div>
-    <div class="c-rgba(255,0,0,1)"></div>
-    <div class="c-[#ff0000]"></div>
-    <div class="c-[red]"></div>
-    <div class="c=#ff0000"></div>
-    <div class="p-4"></div>
-    <div class="padding-4"></div>
+
+    <div class="p-0"></div>
+    <div class="p-2"></div>
+    <div class="p-2px"></div>
+    <div class="padding-2"></div>
+    <div class="!padding-2px"></div>
+    <div class="p-2.5"></div>
+    <div class="p-2.25"></div>
+    <div class="p-md"></div>
+    <div class="p-auto"></div>
     <div class="p-2xs"></div>
+    <div class="p-16px"></div>
+    <div class="p-[4px]"></div>
+    <div class="p=2rem"></div>
+    <div class="p=[2rem]"></div>
     <div class="p-4_5"></div>
     <div class="p-4_5px"></div>
-    <div class="!p-4"></div>
-    <div class="p-4!"></div>
-    <div class="p-4px"></div>
-    <div class="padding-4px"></div>
-    <div class="!p-4px"></div>
-    <div class="!padding-4px"></div>
-    <div class="p-auto"></div>
-    <div class="p-lg"></div>
-    <div class="p-4.5"></div>
-    <div class="p-4.25"></div>
+    <div class="!p-2"></div>
+    <div class="!p-2px"></div>
     <div class="p-1/2"></div>
-    <div class="p-0"></div>
-    <div class="p-1"></div>
     <div class="p-px"></div>
     <div class="p-rem"></div>
     <div class="p-em"></div>
@@ -907,7 +886,6 @@
     <div class="m--4_-5px"></div>
     <div class="-margin-4"></div>
     <div class="!-m-4"></div>
-    <div class="-m-4!"></div>
     <div class="-m-4px"></div>
     <div class="-margin-4px"></div>
     <div class="!-m-4px"></div>
@@ -1008,6 +986,8 @@
     <div class="&[data-foo]:--bg=black"></div>
     <div class="&[data-foo]:--bg-hero-gradient=linear-gradient(blue,red)"></div>
 
+    <div class="-m-4!"><!-- Expected warning: Invalid usage of '!' --></div>
+    <div class="p-4!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="--alias-card=p-4">
       <!-- Expected warning: Invalid alias definition -->
     </div>

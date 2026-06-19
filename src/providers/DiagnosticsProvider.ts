@@ -65,7 +65,10 @@ export function refreshDiagnostics(
         const rule = buildRule(cls);
         const converted = convert(cls);
 
-        if (
+        if (cls.endsWith("!")) {
+          hasError = true;
+          errorMsg = `Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!${cls.slice(0, -1)}').`;
+        } else if (
           activeWord.startsWith("--alias-") &&
           activeWord.includes("=") &&
           instance.tagName &&

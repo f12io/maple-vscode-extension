@@ -1,6 +1,6 @@
 <!doctype html>
 <html
-  class="--alias-btn=bgc-red-500;p-2 @md:--alias-card=p-4 @dark:--l-shift=-0.7"
+  class="--alias-btn=bgc-red-500;p-2 @md:--alias-card=p-{value,4} @dark:--l-shift=-0.7"
 >
   <head>
     <meta charset="UTF-8" />
@@ -52,6 +52,8 @@
     <div class="@dark:@btn"></div>
     <div class="md:@card"></div>
     <div class="@md:@card"></div>
+    <div class="@md:@card(4)"></div>
+    <div class="@md:@card(space:4)"></div>
     <div class="&:hover:@card"></div>
     <div class="&:before:@card"></div>
 

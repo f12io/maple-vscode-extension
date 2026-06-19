@@ -161,44 +161,68 @@ export class MapleSemanticTokensProvider
         const parsedClass = parseClass(className);
         if (!parsedClass) continue;
 
+        const srcClass = parsedClass.srcClass || className;
+        let mediaQuery = "";
+        let parentSel = "";
+        let selfSel = "";
+        let childSel = "";
+        let utilKey = "";
+
+        if (parsedClass.mediaQuery) mediaQuery = `${parsedClass.mediaQuery}:`;
+        if (parsedClass.parentSel) parentSel = `^${parsedClass.parentSel.replace(/ /g, "_")}`;
+        if (parsedClass.selfSel) selfSel = `&${parsedClass.selfSel.replace(/ /g, "_")}`;
+        if (parsedClass.childSel) childSel = `/${parsedClass.childSel.replace(/ /g, "_")}`;
+
+        const importantOffset = parsedClass.isImportant ? 1 : 0;
+        const othersLength =
+          mediaQuery.length +
+          parentSel.length +
+          selfSel.length +
+          childSel.length +
+          importantOffset;
+
+        const expectsSeparator =
+          othersLength > 0 &&
+          othersLength !== mediaQuery.length + importantOffset;
+
+        const rawUtilStart = expectsSeparator ? othersLength + 1 : othersLength;
+        const rawUtilString = className.substring(rawUtilStart);
+        const rawAliasBase = rawUtilString.replace(/\(.*\)$/, "");
+        const fullAliasName = rawAliasBase.startsWith("@") ? rawAliasBase.substring(1) : rawAliasBase;
+
         let isAlias = false;
-        const fullUtilName = `${parsedClass.utilKey || ""}${parsedClass.utilOp || ""}${parsedClass.utilVal || ""}`;
-        const fullAliasName = fullUtilName.startsWith("@")
-          ? fullUtilName.substring(1)
-          : fullUtilName;
-
-        let coreUtil = parsedClass.utilKey || "";
-        const aliasName = coreUtil.startsWith("@")
-          ? coreUtil.substring(1)
-          : coreUtil;
-
+        
         if (
-          fullUtilName.startsWith("@") &&
+          rawAliasBase.startsWith("@") &&
           AliasCache.getAliases(document.uri).has(fullAliasName)
         ) {
           isAlias = true;
-          parsedClass.utilKey = fullUtilName;
+          parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;
           parsedClass.utilVal = "";
         } else if (BUILTIN_ALIASES[fullAliasName]) {
           isAlias = true;
-          parsedClass.utilKey = fullUtilName;
+          parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;
           parsedClass.utilVal = "";
-        } else if (
-          coreUtil.startsWith("@") &&
-          AliasCache.getAliases(document.uri).has(aliasName)
-        ) {
-          isAlias = true;
-        } else if (BUILTIN_ALIASES[aliasName]) {
-          isAlias = true;
+        } else {
+          let coreUtil = parsedClass.utilKey || "";
+          const aliasName = coreUtil.startsWith("@")
+            ? coreUtil.substring(1)
+            : coreUtil;
+
+          if (
+            coreUtil.startsWith("@") &&
+            AliasCache.getAliases(document.uri).has(aliasName) &&
+            !parsedClass.utilVal
+          ) {
+            isAlias = true;
+          } else if (BUILTIN_ALIASES[aliasName] && !parsedClass.utilVal) {
+            isAlias = true;
+          }
         }
 
-        if (
-          parsedClass.utilOp === "-" &&
-          !parsedClass.utilVal?.startsWith("[") &&
-          parsedClass.utilVal?.includes("_!important")
-        ) {
+        if (parsedClass.utilOp === "-" && !parsedClass.utilVal?.startsWith("[") && parsedClass.utilVal?.includes("_!important")) {
           continue;
         }
 
@@ -206,13 +230,6 @@ export class MapleSemanticTokensProvider
         if (!converted && !isAlias) {
           continue;
         }
-
-        const srcClass = parsedClass.srcClass || className;
-        let mediaQuery = "";
-        let parentSel = "";
-        let selfSel = "";
-        let childSel = "";
-        let utilKey = "";
 
         if (parsedClass.isImportant) {
           tokens.push({

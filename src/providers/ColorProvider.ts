@@ -147,25 +147,58 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     }
 
     const originalText = context.document.getText(context.range);
-    let preferredFormat = "hex";
-    if (originalText.startsWith("oklch")) preferredFormat = "oklch";
-    else if (originalText.startsWith("rgb")) preferredFormat = "rgb";
+    const innerText =
+      originalText.startsWith("[") && originalText.endsWith("]")
+        ? originalText.substring(1, originalText.length - 1)
+        : originalText;
 
-    if (namedStr && canUseNamedColor) {
-      formats.push(namedStr);
+    let preferredFormat = "named";
+    if (innerText.startsWith("oklch")) preferredFormat = "oklch";
+    else if (innerText.startsWith("rgb") || innerText.startsWith("rgba"))
+      preferredFormat = "rgb";
+    else if (innerText.startsWith("#")) preferredFormat = "hex";
+
+    const colorLabels = {
+      named: namedStr,
+      oklch: oklchStr,
+      rgb: rgbaStr,
+      hex: hexStr,
+    };
+
+    const orderedFormats: (keyof typeof colorLabels)[] = [];
+
+    // Push the preferred format first
+    if (preferredFormat === "named" && namedStr && canUseNamedColor) {
+      orderedFormats.push("named");
+    } else if (preferredFormat === "oklch" && oklchStr) {
+      orderedFormats.push("oklch");
+    } else if (preferredFormat === "rgb") {
+      orderedFormats.push("rgb");
+    } else if (preferredFormat === "hex") {
+      orderedFormats.push("hex");
     }
 
-    if (preferredFormat === "oklch" && oklchStr) formats.push(`[${oklchStr}]`);
-    else if (preferredFormat === "rgb") formats.push(`[${rgbaStr}]`);
-    else formats.push(`[${hexStr}]`);
+    // Then push the rest
+    if (preferredFormat !== "named" && namedStr && canUseNamedColor) {
+      orderedFormats.push("named");
+    }
+    if (preferredFormat !== "oklch" && oklchStr) {
+      orderedFormats.push("oklch");
+    }
+    if (preferredFormat !== "rgb") {
+      orderedFormats.push("rgb");
+    }
+    if (preferredFormat !== "hex") {
+      orderedFormats.push("hex");
+    }
 
-    if (preferredFormat !== "hex") formats.push(`[${hexStr}]`);
-    if (preferredFormat !== "rgb") formats.push(`[${rgbaStr}]`);
-    if (preferredFormat !== "oklch" && oklchStr) formats.push(`[${oklchStr}]`);
+    return orderedFormats.map((formatName) => {
+      const label = colorLabels[formatName]!;
+      // Non-named colors are always wrapped in brackets for the actual text edit to ensure CSS/Maple validity
+      const textToInsert = formatName === "named" ? label : `[${label}]`;
 
-    return formats.map((f) => {
-      const presentation = new vscode.ColorPresentation(f);
-      presentation.textEdit = new vscode.TextEdit(editRange, f);
+      const presentation = new vscode.ColorPresentation(label);
+      presentation.textEdit = new vscode.TextEdit(editRange, textToInsert);
       return presentation;
     });
   }
@@ -203,57 +236,50 @@ function extractColorFromUtility(
 
   if (prefix && value) {
     if (colorPrefixes.includes(prefix)) {
-      const tokens = tokenizeRespectingBracketsAndParens(value);
-      const valueStartIndex = absoluteIndex + utilStr.lastIndexOf(value);
+      const processTokens = (valueStr: string, absoluteOffset: number) => {
+        const tokens = tokenizeRespectingBracketsAndParens(valueStr);
+        for (const token of tokens) {
+          const colorPart = token.part;
+          const tokenAbsoluteOffset = absoluteOffset + token.offset;
 
-      for (const token of tokens) {
-        let colorPart = token.part;
-        if (!isValidColorTone(colorPart)) continue;
+          if (colorPart.startsWith("[") && colorPart.endsWith("]")) {
+            const innerContent = colorPart.substring(1, colorPart.length - 1);
+            processTokens(innerContent, tokenAbsoluteOffset + 1);
+          } else {
+            if (!isValidColorTone(colorPart)) continue;
 
-        let bracketOffset = 0;
-        if (colorPart.startsWith("[") && colorPart.endsWith("]")) {
-          colorPart = colorPart.substring(1, colorPart.length - 1);
-          bracketOffset = 1;
-        }
-
-        let baseColor = colorPart;
-        if (baseColor.match(/^(rgba?|hsla?|oklch|oklab|color)\(/)) {
-          const closingParen = baseColor.lastIndexOf(")");
-          if (closingParen !== -1) {
-            baseColor = baseColor.substring(0, closingParen + 1);
-          }
-        } else {
-          baseColor = baseColor.split("_")[0];
-        }
-
-        // Parse with coco
-        let rgbString = cocoWithResolver(baseColor.replace(/_/g, " "), "rgb");
-        if (rgbString) {
-          const rgbMatch = rgbString.match(
-            /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,
-          );
-          if (rgbMatch) {
-            const r = parseFloat(rgbMatch[1]) / 255;
-            const g = parseFloat(rgbMatch[2]) / 255;
-            const b = parseFloat(rgbMatch[3]) / 255;
-            const a = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1;
-
-            const startPos = document.positionAt(
-              valueStartIndex + token.offset + bracketOffset,
+            const rgbString = cocoWithResolver(
+              colorPart.replace(/_/g, " "),
+              "rgb",
             );
-            const endPos = document.positionAt(
-              valueStartIndex + token.offset + bracketOffset + colorPart.length,
-            );
+            if (rgbString) {
+              const rgbMatch = rgbString.match(
+                /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,
+              );
+              if (rgbMatch) {
+                const r = parseFloat(rgbMatch[1]) / 255;
+                const g = parseFloat(rgbMatch[2]) / 255;
+                const b = parseFloat(rgbMatch[3]) / 255;
+                const a = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1;
 
-            colors.push(
-              new vscode.ColorInformation(
-                new vscode.Range(startPos, endPos),
-                new vscode.Color(r, g, b, a),
-              ),
-            );
+                const startPos = document.positionAt(tokenAbsoluteOffset);
+                const endPos = document.positionAt(
+                  tokenAbsoluteOffset + colorPart.length,
+                );
+
+                colors.push(
+                  new vscode.ColorInformation(
+                    new vscode.Range(startPos, endPos),
+                    new vscode.Color(r, g, b, a),
+                  ),
+                );
+              }
+            }
           }
         }
-      }
+      };
+
+      processTokens(value, absoluteIndex + utilStr.lastIndexOf(value));
     }
   }
 }

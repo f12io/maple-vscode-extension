@@ -203,69 +203,31 @@ function extractColorFromUtility(
 
   if (prefix && value) {
     if (colorPrefixes.includes(prefix)) {
-      if ((prefix === "bgimg" || prefix === "bg") && value.includes("|")) {
-        let argsString = value;
-        const doubleUnderscoreIdx = value.indexOf("__");
-        if (doubleUnderscoreIdx !== -1) {
-          argsString = value.substring(0, doubleUnderscoreIdx);
-        }
+      const tokens = tokenizeRespectingBracketsAndParens(value);
+      const valueStartIndex = absoluteIndex + utilStr.lastIndexOf(value);
 
-        const args = argsString.split("|");
-        let currentOffset = absoluteIndex + utilStr.lastIndexOf(value);
+      for (const token of tokens) {
+        let colorPart = token.part;
+        if (!isValidColorTone(colorPart)) continue;
 
-        for (const arg of args) {
-          const argParts = arg.split("_");
-          let colorPart = argParts[0];
-
-          if (!isValidColorTone(colorPart)) continue;
-
-          let bracketOffset = 0;
-          if (colorPart.startsWith("[") && colorPart.endsWith("]")) {
-            colorPart = colorPart.substring(1, colorPart.length - 1);
-            bracketOffset = 1;
-          }
-
-          let rgbString = cocoWithResolver(colorPart.replace(/_/g, " "), "rgb");
-          if (rgbString) {
-            const rgbMatch = rgbString.match(
-              /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,
-            );
-            if (rgbMatch) {
-              const r = parseFloat(rgbMatch[1]) / 255;
-              const g = parseFloat(rgbMatch[2]) / 255;
-              const b = parseFloat(rgbMatch[3]) / 255;
-              const a = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1;
-
-              const startPos = document.positionAt(
-                currentOffset + bracketOffset,
-              );
-              const endPos = document.positionAt(
-                currentOffset + bracketOffset + colorPart.length,
-              );
-
-              colors.push(
-                new vscode.ColorInformation(
-                  new vscode.Range(startPos, endPos),
-                  new vscode.Color(r, g, b, a),
-                ),
-              );
-            }
-          }
-          // Advance offset by arg length + 1 (for the | character)
-          currentOffset += arg.length + 1;
-        }
-      } else {
-        if (!isValidColorTone(value)) return;
-
-        let colorStr = value;
         let bracketOffset = 0;
-        if (colorStr.startsWith("[") && colorStr.endsWith("]")) {
-          colorStr = colorStr.substring(1, colorStr.length - 1);
+        if (colorPart.startsWith("[") && colorPart.endsWith("]")) {
+          colorPart = colorPart.substring(1, colorPart.length - 1);
           bracketOffset = 1;
         }
 
+        let baseColor = colorPart;
+        if (baseColor.match(/^(rgba?|hsla?|oklch|oklab|color)\(/)) {
+          const closingParen = baseColor.lastIndexOf(")");
+          if (closingParen !== -1) {
+            baseColor = baseColor.substring(0, closingParen + 1);
+          }
+        } else {
+          baseColor = baseColor.split("_")[0];
+        }
+
         // Parse with coco
-        let rgbString = cocoWithResolver(colorStr.replace(/_/g, " "), "rgb");
+        let rgbString = cocoWithResolver(baseColor.replace(/_/g, " "), "rgb");
         if (rgbString) {
           const rgbMatch = rgbString.match(
             /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,
@@ -276,12 +238,11 @@ function extractColorFromUtility(
             const b = parseFloat(rgbMatch[3]) / 255;
             const a = rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1;
 
-            // calculate exact range of the color value within the document
-            const absIndex = absoluteIndex + utilStr.lastIndexOf(value);
-
-            const startPos = document.positionAt(absIndex + bracketOffset);
+            const startPos = document.positionAt(
+              valueStartIndex + token.offset + bracketOffset,
+            );
             const endPos = document.positionAt(
-              absIndex + bracketOffset + colorStr.length,
+              valueStartIndex + token.offset + bracketOffset + colorPart.length,
             );
 
             colors.push(
@@ -295,4 +256,52 @@ function extractColorFromUtility(
       }
     }
   }
+}
+
+function tokenizeRespectingBracketsAndParens(
+  str: string,
+): { part: string; offset: number }[] {
+  const parts: { part: string; offset: number }[] = [];
+  let currentPart = "";
+  let currentOffset = 0;
+  let bracketDepth = 0;
+  let parenDepth = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    if (char === "[") {
+      bracketDepth++;
+      if (currentPart === "") currentOffset = i;
+      currentPart += char;
+    } else if (char === "]") {
+      bracketDepth = Math.max(0, bracketDepth - 1);
+      if (currentPart === "") currentOffset = i;
+      currentPart += char;
+    } else if (char === "(") {
+      parenDepth++;
+      if (currentPart === "") currentOffset = i;
+      currentPart += char;
+    } else if (char === ")") {
+      parenDepth = Math.max(0, parenDepth - 1);
+      if (currentPart === "") currentOffset = i;
+      currentPart += char;
+    } else if (
+      (char === "_" || char === "|" || char === ",") &&
+      bracketDepth === 0 &&
+      parenDepth === 0
+    ) {
+      if (currentPart) {
+        parts.push({ part: currentPart, offset: currentOffset });
+      }
+      currentPart = "";
+      currentOffset = i + 1;
+    } else {
+      if (currentPart === "") currentOffset = i;
+      currentPart += char;
+    }
+  }
+  if (currentPart) {
+    parts.push({ part: currentPart, offset: currentOffset });
+  }
+  return parts;
 }

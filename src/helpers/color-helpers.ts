@@ -113,6 +113,7 @@ export const colorPrefixes = Object.keys(ABBREVIATIONS).filter((k) => {
     p.includes("color") ||
     p.includes("background") ||
     p.includes("fill") ||
-    p.includes("stroke")
+    p.includes("stroke") ||
+    p.includes("shadow")
   );
 });

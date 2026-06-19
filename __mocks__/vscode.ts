@@ -109,3 +109,19 @@ export class SemanticTokens {
 export const workspace = {
   getWorkspaceFolder: () => ({ uri: { fsPath: "/test" } }),
 };
+
+export class Color {
+  constructor(
+    public readonly red: number,
+    public readonly green: number,
+    public readonly blue: number,
+    public readonly alpha: number,
+  ) {}
+}
+
+export class ColorInformation {
+  constructor(
+    public readonly range: Range,
+    public readonly color: Color,
+  ) {}
+}

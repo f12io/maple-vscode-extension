@@ -1,5 +1,547 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-angular.html 1`] = `
+[
+  {
+    "classValue": "bgc-yellow-500 p-4",
+    "colors": [
+      {
+        "color": "rgba(255, 255, 0, 1)",
+        "text": "yellow-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "yellow-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-red-500",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-blue-500",
+    "colors": [
+      {
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "blue-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "blue-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-red-500",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-blue-500",
+    "colors": [
+      {
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "blue-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "blue-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-purple-500",
+    "colors": [
+      {
+        "color": "rgba(128, 0, 128, 1)",
+        "text": "purple-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "purple-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-green-500",
+    "colors": [
+      {
+        "color": "rgba(0, 128, 0, 1)",
+        "text": "green-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "green-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-purple-500",
+    "colors": [
+      {
+        "color": "rgba(128, 0, 128, 1)",
+        "text": "purple-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "purple-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-green-500",
+    "colors": [
+      {
+        "color": "rgba(0, 128, 0, 1)",
+        "text": "green-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "green-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-purple-500",
+    "colors": [
+      {
+        "color": "rgba(128, 0, 128, 1)",
+        "text": "purple-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "purple-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-white",
+    "colors": [
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-purple-500",
+    "colors": [
+      {
+        "color": "rgba(128, 0, 128, 1)",
+        "text": "purple-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "purple-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+]
+`;
+
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-react.jsx 1`] = `
+[
+  {
+    "classValue": "bgc-blue-500 c-white p-4",
+    "colors": [
+      {
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "blue-500",
+      },
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "blue-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
+        "type": "maple-value",
+      },
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "fw-bold \${true ? "m-4" : "m-6"}",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "6",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+]
+`;
+
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-vue.vue 1`] = `
+[
+  {
+    "classValue": "bgc-green-500 p-4",
+    "colors": [
+      {
+        "color": "rgba(0, 128, 0, 1)",
+        "text": "green-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "green-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-white",
+    "colors": [
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-gray-500",
+    "colors": [
+      {
+        "color": "rgba(128, 128, 128, 1)",
+        "text": "gray-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-red-500",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-gray-300",
+    "colors": [
+      {
+        "color": "rgba(177, 177, 177, 1)",
+        "text": "gray-300",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-300",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+]
+`;
+
 exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-workspace.html 1`] = `
 [
   {
@@ -1002,40 +1544,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "&:before:content='test_abc'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "&",
-        "type": "maple-selector-operator",
-      },
-      {
-        "text": ":before",
-        "type": "maple-self-selector",
-      },
-      {
-        "text": ":",
-        "type": "maple-separator",
-      },
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "=",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'test",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "abc'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
@@ -8771,20 +9280,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "bgimg-url|'https://example.com/image.jpg'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "bgimg",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "url|'https://example.com/image.jpg'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
@@ -9851,103 +10347,13 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "areas='header_header'_'sidebar_main'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "areas",
-        "type": "maple-utility",
-      },
-      {
-        "text": "=",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'header",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "header'",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "'sidebar",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "main'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
     "classValue": "areas='a_b_c'_'a_c_d'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "areas",
-        "type": "maple-utility",
-      },
-      {
-        "text": "=",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'a",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "b",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "c'",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "'a",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "c",
-        "type": "maple-value",
-      },
-      {
-        "text": "_",
-        "type": "maple-underscore",
-      },
-      {
-        "text": "d'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
@@ -14263,77 +14669,25 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "content-'Time:12:00'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'Time:12:00'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
     "classValue": "content-'Time:12:00'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'Time:12:00'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
     "classValue": "content='Time:12:00'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "=",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'Time:12:00'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
     "classValue": "content='Time=12:00'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "=",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'Time=12:00'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
@@ -14358,94 +14712,19 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "/.card[data-type='test']:content-'Time:12:00'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "/",
-        "type": "maple-selector-operator",
-      },
-      {
-        "text": ".card[data-type='test']",
-        "type": "maple-child-selector",
-      },
-      {
-        "text": ":",
-        "type": "maple-separator",
-      },
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'Time:12:00'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
     "classValue": "/.card[data-type='test']:content='Time:12:00'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "/",
-        "type": "maple-selector-operator",
-      },
-      {
-        "text": ".card[data-type='test']",
-        "type": "maple-child-selector",
-      },
-      {
-        "text": ":",
-        "type": "maple-separator",
-      },
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "=",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'Time:12:00'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {
     "classValue": "/.card[data-type='test:123&abc']:content='Time=12:00'",
     "colors": [],
-    "tokens": [
-      {
-        "text": "/",
-        "type": "maple-selector-operator",
-      },
-      {
-        "text": ".card[data-type='test:123&abc']",
-        "type": "maple-child-selector",
-      },
-      {
-        "text": ":",
-        "type": "maple-separator",
-      },
-      {
-        "text": "content",
-        "type": "maple-utility",
-      },
-      {
-        "text": "=",
-        "type": "maple-separator",
-      },
-      {
-        "text": "'Time=12:00'",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
     "warnings": [],
   },
   {

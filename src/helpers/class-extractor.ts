@@ -7,8 +7,8 @@ export interface ClassInstance {
 
 function getTagNameBackwards(text: string, index: number): string | undefined {
   const prefix = text.substring(0, index);
-  const lastOpen = prefix.lastIndexOf('<');
-  const lastClose = prefix.lastIndexOf('>');
+  const lastOpen = prefix.lastIndexOf("<");
+  const lastClose = prefix.lastIndexOf(">");
   if (lastOpen !== -1 && lastOpen > lastClose) {
     const match = text.substring(lastOpen + 1).match(/^\s*([a-zA-Z0-9\-]+)/);
     if (match) {
@@ -22,23 +22,32 @@ export function extractAllClasses(text: string): ClassInstance[] {
   const instances: ClassInstance[] = [];
 
   // 1. Standard attributes: class="", className="", CssClass=""
-  const attrRegex = /(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1/gi;
+  // Must be preceded by space or start of tag to avoid matching the "class" inside ":class" or "[class]"
+  // Also support React template literals: className={\`...\`}
+  const attrRegex =
+    /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1|(?:^|[\s<>])className\s*=\s*\{\s*`([^`]*)`\s*\}/gi;
   let match;
   while ((match = attrRegex.exec(text)) !== null) {
-    const quoteIdx = match[0].indexOf(match[1]);
-    const start = match.index + quoteIdx + 1;
+    const value = match[2] || match[3];
+    const valueMatchStr = match[1]
+      ? match[1] + value + match[1]
+      : `\`${value}\``;
+    const start = match.index + match[0].indexOf(valueMatchStr) + 1; // +1 to skip the quote/backtick
     instances.push({
-      value: match[2],
+      value: value,
       start: start,
-      end: start + match[2].length,
+      end: start + value.length,
       tagName: getTagNameBackwards(text, match.index),
     });
   }
 
-  // 2. Angular / Vue expressions: [ngClass]="...", :class="..."
-  const exprRegex = /(?:\[ngClass\]|:class)\s*=\s*(["'])([\s\S]*?)\1/gi;
+  // 2. Angular / Vue / React expressions: [ngClass]="...", :class="...", [class]="...", className={...}
+  // This matches the container of the expression
+  // We use this for objects, arrays, and ternaries where classes are inside strings: :class="{ 'c-red': isActive }"
+  const exprRegex =
+    /(?:\[ngClass\]|:class|\[class\])\s*=\s*(["'])([\s\S]*?)\1|className\s*=\s*\{\s*(["'])([\s\S]*?)\3\s*\}/gi;
   while ((match = exprRegex.exec(text)) !== null) {
-    const expr = match[2];
+    const expr = match[2] || match[4];
     const exprStart = match.index + match[0].indexOf(expr);
 
     // Find all string literals inside the expression: '...', "...", `...`
@@ -112,8 +121,10 @@ export function isInsideClassAttribute(
   // 4: host: { 'class': '
   // 5: [class.xxx]="
   // 6: class:xxx="
+  // 7: className={`
+  // 8: [class]="
   const attrRegex =
-    /(?:class|className|CssClass|\[ngClass\]|:class)\s*=\s*(["'])|host\s*:\s*\{[^}]*(?:'class'|"class"|class)\s*:\s*(["'`])|\[class\.[^\]=]*\]\s*=\s*(["'])|class:[a-zA-Z0-9\-\@\:]+\s*=\s*(["'])/gi;
+    /(?:class|className|CssClass|\[ngClass\]|:class|\[class\])\s*=\s*(["'])|host\s*:\s*\{[^}]*(?:'class'|"class"|class)\s*:\s*(["'`])|\[class\.[^\]=]*\]\s*=\s*(["'])|class:[a-zA-Z0-9\-\@\:]+\s*=\s*(["'])|className\s*=\s*\{\s*`([^`]*)`/gi;
 
   let match;
   let lastMatch = null;
@@ -130,11 +141,14 @@ export function isInsideClassAttribute(
     return false;
   }
 
-  // The quote character used
-  const quote = lastMatch[1] || lastMatch[2] || lastMatch[3] || lastMatch[4];
+  // The quote character used or backtick if React template literal
+  const quote =
+    lastMatch[1] || lastMatch[2] || lastMatch[3] || lastMatch[4] || "`";
 
   // The string contents from the quote to the offset
-  const insideString = prefix.substring(lastMatch.index + lastMatch[0].length);
+  const insideString = prefix.substring(
+    lastMatch.index + lastMatch[0].lastIndexOf(quote) + 1,
+  );
 
   // If the insideString contains the matching quote, it means the attribute was closed before the cursor
   if (insideString.includes(quote)) {
@@ -146,13 +160,13 @@ export function isInsideClassAttribute(
 
 export function getExactWordRangeAtPosition(
   document: any, // using any here to avoid importing vscode in pure helper if needed, or we can use vscode types if we import it. Wait, class-extractor is currently independent of vscode?
-  position: any
+  position: any,
 ): { wordRange: any | undefined; currentWord: string } {
   // We'll import vscode inside or just use duck typing since it's passed in.
   // Actually, we'll just implement it safely.
   const wordRange = document.getWordRangeAtPosition(
     position,
-    MAPLE_CLASS_REGEX_NON_GLOBAL
+    MAPLE_CLASS_REGEX_NON_GLOBAL,
   );
   let currentWord = wordRange ? document.getText(wordRange) : "";
 
@@ -163,20 +177,20 @@ export function getExactWordRangeAtPosition(
   const cursorOffsetInWord = position.character - wordRange.start.character;
   const tokens = currentWord.split(/(["'\s])/);
   let currentOffset = 0;
-  
+
   let finalRange = wordRange;
   let finalWord = "";
 
   for (const token of tokens) {
     const start = currentOffset;
     const end = currentOffset + token.length;
-    
+
     if (cursorOffsetInWord > start && cursorOffsetInWord <= end) {
       if (token !== '"' && token !== "'" && token.trim() !== "") {
         finalWord = token;
         finalRange = wordRange.with(
           wordRange.start.translate(0, start),
-          wordRange.start.translate(0, end)
+          wordRange.start.translate(0, end),
         );
       } else {
         finalRange = undefined;
@@ -188,7 +202,7 @@ export function getExactWordRangeAtPosition(
         finalWord = token;
         finalRange = wordRange.with(
           wordRange.start.translate(0, start),
-          wordRange.start.translate(0, end)
+          wordRange.start.translate(0, end),
         );
         break;
       }
@@ -201,7 +215,10 @@ export function getExactWordRangeAtPosition(
     const cleanWord = finalWord.replace(/[><]+$/, "").replace(/<![\-]*$/, "");
     if (cleanWord !== finalWord) {
       const diff = finalWord.length - cleanWord.length;
-      finalRange = finalRange.with(undefined, finalRange.end.translate(0, -diff));
+      finalRange = finalRange.with(
+        undefined,
+        finalRange.end.translate(0, -diff),
+      );
       finalWord = cleanWord;
     }
   }

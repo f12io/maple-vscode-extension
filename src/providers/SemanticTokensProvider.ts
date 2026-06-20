@@ -76,6 +76,18 @@ export class MapleSemanticTokensProvider
       while ((match = MAPLE_CLASS_REGEX.exec(classStr)) !== null) {
         let className = match[0];
         let currentClassNameOffset = instance.start + match.index;
+
+        // Strip leading/trailing quotes if matched
+        if (className.startsWith('"') || className.startsWith("'")) {
+          className = className.substring(1);
+          currentClassNameOffset += 1;
+        }
+        if (className.endsWith('"') || className.endsWith("'")) {
+          className = className.substring(0, className.length - 1);
+        }
+
+        if (className.length === 0) continue;
+
         const startPos = document.positionAt(currentClassNameOffset);
 
         if (className.startsWith("--alias-")) {

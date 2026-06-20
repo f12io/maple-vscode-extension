@@ -36,8 +36,18 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
       MAPLE_CLASS_REGEX.lastIndex = 0;
       let wordMatch;
       while ((wordMatch = MAPLE_CLASS_REGEX.exec(classValue))) {
-        const word = wordMatch[0];
-        const wordOffset = instance.start + wordMatch.index;
+        let word = wordMatch[0];
+        let wordOffset = instance.start + wordMatch.index;
+
+        if (word.startsWith('"') || word.startsWith("'")) {
+          word = word.substring(1);
+          wordOffset += 1;
+        }
+        if (word.endsWith('"') || word.endsWith("'")) {
+          word = word.substring(0, word.length - 1);
+        }
+
+        if (word.length === 0) continue;
 
         if (word.startsWith("--") && word.includes("=")) {
           const equalsIdx = word.indexOf("=");

@@ -1,0 +1,23 @@
+<div class="bgc-yellow-500 p-4">
+  <span [ngClass]="isActive ? 'c-red-500' : 'c-blue-500'">
+    Angular Example
+  </span>
+  <span [ngClass]="[isActive ? 'c-red-500' : 'c-blue-500']">
+    Angular Example
+  </span>
+  <button [class.bgc-purple-500]="isPurple">Purple Button</button>
+  <button [class]="isPurple ? 'bgc-purple-500' : 'bgc-green-500'">
+    Purple Button
+  </button>
+  <button [class]="[isPurple ? 'bgc-purple-500' : 'bgc-green-500']">
+    Purple Button
+  </button>
+  <button
+    [class]="{
+      'bgc-purple-500': isPurple,
+      'c-white': isActive
+    }"
+  >
+    Purple Button
+  </button>
+</div>

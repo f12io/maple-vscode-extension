@@ -15,11 +15,19 @@ vi.mock("../src/helpers/config", () => ({
 }));
 
 describe("Workspace Highlights and Colors", () => {
-  it("should generate consistent semantic tokens and colors for test-workspace.html", () => {
-    const htmlContent = readFileSync(
-      join(__dirname, "test-workspace.html"),
-      "utf8",
-    );
+  const testFiles = [
+    "test-workspace.html",
+    "test-react.jsx",
+    "test-vue.vue",
+    "test-angular.html",
+  ];
+
+  for (const fileName of testFiles) {
+    it(`should generate consistent semantic tokens and colors for ${fileName}`, () => {
+      const htmlContent = readFileSync(
+        join(__dirname, fileName),
+        "utf8",
+      );
 
     const lines = htmlContent.split("\n");
 
@@ -49,7 +57,7 @@ describe("Workspace Highlights and Colors", () => {
     const mockDocument = {
       getText: () => htmlContent,
       positionAt,
-      uri: { fsPath: "/test/test-workspace.html" },
+      uri: { fsPath: `/test/${fileName}` },
     } as unknown as vscode.TextDocument;
 
     // Mock vscode API needed for diagnostics
@@ -190,4 +198,5 @@ describe("Workspace Highlights and Colors", () => {
 
     expect(snapshotData).toMatchSnapshot();
   });
+  }
 });

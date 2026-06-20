@@ -1,8 +1,8 @@
 import { coco } from "@f12io/coco";
 import {
   buildRule,
-  COLOR_MIN_TONE,
   COLOR_MAX_TONE,
+  COLOR_MIN_TONE,
   REGEX_COLOR_TOKEN,
   REGEX_RESERVED_KEYWORDS,
   StringHelper,
@@ -287,32 +287,32 @@ function extractColorFromUtility(
 
 function getTokens(valueStr: string): { part: string; offset: number }[] {
   const tokens: { part: string; offset: number }[] = [];
-  
-  const commaParts = StringHelper.split(valueStr, ',');
+
+  const commaParts = StringHelper.split(valueStr, ",");
   let currentCommaOffset = 0;
-  
+
   for (const cPart of commaParts) {
     const cIdx = valueStr.indexOf(cPart, currentCommaOffset);
     currentCommaOffset = cIdx + cPart.length;
-    
-    const pipeParts = StringHelper.split(cPart, '|');
+
+    const pipeParts = StringHelper.split(cPart, "|");
     let currentPipeOffset = 0;
-    
+
     for (const pPart of pipeParts) {
       const pIdx = cPart.indexOf(pPart, currentPipeOffset);
       currentPipeOffset = pIdx + pPart.length;
-      
-      const spaceParts = StringHelper.split(pPart, '_');
+
+      const spaceParts = StringHelper.split(pPart, "_");
       let currentSpaceOffset = 0;
-      
+
       for (const sPart of spaceParts) {
         if (!sPart) continue;
         const sIdx = pPart.indexOf(sPart, currentSpaceOffset);
         currentSpaceOffset = sIdx + sPart.length;
-        
+
         tokens.push({
           part: sPart,
-          offset: cIdx + pIdx + sIdx
+          offset: cIdx + pIdx + sIdx,
         });
       }
     }

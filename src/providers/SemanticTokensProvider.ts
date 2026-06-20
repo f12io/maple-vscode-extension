@@ -44,6 +44,9 @@ const semanticTokenIndexes = {
   mapleImportant: 11,
 };
 
+// Cache to prevent re-compiling unmodified classes on every keystroke
+const convertCache = new Map<string, boolean>();
+
 export class MapleSemanticTokensProvider
   implements vscode.DocumentSemanticTokensProvider
 {
@@ -226,8 +229,17 @@ export class MapleSemanticTokensProvider
           continue;
         }
 
-        const converted = convert(className);
-        if (!converted && !isAlias) {
+        let isConverted = convertCache.get(className);
+        if (isConverted === undefined) {
+          isConverted = !!convert(className);
+          if (convertCache.size > 5000) {
+            const firstKey = convertCache.keys().next().value;
+            if (firstKey !== undefined) convertCache.delete(firstKey);
+          }
+          convertCache.set(className, isConverted);
+        }
+
+        if (!isConverted && !isAlias) {
           continue;
         }
 

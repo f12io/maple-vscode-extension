@@ -13,6 +13,9 @@ import {
 import { isExtensionEnabled } from "../helpers/config";
 import { parseMapleToken } from "../helpers/maple-parser";
 
+// Cache to prevent re-compiling unmodified classes on every keystroke
+const convertCache = new Map<string, boolean>();
+
 export function refreshDiagnostics(
   doc: vscode.TextDocument,
   mapleDiagnostics: vscode.DiagnosticCollection,
@@ -50,7 +53,16 @@ export function refreshDiagnostics(
 
       if (isMapleIntent) {
         // Let the engine validate the syntax
-        const converted = convert(cls);
+        let converted = convertCache.get(cls);
+        if (converted === undefined) {
+          converted = !!convert(cls);
+          if (convertCache.size > 5000) {
+            const firstKey = convertCache.keys().next().value;
+            if (firstKey !== undefined) convertCache.delete(firstKey);
+          }
+          convertCache.set(cls, converted);
+        }
+        
         const rule = buildRule(cls);
 
         let isShadeError = false;

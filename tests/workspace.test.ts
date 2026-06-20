@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as vscode from "vscode";
 import { extractAllClasses } from "../src/helpers/class-extractor";
 import { MapleColorProvider } from "../src/providers/ColorProvider";
+import { refreshDiagnostics } from "../src/providers/DiagnosticsProvider";
 import {
   MapleSemanticTokensProvider,
   tokenTypes,
@@ -51,6 +52,25 @@ describe("Workspace Highlights and Colors", () => {
       uri: { fsPath: "/test/test-workspace.html" },
     } as unknown as vscode.TextDocument;
 
+    // Mock vscode API needed for diagnostics
+    (vscode as any).DiagnosticSeverity = {
+      Error: 0,
+      Warning: 1,
+      Information: 2,
+      Hint: 3,
+    };
+    (vscode as any).Diagnostic = class Diagnostic {
+      range: any;
+      message: string;
+      severity: number;
+      source?: string;
+      constructor(range: any, message: string, severity: number) {
+        this.range = range;
+        this.message = message;
+        this.severity = severity;
+      }
+    };
+
     const token = {} as vscode.CancellationToken;
 
     const semanticProvider = new MapleSemanticTokensProvider();
@@ -64,6 +84,27 @@ describe("Workspace Highlights and Colors", () => {
       mockDocument,
       token,
     ) as any[];
+
+    const diagnosticsMap = new Map<vscode.Uri, vscode.Diagnostic[]>();
+    const mockDiagnosticsCollection = {
+      name: "maple",
+      set: (uri: vscode.Uri, diags: vscode.Diagnostic[]) => {
+        diagnosticsMap.set(uri, diags);
+      },
+      delete: (uri: vscode.Uri) => {
+        diagnosticsMap.delete(uri);
+      },
+      clear: () => {
+        diagnosticsMap.clear();
+      },
+      forEach: () => {},
+      get: (uri: vscode.Uri) => diagnosticsMap.get(uri),
+      has: (uri: vscode.Uri) => diagnosticsMap.has(uri),
+      dispose: () => {},
+    } as unknown as vscode.DiagnosticCollection;
+
+    refreshDiagnostics(mockDocument, mockDiagnosticsCollection);
+    const diagnosticsResult = diagnosticsMap.get(mockDocument.uri) || [];
 
     const mappedTokens = semanticResult.data.map((t: any) => {
       const lineStr = lines[t.line];
@@ -93,6 +134,14 @@ describe("Workspace Highlights and Colors", () => {
       };
     });
 
+    const mappedDiagnostics = diagnosticsResult.map((d: any) => {
+      return {
+        line: d.range.start.line,
+        char: d.range.start.character,
+        message: d.message,
+      };
+    });
+
     const classInstances = extractAllClasses(htmlContent);
 
     const snapshotData: any[] = [];
@@ -117,6 +166,14 @@ describe("Workspace Highlights and Colors", () => {
         );
       });
 
+      const diagnosticsForClass = mappedDiagnostics.filter((d: any) => {
+        const diagStartOffset = getOffset(d.line, d.char);
+        return (
+          diagStartOffset >= instanceStartOffset &&
+          diagStartOffset < instanceEndOffset
+        );
+      });
+
       snapshotData.push({
         classValue: instance.value,
         tokens: tokensForClass.map((t: any) => ({
@@ -127,6 +184,7 @@ describe("Workspace Highlights and Colors", () => {
           text: c.text,
           color: c.color,
         })),
+        warnings: diagnosticsForClass.map((d: any) => d.message),
       });
     }
 

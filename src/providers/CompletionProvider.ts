@@ -24,7 +24,7 @@ import {
 } from "@f12io/maple";
 import {
   isInsideClassAttribute,
-  MAPLE_CLASS_REGEX_NON_GLOBAL,
+  getExactWordRangeAtPosition,
 } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
 import { AliasCache } from "../helpers/alias-cache";
@@ -77,14 +77,11 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
 
     const customAliases = AliasCache.getAliases(document.uri);
 
-    // Get the exact word range the cursor is currently touching or right after
-    const wordRange = document.getWordRangeAtPosition(
-      position,
-      MAPLE_CLASS_REGEX_NON_GLOBAL,
-    );
-    let currentWord = wordRange ? document.getText(wordRange) : "";
+    const exactRange = getExactWordRangeAtPosition(document, position);
+    let wordRange = exactRange.wordRange;
+    let currentWord = exactRange.currentWord;
 
-    // If we are touching space, currentWord should be empty
+    // If we are touching space or quote, currentWord should be empty
     const linePrefix = document
       .lineAt(position)
       .text.substr(0, position.character);

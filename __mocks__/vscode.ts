@@ -3,6 +3,20 @@ export class Position {
     public readonly line: number,
     public readonly character: number,
   ) {}
+
+  translate(lineDelta?: number, characterDelta?: number): Position {
+    return new Position(
+      this.line + (lineDelta || 0),
+      this.character + (characterDelta || 0)
+    );
+  }
+
+  with(line?: number, character?: number): Position {
+    return new Position(
+      line !== undefined ? line : this.line,
+      character !== undefined ? character : this.character
+    );
+  }
 }
 
 export class Range {
@@ -21,6 +35,13 @@ export class Range {
       this.start = new Position(startLine as number, startCharacter as number);
       this.end = new Position(endLine as number, endCharacter as number);
     }
+  }
+
+  with(start?: Position, end?: Position): Range {
+    return new Range(
+      start !== undefined ? start : this.start,
+      end !== undefined ? end : this.end
+    );
   }
 }
 

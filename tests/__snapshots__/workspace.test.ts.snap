@@ -21521,6 +21521,16 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
   },
   {
+    "classValue": "bgc-#00f_!important",
+    "colors": [
+      {
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "#00f",
+      },
+    ],
+    "tokens": [],
+  },
+  {
     "classValue": "--alias-card=p-4",
     "colors": [],
     "tokens": [
@@ -21573,17 +21583,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
   },
   {
-    "classValue": "bgc-#00f_!important",
-    "colors": [
-      {
-        "color": "rgba(0, 0, 255, 1)",
-        "text": "#00f",
-      },
-    ],
-    "tokens": [],
-  },
-  {
-    "classValue": "bgc-red-10",
+    "classValue": "bgc-red-49",
     "colors": [],
     "tokens": [
       {
@@ -21595,25 +21595,17 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "red-10",
+        "text": "red-49",
         "type": "maple-value",
       },
     ],
   },
   {
-    "classValue": "md:invalid-maple-class-name",
+    "classValue": "bgc-red-951",
     "colors": [],
     "tokens": [
       {
-        "text": "md",
-        "type": "maple-mediaQuery",
-      },
-      {
-        "text": ":",
-        "type": "maple-separator",
-      },
-      {
-        "text": "invalid",
+        "text": "bgc",
         "type": "maple-utility",
       },
       {
@@ -21621,7 +21613,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "maple-class-name",
+        "text": "red-951",
         "type": "maple-value",
       },
     ],
@@ -21792,20 +21784,12 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "invalid-maple-class-name",
     "colors": [],
-    "tokens": [
-      {
-        "text": "invalid",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "maple-class-name",
-        "type": "maple-value",
-      },
-    ],
+    "tokens": [],
+  },
+  {
+    "classValue": "md:invalid-maple-class-name",
+    "colors": [],
+    "tokens": [],
   },
 ]
 `;

@@ -3,19 +3,25 @@ import {
   ABBREVIATIONS,
   BUILTIN_ALIASES,
   PSEUDO_CLASSES,
-  MEDIA_QUERIES,
   POPULAR_ABBREVIATIONS,
   CSS_OPTIONS,
   DEFAULT_CSS_VALUES,
-  GRADIENT_KEYS,
   GRADIENT_DIRECTIONS,
   PREDEFINED_VARIABLES,
-  COLOR_REGEX,
-  UNITLESS_REGEX,
-  ANGLE_REGEX,
-  TIME_REGEX,
   MULTI_VALUE_REGEX,
 } from "../mapleEngine/data";
+import {
+  OPTIONS,
+  PropertyHelper,
+  PROP_TYPE_COLOR,
+  PROP_TYPE_SPACE,
+  COLOR_MIN_TONE,
+  COLOR_MAX_TONE,
+  FUNCTION_KEYS,
+  PROP_UNIT_MAP,
+  DEFAULT_TIME_UNIT,
+  DEFAULT_ANGLE_UNIT,
+} from "@f12io/maple";
 import {
   isInsideClassAttribute,
   MAPLE_CLASS_REGEX_NON_GLOBAL,
@@ -133,8 +139,16 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     };
 
     // Suggest Media Queries and Custom Aliases
+    const mediaQueries = [
+      ...Object.keys(OPTIONS.breakpoints),
+      "dark",
+      "light",
+      "portrait",
+      "landscape",
+    ];
+
     if (isMedia && !hasPseudo) {
-      for (const mq of MEDIA_QUERIES) {
+      for (const mq of mediaQueries) {
         const item = createItem(
           `@${mq}:`,
           `@${mq}:`,
@@ -180,10 +194,8 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
       return new vscode.CompletionList(items, true);
     }
 
-    // Suggest Pseudo classes and Container Queries
     // If we haven't typed a hyphen in the active part, we can suggest pseudo-classes with colon
     if (!activeWord.includes("-") && !isMedia) {
-      console.log("isMedia", MEDIA_QUERIES[0]);
       for (const pc of PSEUDO_CLASSES) {
         const item = createItem(
           `${pc}:`,
@@ -198,7 +210,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
         item.sortText = `8-${pc}`;
         items.push(item);
       }
-      for (const mq of MEDIA_QUERIES) {
+      for (const mq of mediaQueries) {
         const item = createItem(
           `${mq}:`,
           `${typedPrefix}${mq}:`,
@@ -339,8 +351,9 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
 
       if (ABBREVIATIONS[mappedPrefix]) {
         const prop = ABBREVIATIONS[mappedPrefix];
-
-        const isColorProp = COLOR_REGEX.test(prop);
+        const kebabProp = prop.replace(/([A-Z])/g, "-$1").toLowerCase();
+        const propType = PropertyHelper.resolveType(kebabProp, prop);
+        const isColorProp = propType === PROP_TYPE_COLOR;
 
         if (activePrefix === "bgimg" || activePrefix === "bg") {
           const typedValue = checkWord.substring(activePrefix.length + 1);
@@ -360,8 +373,8 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
 
           if (doubleUnderscoreIdx === -1) {
             if (args.length === 1) {
-              for (const [gKey, gProp] of Object.entries(GRADIENT_KEYS)) {
-                if (matchesPrefix(gKey, lastArg)) {
+              for (const [gKey, gProp] of Object.entries(FUNCTION_KEYS)) {
+                if (gProp.includes("gradient") && matchesPrefix(gKey, lastArg)) {
                   const item = new vscode.CompletionItem(
                     `${baseClass}${gKey}`,
                     vscode.CompletionItemKind.Value,
@@ -437,7 +450,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                       colorName !== "black" &&
                       colorTyped.length > 0
                     ) {
-                      for (let i = 0; i <= 999; i++) {
+                      for (let i = COLOR_MIN_TONE; i <= COLOR_MAX_TONE; i += (i >= 100 ? 100 : 50)) {
                         const tone = i.toString();
                         const fullColor = `${colorName}-${tone}`;
                         if (matchesPrefix(fullColor, colorTyped)) {
@@ -542,7 +555,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                   colorName !== "black" &&
                   colorTyped.length > 0
                 ) {
-                  for (let i = 0; i <= 999; i++) {
+                  for (let i = COLOR_MIN_TONE; i <= COLOR_MAX_TONE; i += (i >= 100 ? 100 : 50)) {
                     const tone = i.toString();
                     const fullColor = `${colorName}-${tone}`;
                     if (matchesPrefix(fullColor, colorTyped)) {
@@ -615,11 +628,11 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
               multiPrefix = parts.slice(0, parts.length - 1).join("_") + "_";
             }
 
-            if (TIME_REGEX.test(prop)) {
+            if (PROP_UNIT_MAP[prop] === DEFAULT_TIME_UNIT) {
               sizes = ["75", "100", "150", "200", "300", "500", "700", "1000"];
-            } else if (ANGLE_REGEX.test(prop)) {
+            } else if (PROP_UNIT_MAP[prop] === DEFAULT_ANGLE_UNIT) {
               sizes = ["0", "15", "30", "45", "60", "90", "180", "360"];
-            } else if (UNITLESS_REGEX.test(prop)) {
+            } else if (propType !== PROP_TYPE_SPACE) {
               if (prop.toLowerCase().includes("opacity")) {
                 sizes = [
                   "0",

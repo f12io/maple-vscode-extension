@@ -3,9 +3,7 @@ import {
   COLOR_MAX_TONE,
   COLOR_MIN_TONE,
   convert,
-  PRECALCULATED_PROP_TYPES,
-  REGEX_COLOR_TOKEN,
-  REGEX_RESERVED_KEYWORDS,
+  PROP_TYPE_COLOR,
 } from "@f12io/maple";
 import * as vscode from "vscode";
 import {
@@ -14,9 +12,6 @@ import {
 } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
 import { parseMapleToken } from "../helpers/maple-parser";
-import { ABBREVIATIONS, BUILTIN_ALIASES } from "../mapleEngine/data";
-
-const validProperties = Object.keys(PRECALCULATED_PROP_TYPES || {});
 
 export function refreshDiagnostics(
   doc: vscode.TextDocument,
@@ -44,14 +39,7 @@ export function refreshDiagnostics(
     while ((wordMatch = MAPLE_CLASS_REGEX.exec(classValue))) {
       const cls = wordMatch[0];
 
-      const {
-        activeWord,
-        prefixes,
-        activePrefix,
-        activeParts,
-        isMaplePrefix,
-        isMapleIntent,
-      } = parseMapleToken(cls);
+      const { activeWord, isMapleIntent } = parseMapleToken(cls);
 
       if (!isMapleIntent) {
         continue;
@@ -62,69 +50,51 @@ export function refreshDiagnostics(
 
       if (isMapleIntent) {
         // Let the engine validate the syntax
-        const rule = buildRule(cls);
         const converted = convert(cls);
+        const rule = buildRule(cls);
 
-        if (cls.endsWith("!")) {
+        let isShadeError = false;
+        if (rule?.parsed?.propType === PROP_TYPE_COLOR) {
+          const parts = rule.parsed.utilVal.split("-");
+          if (parts.length > 1) {
+            const tonePart = parts[parts.length - 1];
+            const tone = parseInt(tonePart.split("/")[0]);
+            if (
+              !isNaN(tone) &&
+              (tone < COLOR_MIN_TONE || tone > COLOR_MAX_TONE)
+            ) {
+              hasError = true;
+              errorMsg = `Invalid shade: '${tone}'. Must be between ${COLOR_MIN_TONE} and ${COLOR_MAX_TONE}.`;
+              isShadeError = true;
+            }
+          }
+        }
+
+        if (isShadeError) {
+          // already set
+        } else if (cls.endsWith("!")) {
           hasError = true;
           errorMsg = `Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!${cls.slice(0, -1)}').`;
         } else if (
-          activeWord.startsWith("--alias-") &&
-          activeWord.includes("=") &&
-          instance.tagName &&
-          instance.tagName !== "html"
+          rule &&
+          rule.parsed &&
+          rule.parsed.utilOp === "-" &&
+          !rule.parsed.utilVal.startsWith("[") &&
+          rule.parsed.utilVal.includes("_!important")
         ) {
-          hasError = true;
-          errorMsg = `Maple aliases can only be defined on the 'html' element. Found on '${instance.tagName}'.`;
-        } else if ((!rule || !rule.content) && !converted) {
-          hasError = true;
-          errorMsg = `Invalid maple class: '${cls}'`;
-        } else if (rule && rule.parsed && rule.parsed.utilOp === "-" && !rule.parsed.utilVal.startsWith("[") && rule.parsed.utilVal.includes("_!important")) {
           hasError = true;
           errorMsg = `Invalid usage of '!important'. Use '=' operator or '[]' brackets for string literals.`;
         } else if (
-          !BUILTIN_ALIASES[activeWord] &&
-          activeWord.includes("-") &&
-          !activeWord.startsWith("--")
+          activeWord.startsWith("--alias-") &&
+          activeWord.includes("=")
         ) {
-          // Check for abbreviation typos if rule parses
-          if (
-            !ABBREVIATIONS[activePrefix] &&
-            !validProperties.includes(activePrefix) &&
-            prefixes.length > 0
-          ) {
+          if (instance.tagName && instance.tagName !== "html") {
             hasError = true;
-            errorMsg = `Unknown maple abbreviation: '${activePrefix}'`;
-          } else if (ABBREVIATIONS[activePrefix]) {
-            const prop = ABBREVIATIONS[activePrefix].toLowerCase();
-            const isColorProp =
-              prop.includes("color") ||
-              prop.includes("background") ||
-              prop.includes("fill") ||
-              prop.includes("stroke");
-
-            if (isColorProp) {
-              const utilVal = activeParts.slice(1).join("-");
-              const colorMatch = REGEX_COLOR_TOKEN.exec(utilVal);
-
-              if (colorMatch) {
-                const colorName = colorMatch[1];
-                const tonePart = colorMatch[2];
-
-                if (
-                  colorName &&
-                  !REGEX_RESERVED_KEYWORDS.test(colorName) &&
-                  tonePart
-                ) {
-                  const numTone = Number(tonePart);
-                  if (numTone < COLOR_MIN_TONE || numTone > COLOR_MAX_TONE) {
-                    hasError = true;
-                    errorMsg = `Invalid color tone: '${tonePart}'. Must be between ${COLOR_MIN_TONE} and ${COLOR_MAX_TONE}.`;
-                  }
-                }
-              }
-            }
+            errorMsg = `Maple aliases can only be defined on the 'html' element. Found on '${instance.tagName}'.`;
           }
+        } else if (!converted) {
+          hasError = true;
+          errorMsg = `Invalid maple class: '${cls}'`;
         }
       }
 

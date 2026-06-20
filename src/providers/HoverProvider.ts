@@ -4,7 +4,6 @@ import * as vscode from "vscode";
 import { AliasCache } from "../helpers/alias-cache";
 import { MAPLE_CLASS_REGEX_NON_GLOBAL } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
-import { parseMapleToken } from "../helpers/maple-parser";
 
 export class MapleHoverProvider implements vscode.HoverProvider {
   async provideHover(
@@ -20,7 +19,27 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     );
     if (!range) return null;
 
-    const word = document.getText(range);
+    let word = document.getText(range);
+
+    // MAPLE_CLASS_REGEX is greedy and might capture HTML brackets/quotes (e.g. `bgc-red"><!`).
+    // Split the captured string by quotes and whitespace to isolate the specific token under the cursor.
+    const cursorOffsetInWord = position.character - range.start.character;
+    const tokens = word.split(/(["'\s])/);
+    let currentOffset = 0;
+    for (const token of tokens) {
+      const start = currentOffset;
+      const end = currentOffset + token.length;
+      if (cursorOffsetInWord >= start && cursorOffsetInWord <= end) {
+        if (token !== '"' && token !== "'" && token.trim() !== "") {
+          word = token;
+        }
+        break;
+      }
+      currentOffset = end;
+    }
+    
+    // Strip trailing HTML characters if it still bled (e.g. `bgc-red>`)
+    word = word.replace(/[><]+$/, "").replace(/<![\-]*$/, "");
 
     // 1. Try to parse the class to separate prefixes from the core utility
     const parsedClass = parseClass(word);
@@ -84,12 +103,9 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     }
 
     // 2. Standard class handling
-    let { isMapleIntent } = parseMapleToken(word);
-
-    if (isMapleIntent || word.startsWith("--")) {
-      const css = convert(word);
-      if (css) {
-        const markdown = new vscode.MarkdownString();
+    const css = convert(word);
+    if (css) {
+      const markdown = new vscode.MarkdownString();
 
         try {
           const formattedCss = await prettier.format(css, {
@@ -103,8 +119,7 @@ export class MapleHoverProvider implements vscode.HoverProvider {
           markdown.appendCodeblock(css, "css");
         }
 
-        return new vscode.Hover(markdown);
-      }
+      return new vscode.Hover(markdown);
     }
 
     return null;

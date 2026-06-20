@@ -988,32 +988,36 @@
 
     <div class="-m-4!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="p-4!"><!-- Expected warning: Invalid usage of '!' --></div>
+    <div class="bgc-#00f_!important"><!-- Expexted important warning --></div>
+
     <div class="--alias-card=p-4">
       <!-- Expected warning: Invalid alias definition -->
     </div>
     <div class="@md:--alias-card=p-4">
       <!-- Expected warning: Invalid alias definition -->
     </div>
-    <div class="bgc-#00f_!important"><!-- Expexted important warning --></div>
-    <div class="bgc-red-10"><!-- Expected warning: Invalid shade --></div>
-    <div class="md:invalid-maple-class-name">
-      <!-- Expected warning: Unknown maple abbreviation -->
-    </div>
+
+    <div class="bgc-red-49"><!-- Expected warning: Invalid shade --></div>
+    <div class="bgc-red-951"><!-- Expected warning: Invalid shade --></div>
+
     <div class="p-2 p-4">
-      <!-- Expected warnings: Conflicted utility usage (2x) -->
+      <!-- Expected warning: Conflicted utility usage (2x) -->
     </div>
     <div class="md:bgc-red-500 md:bgc-blue-500">
-      <!-- Expected warnings: Conflicted utility usage (2x) -->
+      <!-- Expected warning: Conflicted utility usage (2x) -->
     </div>
     <div class="md:bgc-red-500 hover:bgc-blue-500">
-      <!-- No warning (different prefixes) -->
+      <!-- No warning: different prefixes -->
     </div>
 
     <div class="invalid=maple-class-name">
-      <!-- Expected warning: Unknown maple abbreviation -->
+      <!-- No warning: literal setter -->
     </div>
     <div class="@space(4)"><!-- Undefined alias, no highlight--></div>
     <div class="invalid-maple-class-name">
+      <!-- Regular class, no highlight -->
+    </div>
+    <div class="md:invalid-maple-class-name">
       <!-- Regular class, no highlight -->
     </div>
   </body>

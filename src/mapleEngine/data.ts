@@ -19,17 +19,7 @@ export const PSEUDO_CLASSES = [
   "after",
 ];
 
-export const MEDIA_QUERIES = [
-  "sm",
-  "md",
-  "lg",
-  "xl",
-  "2xl",
-  "dark",
-  "light",
-  "portrait",
-  "landscape",
-];
+
 
 export const PREDEFINED_VARIABLES = [
   { name: "--l-scale", description: "Lightness Scale Chain (e.g., 0.2)" },
@@ -330,14 +320,7 @@ export const DEFAULT_CSS_VALUES = [
   "revert-layer",
 ];
 
-export const GRADIENT_KEYS: Record<string, string> = {
-  linear: "linear-gradient",
-  radial: "radial-gradient",
-  conic: "conic-gradient",
-  rlinear: "repeating-linear-gradient",
-  rradial: "repeating-radial-gradient",
-  rconic: "repeating-conic-gradient",
-};
+
 
 export const GRADIENT_DIRECTIONS = [
   "to_top",
@@ -350,10 +333,5 @@ export const GRADIENT_DIRECTIONS = [
   "to_bottom_left",
 ];
 
-export const UNITLESS_REGEX =
-  /scale|opacity|weight|index|flex|lineHeight|aspectRatio|count|invert|brightness|contrast|grayscale|saturate|sepia/i;
-export const ANGLE_REGEX = /\brot\b|rotate|skew|hue/i;
-export const TIME_REGEX = /delay|duration|transition|animation/i;
 export const MULTI_VALUE_REGEX =
   /shadow|margin|padding|border|gap|inset|transition$|animation$|gridTemplate/i;
-export const COLOR_REGEX = /color|fill|stroke|background$|bg$/i;

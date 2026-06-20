@@ -1,7 +1,8 @@
 import { coco, createCoco, namedColors, parse } from "@f12io/coco";
-import { ABBREVIATIONS } from "../mapleEngine/data";
+import { ABBREVIATIONS, COLOR_MIN_TONE, COLOR_MAX_TONE } from "@f12io/maple";
 
-const COLOR_MID_TONE = 500;
+const COLOR_MID_TONE = COLOR_MIN_TONE + (COLOR_MAX_TONE - COLOR_MIN_TONE) / 2;
+const COLOR_REGEX = /color|fill|stroke|background$|bg$|shadow/i;
 
 function calculateNamedColorAndToneToHex(input: string) {
   const [nt, opacity] = input.split("/");
@@ -107,13 +108,19 @@ export const cocoWithResolver = createCoco({
   },
 });
 
-export const colorPrefixes = Object.keys(ABBREVIATIONS).filter((k) => {
-  const p = ABBREVIATIONS[k].toLowerCase();
-  return (
+const _colorPrefixes = new Set<string>();
+for (const [abbr, propValue] of Object.entries(ABBREVIATIONS)) {
+  const p = propValue.toLowerCase();
+  if (
     p.includes("color") ||
     p.includes("background") ||
     p.includes("fill") ||
     p.includes("stroke") ||
     p.includes("shadow")
-  );
-});
+  ) {
+    _colorPrefixes.add(abbr);
+    _colorPrefixes.add(propValue);
+    _colorPrefixes.add(propValue.replace(/([A-Z])/g, "-$1").toLowerCase());
+  }
+}
+export const colorPrefixes = Array.from(_colorPrefixes);

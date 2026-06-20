@@ -1,10 +1,11 @@
 import { coco } from "@f12io/coco";
 import {
   buildRule,
-  COLOR_MAX_TONE,
   COLOR_MIN_TONE,
+  COLOR_MAX_TONE,
   REGEX_COLOR_TOKEN,
   REGEX_RESERVED_KEYWORDS,
+  StringHelper,
 } from "@f12io/maple";
 import * as vscode from "vscode";
 import {
@@ -237,7 +238,7 @@ function extractColorFromUtility(
   if (prefix && value) {
     if (colorPrefixes.includes(prefix)) {
       const processTokens = (valueStr: string, absoluteOffset: number) => {
-        const tokens = tokenizeRespectingBracketsAndParens(valueStr);
+        const tokens = getTokens(valueStr);
         for (const token of tokens) {
           const colorPart = token.part;
           const tokenAbsoluteOffset = absoluteOffset + token.offset;
@@ -284,50 +285,37 @@ function extractColorFromUtility(
   }
 }
 
-function tokenizeRespectingBracketsAndParens(
-  str: string,
-): { part: string; offset: number }[] {
-  const parts: { part: string; offset: number }[] = [];
-  let currentPart = "";
-  let currentOffset = 0;
-  let bracketDepth = 0;
-  let parenDepth = 0;
-
-  for (let i = 0; i < str.length; i++) {
-    const char = str[i];
-    if (char === "[") {
-      bracketDepth++;
-      if (currentPart === "") currentOffset = i;
-      currentPart += char;
-    } else if (char === "]") {
-      bracketDepth = Math.max(0, bracketDepth - 1);
-      if (currentPart === "") currentOffset = i;
-      currentPart += char;
-    } else if (char === "(") {
-      parenDepth++;
-      if (currentPart === "") currentOffset = i;
-      currentPart += char;
-    } else if (char === ")") {
-      parenDepth = Math.max(0, parenDepth - 1);
-      if (currentPart === "") currentOffset = i;
-      currentPart += char;
-    } else if (
-      (char === "_" || char === "|" || char === ",") &&
-      bracketDepth === 0 &&
-      parenDepth === 0
-    ) {
-      if (currentPart) {
-        parts.push({ part: currentPart, offset: currentOffset });
+function getTokens(valueStr: string): { part: string; offset: number }[] {
+  const tokens: { part: string; offset: number }[] = [];
+  
+  const commaParts = StringHelper.split(valueStr, ',');
+  let currentCommaOffset = 0;
+  
+  for (const cPart of commaParts) {
+    const cIdx = valueStr.indexOf(cPart, currentCommaOffset);
+    currentCommaOffset = cIdx + cPart.length;
+    
+    const pipeParts = StringHelper.split(cPart, '|');
+    let currentPipeOffset = 0;
+    
+    for (const pPart of pipeParts) {
+      const pIdx = cPart.indexOf(pPart, currentPipeOffset);
+      currentPipeOffset = pIdx + pPart.length;
+      
+      const spaceParts = StringHelper.split(pPart, '_');
+      let currentSpaceOffset = 0;
+      
+      for (const sPart of spaceParts) {
+        if (!sPart) continue;
+        const sIdx = pPart.indexOf(sPart, currentSpaceOffset);
+        currentSpaceOffset = sIdx + sPart.length;
+        
+        tokens.push({
+          part: sPart,
+          offset: cIdx + pIdx + sIdx
+        });
       }
-      currentPart = "";
-      currentOffset = i + 1;
-    } else {
-      if (currentPart === "") currentOffset = i;
-      currentPart += char;
     }
   }
-  if (currentPart) {
-    parts.push({ part: currentPart, offset: currentOffset });
-  }
-  return parts;
+  return tokens;
 }

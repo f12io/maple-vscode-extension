@@ -1,14 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
-import * as vscode from "vscode";
-import { MapleCompletionProvider } from "../src/providers/CompletionProvider";
+import { describe, expect, it, vi } from 'vitest';
+import * as vscode from 'vscode';
+import { MapleCompletionProvider } from '../src/providers/CompletionProvider';
 
 // Mock Config to pretend extension is enabled
-vi.mock("../src/helpers/config", () => ({
+vi.mock('../src/helpers/config', () => ({
   isExtensionEnabled: () => true,
 }));
 
-describe("MapleCompletionProvider", () => {
-  it("should provide autocomplete items inside class attribute", () => {
+describe('MapleCompletionProvider', () => {
+  it('should provide autocomplete items inside class attribute', () => {
     const provider = new MapleCompletionProvider();
 
     // We create a mock document and position
@@ -19,13 +19,13 @@ describe("MapleCompletionProvider", () => {
         if (range.start.character === 0 && range.end.character === 16)
           return '<div class="bgc-';
         if (range.start.character === 12 && range.end.character === 16)
-          return "bgc-";
+          return 'bgc-';
         return text;
       },
       offsetAt: () => 16,
       getWordRangeAtPosition: () => new vscode.Range(0, 12, 0, 16),
       lineAt: () => ({ text: '<div class="bgc-"></div>' }),
-      uri: { fsPath: "/test/file.html" },
+      uri: { fsPath: '/test/file.html' },
     } as unknown as vscode.TextDocument;
 
     const position = new vscode.Position(0, 16);
@@ -46,20 +46,20 @@ describe("MapleCompletionProvider", () => {
     // Test that background color autocomplete proposes color values like bgc-red
     const hasRed = result.items.some(
       (item: vscode.CompletionItem) =>
-        item.label === "bgc-red" || item.insertText === "bgc-red",
+        item.label === 'bgc-red' || item.insertText === 'bgc-red',
     );
     expect(hasRed).toBe(true);
   });
 
-  it("should not provide items outside class attribute", () => {
+  it('should not provide items outside class attribute', () => {
     const provider = new MapleCompletionProvider();
 
     const mockDocument = {
-      getText: () => "<div>hello bgc-</div>",
+      getText: () => '<div>hello bgc-</div>',
       offsetAt: () => 15,
       getWordRangeAtPosition: () => new vscode.Range(0, 11, 0, 15),
-      lineAt: () => ({ text: "<div>hello bgc-</div>" }),
-      uri: { fsPath: "/test/file.html" },
+      lineAt: () => ({ text: '<div>hello bgc-</div>' }),
+      uri: { fsPath: '/test/file.html' },
     } as unknown as vscode.TextDocument;
 
     const position = new vscode.Position(0, 15);

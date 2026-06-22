@@ -1,12 +1,11 @@
-import { coco, createCoco, namedColors, parse } from "@f12io/coco";
-import { ABBREVIATIONS, COLOR_MIN_TONE, COLOR_MAX_TONE } from "@f12io/maple";
+import { coco, createCoco, namedColors, parse } from '@f12io/coco';
+import { ABBREVIATIONS, COLOR_MAX_TONE, COLOR_MIN_TONE } from '@f12io/maple';
 
 const COLOR_MID_TONE = COLOR_MIN_TONE + (COLOR_MAX_TONE - COLOR_MIN_TONE) / 2;
-const COLOR_REGEX = /color|fill|stroke|background$|bg$|shadow/i;
 
 function calculateNamedColorAndToneToHex(input: string) {
-  const [nt, opacity] = input.split("/");
-  const [name, t] = nt.split("-");
+  const [nt, opacity] = input.split('/');
+  const [name, t] = nt.split('-');
 
   const alpha = (opacity ? parseInt(opacity) : 100) / 100;
   const tone = t ? parseInt(t) : 500;
@@ -15,7 +14,7 @@ function calculateNamedColorAndToneToHex(input: string) {
     return undefined;
   }
   const hex = `#${namedColors[name]}`;
-  const oklch = coco(hex, "oklch");
+  const oklch = coco(hex, 'oklch');
   if (!oklch) return undefined;
   const converted = parse(oklch);
   if (!converted) {
@@ -25,12 +24,12 @@ function calculateNamedColorAndToneToHex(input: string) {
   const [l, c, h] = converted.coords;
   const lCalc = l + (amount > 0 ? 1 - l : l) * amount;
   const target = `oklch(${lCalc} ${c} ${h} / ${alpha})`;
-  return coco(target, "hex") || undefined;
+  return coco(target, 'hex') || undefined;
 }
 
 const baseColorOKLCH: Record<string, { l: number; c: number; h: number }> = {};
 for (const [name, hex] of Object.entries(namedColors)) {
-  const oklchStr = coco(`#${hex}`, "oklch");
+  const oklchStr = coco(`#${hex}`, 'oklch');
   if (oklchStr) {
     const parsed = parse(oklchStr);
     if (parsed) {
@@ -44,7 +43,7 @@ for (const [name, hex] of Object.entries(namedColors)) {
 }
 
 export function findNamedColorAndTone(hex: string): { id: string } | undefined {
-  const targetOklchStr = coco(hex, "oklch");
+  const targetOklchStr = coco(hex, 'oklch');
   if (!targetOklchStr) return undefined;
   const parsedTarget = parse(targetOklchStr);
   if (!parsedTarget) return undefined;
@@ -103,8 +102,8 @@ export const cocoWithResolver = createCoco({
     return calculateNamedColorAndToneToHex(name);
   },
   valueResolver: (color: any) => {
-    const hex6 = coco(color.meta?.originalInput || color.rgb, "hex6");
-    return findNamedColorAndTone(hex6 || "")?.id || undefined;
+    const hex6 = coco(color.meta?.originalInput || color.rgb, 'hex6');
+    return findNamedColorAndTone(hex6 || '')?.id || undefined;
   },
 });
 
@@ -112,15 +111,15 @@ const _colorPrefixes = new Set<string>();
 for (const [abbr, propValue] of Object.entries(ABBREVIATIONS)) {
   const p = propValue.toLowerCase();
   if (
-    p.includes("color") ||
-    p.includes("background") ||
-    p.includes("fill") ||
-    p.includes("stroke") ||
-    p.includes("shadow")
+    p.includes('color') ||
+    p.includes('background') ||
+    p.includes('fill') ||
+    p.includes('stroke') ||
+    p.includes('shadow')
   ) {
     _colorPrefixes.add(abbr);
     _colorPrefixes.add(propValue);
-    _colorPrefixes.add(propValue.replace(/([A-Z])/g, "-$1").toLowerCase());
+    _colorPrefixes.add(propValue.replace(/([A-Z])/g, '-$1').toLowerCase());
   }
 }
 export const colorPrefixes = Array.from(_colorPrefixes);

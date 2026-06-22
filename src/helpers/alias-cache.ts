@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as vscode from "vscode";
+import * as fs from 'fs';
+import * as vscode from 'vscode';
 
 /**
  * A workspace-wide cache that scans files for custom Maple aliases
@@ -17,11 +17,11 @@ export class AliasCache {
 
   public static init(context: vscode.ExtensionContext) {
     // Initial scan
-    this.scanAllWorkspaces();
+    void this.scanAllWorkspaces();
 
     // Setup File Watchers for all supported file types
     const watcher = vscode.workspace.createFileSystemWatcher(
-      "**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}",
+      '**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}',
     );
 
     context.subscriptions.push(watcher);
@@ -33,7 +33,7 @@ export class AliasCache {
     // When workspace folders change, do a full rescan
     context.subscriptions.push(
       vscode.workspace.onDidChangeWorkspaceFolders(() => {
-        this.scanAllWorkspaces();
+        void this.scanAllWorkspaces();
       }),
     );
   }
@@ -81,15 +81,15 @@ export class AliasCache {
     try {
       // Find files but exclude node_modules and .git
       const files = await vscode.workspace.findFiles(
-        "**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}",
-        "**/{node_modules,.git}/**",
+        '**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}',
+        '**/{node_modules,.git}/**',
       );
 
       for (const file of files) {
         await this.processFile(file, false);
       }
     } catch (error) {
-      console.error("Error scanning workspace for aliases:", error);
+      console.error('Error scanning workspace for aliases:', error);
     }
     this.onDidUpdateAliases.fire();
   }
@@ -100,7 +100,7 @@ export class AliasCache {
 
     try {
       // Read file content
-      const content = await fs.promises.readFile(uri.fsPath, "utf-8");
+      const content = await fs.promises.readFile(uri.fsPath, 'utf-8');
 
       const fileMap = new Map<string, string>();
       this.parseContentIntoMap(content, fileMap);
@@ -120,7 +120,7 @@ export class AliasCache {
       if (fireEvent) {
         this.onDidUpdateAliases.fire();
       }
-    } catch (error) {
+    } catch (ignoreError) {
       // Ignore file read errors (e.g. file locked or deleted)
     }
   }

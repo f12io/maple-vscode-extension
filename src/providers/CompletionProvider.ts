@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import * as vscode from 'vscode';
 import {
   ABBREVIATIONS,
   BUILTIN_ALIASES,
@@ -9,7 +9,7 @@ import {
   GRADIENT_DIRECTIONS,
   PREDEFINED_VARIABLES,
   MULTI_VALUE_REGEX,
-} from "../mapleEngine/data";
+} from '../mapleEngine/data';
 import {
   OPTIONS,
   PropertyHelper,
@@ -21,13 +21,13 @@ import {
   PROP_UNIT_MAP,
   DEFAULT_TIME_UNIT,
   DEFAULT_ANGLE_UNIT,
-} from "@f12io/maple";
+} from '@f12io/maple';
 import {
   isInsideClassAttribute,
   getExactWordRangeAtPosition,
-} from "../helpers/class-extractor";
-import { isExtensionEnabled } from "../helpers/config";
-import { AliasCache } from "../helpers/alias-cache";
+} from '../helpers/class-extractor';
+import { isExtensionEnabled } from '../helpers/config';
+import { AliasCache } from '../helpers/alias-cache';
 
 export class MapleCompletionProvider implements vscode.CompletionItemProvider {
   provideCompletionItems(
@@ -35,7 +35,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     position: vscode.Position,
     token: vscode.CancellationToken,
     context: vscode.CompletionContext,
-  ): vscode.ProviderResult<vscode.CompletionItem[] | vscode.CompletionList> {
+  ): vscode.ProviderResult<Array<vscode.CompletionItem> | vscode.CompletionList> {
     if (!isExtensionEnabled()) return undefined;
 
     const documentText = document.getText();
@@ -46,25 +46,24 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
       return undefined;
     }
 
-    const items: vscode.CompletionItem[] = [];
+    const items: Array<vscode.CompletionItem> = [];
 
     let isHtmlTag = false;
     const textBeforeCursor = document.getText(
       new vscode.Range(new vscode.Position(0, 0), position),
     );
-    const lastOpeningTagIndex = textBeforeCursor.lastIndexOf("<");
+    const lastOpeningTagIndex = textBeforeCursor.lastIndexOf('<');
     if (lastOpeningTagIndex !== -1) {
-      const tagMatch = textBeforeCursor
-        .substring(lastOpeningTagIndex)
-        .match(/^<\s*([a-zA-Z0-9\-]+)/);
-      if (tagMatch && tagMatch[1].toLowerCase() === "html") {
+      const tagMatch = /^<\s*([a-zA-Z0-9\-]+)/.exec(textBeforeCursor
+        .substring(lastOpeningTagIndex));
+      if (tagMatch?.[1].toLowerCase() === 'html') {
         isHtmlTag = true;
       }
     }
 
     if (isHtmlTag) {
       const aliasItem = new vscode.CompletionItem(
-        "--alias-",
+        '--alias-',
         vscode.CompletionItemKind.Keyword,
       );
       aliasItem.detail = `Define Custom Maple Alias`;
@@ -78,47 +77,47 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     const customAliases = AliasCache.getAliases(document.uri);
 
     const exactRange = getExactWordRangeAtPosition(document, position);
-    let wordRange = exactRange.wordRange;
+    const wordRange = exactRange.wordRange;
     let currentWord = exactRange.currentWord;
 
     // If we are touching space or quote, currentWord should be empty
     const linePrefix = document
       .lineAt(position)
       .text.substr(0, position.character);
-    if (!wordRange && linePrefix.endsWith(" ")) {
-      currentWord = "";
-    } else if (!wordRange && linePrefix.match(/["']$/)) {
-      currentWord = ""; // right after class="
+    if (!wordRange && linePrefix.endsWith(' ')) {
+      currentWord = '';
+    } else if (!wordRange && (/["']$/.exec(linePrefix))) {
+      currentWord = ''; // right after class="
     }
 
     // Strip framework prefixes for specific class bindings (e.g., [class.bg-red-500] or class:bg-red-500)
-    let frameworkPrefix = "";
-    if (currentWord.startsWith("[class.")) {
-      frameworkPrefix = "[class.";
+    let frameworkPrefix = '';
+    if (currentWord.startsWith('[class.')) {
+      frameworkPrefix = '[class.';
       currentWord = currentWord.substring(7);
-    } else if (currentWord.startsWith("class:")) {
-      frameworkPrefix = "class:";
+    } else if (currentWord.startsWith('class:')) {
+      frameworkPrefix = 'class:';
       currentWord = currentWord.substring(6);
     }
 
     // Strip custom alias prefix (e.g. --alias-btn=bgc-red)
-    if (currentWord.startsWith("--alias-")) {
-      const eqIndex = currentWord.indexOf("=");
+    if (currentWord.startsWith('--alias-')) {
+      const eqIndex = currentWord.indexOf('=');
       if (eqIndex !== -1) {
         frameworkPrefix += currentWord.substring(0, eqIndex + 1);
         currentWord = currentWord.substring(eqIndex + 1);
       }
     }
 
-    const isMedia = currentWord.startsWith("@");
-    const hasPseudo = currentWord.includes(":");
+    const isMedia = currentWord.startsWith('@');
+    const hasPseudo = currentWord.includes(':');
 
     // Split by ':' to see prefix (e.g. "hover:" or "@md:")
-    const parts = currentWord.split(":");
+    const parts = currentWord.split(':');
     const prefixParts = parts.slice(0, parts.length - 1);
     const activeWord = parts[parts.length - 1]; // what follows the last colon
     const typedPrefix =
-      prefixParts.length > 0 ? prefixParts.join(":") + ":" : "";
+      prefixParts.length > 0 ? prefixParts.join(':') + ':' : '';
 
     // Helper function to create an item that replaces the current word correctly
     const createItem = (
@@ -138,10 +137,10 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     // Suggest Media Queries and Custom Aliases
     const mediaQueries = [
       ...Object.keys(OPTIONS.breakpoints),
-      "dark",
-      "light",
-      "portrait",
-      "landscape",
+      'dark',
+      'light',
+      'portrait',
+      'landscape',
     ];
 
     if (isMedia && !hasPseudo) {
@@ -192,7 +191,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     }
 
     // If we haven't typed a hyphen in the active part, we can suggest pseudo-classes with colon
-    if (!activeWord.includes("-") && !isMedia) {
+    if (!activeWord.includes('-') && !isMedia) {
       for (const pc of PSEUDO_CLASSES) {
         const item = createItem(
           `${pc}:`,
@@ -238,7 +237,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
 
     // Predefined Variables (e.g. --l-shift)
     // Show if empty, or starts with -
-    if (activeWord === "" || activeWord.startsWith("-")) {
+    if (activeWord === '' || activeWord.startsWith('-')) {
       for (const variable of PREDEFINED_VARIABLES) {
         const item = createItem(
           `${variable.name}=`,
@@ -253,7 +252,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     }
 
     // If the user hasn't typed a hyphen in the activeWord, suggest prefixes and aliases
-    if (!activeWord.includes("-")) {
+    if (!activeWord.includes('-')) {
       for (const [abbr, prop] of Object.entries(ABBREVIATIONS)) {
         const item = createItem(
           `${abbr}-`,
@@ -262,12 +261,12 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
         );
         item.detail = `Maple: ${prop}`;
         item.documentation = new vscode.MarkdownString(
-          `Sets the \`${prop.replace(/([A-Z])/g, "-$1").toLowerCase()}\` CSS property.`,
+          `Sets the \`${prop.replace(/([A-Z])/g, '-$1').toLowerCase()}\` CSS property.`,
         );
 
         const popIndex = POPULAR_ABBREVIATIONS.indexOf(abbr);
         const sortPriority =
-          popIndex > -1 ? String(popIndex).padStart(3, "0") : "999";
+          popIndex > -1 ? String(popIndex).padStart(3, '0') : '999';
         item.sortText = `2-${sortPriority}-${abbr}`;
 
         items.push(item);
@@ -284,7 +283,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
         items.push(fullItem);
 
         // Add full key (kebab-case)
-        const kebabProp = prop.replace(/([A-Z])/g, "-$1").toLowerCase();
+        const kebabProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
         if (kebabProp !== prop) {
           const kebabItem = createItem(
             `${kebabProp}-`,
@@ -328,17 +327,17 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     } else {
       // User typed a prefix and a hyphen, e.g. "bgc-" or "-m-"
       const isNegative =
-        activeWord.startsWith("-") && !activeWord.startsWith("--");
+        activeWord.startsWith('-') && !activeWord.startsWith('--');
       const checkWord = isNegative ? activeWord.substring(1) : activeWord;
-      const activePrefix = checkWord.split("-")[0];
-      const negPrefix = isNegative ? "-" : "";
+      const activePrefix = checkWord.split('-')[0];
+      const negPrefix = isNegative ? '-' : '';
 
       let mappedPrefix = activePrefix;
       if (!ABBREVIATIONS[activePrefix]) {
         for (const [abbr, propValue] of Object.entries(ABBREVIATIONS)) {
           if (
             propValue === activePrefix ||
-            propValue.replace(/([A-Z])/g, "-$1").toLowerCase() === activePrefix
+            propValue.replace(/([A-Z])/g, '-$1').toLowerCase() === activePrefix
           ) {
             mappedPrefix = abbr;
             break;
@@ -348,30 +347,33 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
 
       if (ABBREVIATIONS[mappedPrefix]) {
         const prop = ABBREVIATIONS[mappedPrefix];
-        const kebabProp = prop.replace(/([A-Z])/g, "-$1").toLowerCase();
+        const kebabProp = prop.replace(/([A-Z])/g, '-$1').toLowerCase();
         const propType = PropertyHelper.resolveType(kebabProp, prop);
         const isColorProp = propType === PROP_TYPE_COLOR;
 
-        if (activePrefix === "bgimg" || activePrefix === "bg") {
+        if (activePrefix === 'bgimg' || activePrefix === 'bg') {
           const typedValue = checkWord.substring(activePrefix.length + 1);
           let argsString = typedValue;
-          const doubleUnderscoreIdx = typedValue.indexOf("__");
+          const doubleUnderscoreIdx = typedValue.indexOf('__');
           if (doubleUnderscoreIdx !== -1) {
             argsString = typedValue.substring(0, doubleUnderscoreIdx);
           }
 
-          const args = argsString.split("|");
+          const args = argsString.split('|');
           const lastArg = args[args.length - 1];
           const baseClass =
             `${typedPrefix}${negPrefix}${activePrefix}-` +
             (args.length > 1
-              ? args.slice(0, args.length - 1).join("|") + "|"
-              : "");
+              ? args.slice(0, args.length - 1).join('|') + '|'
+              : '');
 
           if (doubleUnderscoreIdx === -1) {
             if (args.length === 1) {
               for (const [gKey, gProp] of Object.entries(FUNCTION_KEYS)) {
-                if (gProp.includes("gradient") && matchesPrefix(gKey, lastArg)) {
+                if (
+                  gProp.includes('gradient') &&
+                  matchesPrefix(gKey, lastArg)
+                ) {
                   const item = new vscode.CompletionItem(
                     `${baseClass}${gKey}`,
                     vscode.CompletionItemKind.Value,
@@ -390,24 +392,24 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                     vscode.CompletionItemKind.Value,
                   );
                   if (wordRange) item.range = wordRange;
-                  item.detail = `Direction: ${dir.replace(/_/g, " ")}`;
+                  item.detail = `Direction: ${dir.replace(/_/g, ' ')}`;
                   item.sortText = `4-dir-${dir}`;
                   items.push(item);
                 }
               }
             }
 
-            const { namedColors } = require("@f12io/coco");
-            const colorArgs = lastArg.split("_");
+            const { namedColors } = require('@f12io/coco');
+            const colorArgs = lastArg.split('_');
             const colorTypedFull = colorArgs[0];
 
-            const hasOpacity = colorTypedFull.includes("/");
+            const hasOpacity = colorTypedFull.includes('/');
             let colorTyped = colorTypedFull;
-            let opacityTyped = "";
+            let opacityTyped = '';
             if (hasOpacity) {
-              const parts = colorTypedFull.split("/");
+              const parts = colorTypedFull.split('/');
               colorTyped = parts[0];
-              opacityTyped = parts[1] || "";
+              opacityTyped = parts[1] || '';
             }
 
             if (colorArgs.length === 1) {
@@ -421,7 +423,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                     );
                     if (wordRange) opItem.range = wordRange;
                     opItem.detail = `Opacity ${opStr}%`;
-                    opItem.sortText = `7-${opStr.padStart(3, "0")}`;
+                    opItem.sortText = `7-${opStr.padStart(3, '0')}`;
                     items.push(opItem);
                   }
                 }
@@ -443,11 +445,15 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                     }
 
                     if (
-                      colorName !== "white" &&
-                      colorName !== "black" &&
+                      colorName !== 'white' &&
+                      colorName !== 'black' &&
                       colorTyped.length > 0
                     ) {
-                      for (let i = COLOR_MIN_TONE; i <= COLOR_MAX_TONE; i += (i >= 100 ? 100 : 50)) {
+                      for (
+                        let i = COLOR_MIN_TONE;
+                        i <= COLOR_MAX_TONE;
+                        i += i >= 100 ? 100 : 50
+                      ) {
                         const tone = i.toString();
                         const fullColor = `${colorName}-${tone}`;
                         if (matchesPrefix(fullColor, colorTyped)) {
@@ -456,7 +462,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                             vscode.CompletionItemKind.Color,
                           );
                           if (wordRange) toneItem.range = wordRange;
-                          toneItem.sortText = `5-${colorName}-${tone.padStart(3, "0")}`;
+                          toneItem.sortText = `5-${colorName}-${tone.padStart(3, '0')}`;
                           items.push(toneItem);
                         }
                       }
@@ -473,19 +479,19 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
               }
             } else {
               const commonSuffixes = [
-                "0",
-                "%",
-                "50%",
-                "100%",
-                "0.25turn",
-                "0.5turn",
-                "0.75turn",
-                "1turn",
-                "45deg",
-                "90deg",
-                "180deg",
+                '0',
+                '%',
+                '50%',
+                '100%',
+                '0.25turn',
+                '0.5turn',
+                '0.75turn',
+                '1turn',
+                '45deg',
+                '90deg',
+                '180deg',
               ];
-              const colorPrefix = `${baseClass}${colorArgs.slice(0, colorArgs.length - 1).join("_")}_`;
+              const colorPrefix = `${baseClass}${colorArgs.slice(0, colorArgs.length - 1).join('_')}_`;
               const suffixTyped = colorArgs[colorArgs.length - 1];
               for (const suf of commonSuffixes) {
                 if (matchesPrefix(suf, suffixTyped)) {
@@ -502,15 +508,15 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
           }
         } else if (isColorProp) {
           const typedValue = checkWord.substring(activePrefix.length + 1);
-          const { namedColors } = require("@f12io/coco");
+          const { namedColors } = require('@f12io/coco');
 
-          const hasOpacity = typedValue.includes("/");
+          const hasOpacity = typedValue.includes('/');
           let colorTyped = typedValue;
-          let opacityTyped = "";
+          let opacityTyped = '';
           if (hasOpacity) {
-            const parts = typedValue.split("/");
+            const parts = typedValue.split('/');
             colorTyped = parts[0];
-            opacityTyped = parts[1] || "";
+            opacityTyped = parts[1] || '';
           }
 
           if (hasOpacity) {
@@ -523,7 +529,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                 );
                 if (wordRange) opItem.range = wordRange;
                 opItem.detail = `Opacity ${opStr}%`;
-                opItem.sortText = `7-${opStr.padStart(3, "0")}`;
+                opItem.sortText = `7-${opStr.padStart(3, '0')}`;
                 items.push(opItem);
               }
             }
@@ -548,11 +554,15 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
 
                 // Tones
                 if (
-                  colorName !== "white" &&
-                  colorName !== "black" &&
+                  colorName !== 'white' &&
+                  colorName !== 'black' &&
                   colorTyped.length > 0
                 ) {
-                  for (let i = COLOR_MIN_TONE; i <= COLOR_MAX_TONE; i += (i >= 100 ? 100 : 50)) {
+                  for (
+                    let i = COLOR_MIN_TONE;
+                    i <= COLOR_MAX_TONE;
+                    i += i >= 100 ? 100 : 50
+                  ) {
                     const tone = i.toString();
                     const fullColor = `${colorName}-${tone}`;
                     if (matchesPrefix(fullColor, colorTyped)) {
@@ -562,7 +572,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                       );
                       if (wordRange) toneItem.range = wordRange;
                       toneItem.detail = `${namedColors[colorName]} tone ${tone}`;
-                      toneItem.sortText = `5-${colorName}-${tone.padStart(3, "0")}`;
+                      toneItem.sortText = `5-${colorName}-${tone.padStart(3, '0')}`;
                       items.push(toneItem);
                     }
                   }
@@ -612,82 +622,82 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
               }
             }
           } else {
-            let sizes: string[] = [];
+            let sizes: Array<string> = [];
             let isFractionAllowed = false;
 
             let currentTypedValue = typedValue;
-            let multiPrefix = "";
-            let isMultiValue = MULTI_VALUE_REGEX.test(prop);
+            let multiPrefix = '';
+            const isMultiValue = MULTI_VALUE_REGEX.test(prop);
 
-            if (isMultiValue && typedValue.includes("_")) {
-              const parts = typedValue.split("_");
+            if (isMultiValue && typedValue.includes('_')) {
+              const parts = typedValue.split('_');
               currentTypedValue = parts[parts.length - 1];
-              multiPrefix = parts.slice(0, parts.length - 1).join("_") + "_";
+              multiPrefix = parts.slice(0, parts.length - 1).join('_') + '_';
             }
 
             if (PROP_UNIT_MAP[prop] === DEFAULT_TIME_UNIT) {
-              sizes = ["75", "100", "150", "200", "300", "500", "700", "1000"];
+              sizes = ['75', '100', '150', '200', '300', '500', '700', '1000'];
             } else if (PROP_UNIT_MAP[prop] === DEFAULT_ANGLE_UNIT) {
-              sizes = ["0", "15", "30", "45", "60", "90", "180", "360"];
+              sizes = ['0', '15', '30', '45', '60', '90', '180', '360'];
             } else if (propType !== PROP_TYPE_SPACE) {
-              if (prop.toLowerCase().includes("opacity")) {
+              if (prop.toLowerCase().includes('opacity')) {
                 sizes = [
-                  "0",
-                  "5",
-                  "10",
-                  "20",
-                  "25",
-                  "30",
-                  "40",
-                  "50",
-                  "60",
-                  "70",
-                  "75",
-                  "80",
-                  "90",
-                  "95",
-                  "100",
+                  '0',
+                  '5',
+                  '10',
+                  '20',
+                  '25',
+                  '30',
+                  '40',
+                  '50',
+                  '60',
+                  '70',
+                  '75',
+                  '80',
+                  '90',
+                  '95',
+                  '100',
                 ];
-              } else if (prop.toLowerCase().includes("weight")) {
+              } else if (prop.toLowerCase().includes('weight')) {
                 sizes = [
-                  "100",
-                  "200",
-                  "300",
-                  "400",
-                  "500",
-                  "600",
-                  "700",
-                  "800",
-                  "900",
+                  '100',
+                  '200',
+                  '300',
+                  '400',
+                  '500',
+                  '600',
+                  '700',
+                  '800',
+                  '900',
                 ];
-              } else if (prop.toLowerCase().includes("index")) {
+              } else if (prop.toLowerCase().includes('index')) {
                 sizes = [
-                  "0",
-                  "1",
-                  "2",
-                  "3",
-                  "4",
-                  "5",
-                  "10",
-                  "20",
-                  "30",
-                  "40",
-                  "50",
-                  "100",
+                  '0',
+                  '1',
+                  '2',
+                  '3',
+                  '4',
+                  '5',
+                  '10',
+                  '20',
+                  '30',
+                  '40',
+                  '50',
+                  '100',
                 ];
               } else {
                 sizes = [
-                  "0",
-                  "1",
-                  "2",
-                  "3",
-                  "4",
-                  "5",
-                  "6",
-                  "7",
-                  "8",
-                  "9",
-                  "10",
+                  '0',
+                  '1',
+                  '2',
+                  '3',
+                  '4',
+                  '5',
+                  '6',
+                  '7',
+                  '8',
+                  '9',
+                  '10',
                 ];
               }
             } else {
@@ -707,7 +717,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                 if (wordRange) item.range = wordRange;
                 item.detail = `Value ${size}`;
                 const numVal = isNaN(parseFloat(size)) ? 999 : parseFloat(size);
-                item.sortText = `4-${String(numVal * 100).padStart(6, "0")}`;
+                item.sortText = `4-${String(numVal * 100).padStart(6, '0')}`;
                 items.push(item);
               }
             }
@@ -715,7 +725,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
             // Add fraction values for generic numeric props (like width, height)
             if (
               isFractionAllowed &&
-              ["w", "h", "mnw", "mnh", "mxw", "mxh"].includes(activePrefix)
+              ['w', 'h', 'mnw', 'mnh', 'mxw', 'mxh'].includes(activePrefix)
             ) {
               const fractions = generateFractionValues();
               for (const frac of fractions) {
@@ -761,8 +771,8 @@ function matchesPrefix(val: string, prefix: string): boolean {
   return val.startsWith(prefix);
 }
 
-function generateSpacingValues(prefix: string): string[] {
-  const values: string[] = [];
+function generateSpacingValues(prefix: string): Array<string> {
+  const values: Array<string> = [];
 
   // Base values with decimals
   const baseValues = new Array(40).fill(1).map((_, i) => (i * 0.25).toString());
@@ -781,7 +791,7 @@ function generateSpacingValues(prefix: string): string[] {
   }
 
   // Add auto
-  baseValues.push("auto");
+  baseValues.push('auto');
   // Filter by prefix
   for (const val of baseValues) {
     if (matchesPrefix(val, prefix) && !values.includes(val)) {
@@ -792,7 +802,7 @@ function generateSpacingValues(prefix: string): string[] {
   return values;
 }
 
-function generateFractionValues(base: number = 12) {
+function generateFractionValues(base = 12) {
   const items = [];
   const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
 
@@ -806,7 +816,7 @@ function generateFractionValues(base: number = 12) {
 
     items.push({
       value: reduced,
-      sortIndex: `${i}/${base}`.padStart(5, "0"),
+      sortIndex: `${i}/${base}`.padStart(5, '0'),
       percentage: `${percentage.toFixed(2)}%`,
     });
   }

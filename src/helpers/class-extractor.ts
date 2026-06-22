@@ -7,10 +7,10 @@ export interface ClassInstance {
 
 function getTagNameBackwards(text: string, index: number): string | undefined {
   const prefix = text.substring(0, index);
-  const lastOpen = prefix.lastIndexOf("<");
-  const lastClose = prefix.lastIndexOf(">");
+  const lastOpen = prefix.lastIndexOf('<');
+  const lastClose = prefix.lastIndexOf('>');
   if (lastOpen !== -1 && lastOpen > lastClose) {
-    const match = text.substring(lastOpen + 1).match(/^\s*([a-zA-Z0-9\-]+)/);
+    const match = /^\s*([a-zA-Z0-9\-]+)/.exec(text.substring(lastOpen + 1));
     if (match) {
       return match[1].toLowerCase();
     }
@@ -23,7 +23,7 @@ export function extractStringsFromBraces(
   startRegex: RegExp,
   openChar: string,
   closeChar: string,
-  instances: ClassInstance[],
+  instances: Array<ClassInstance>,
 ) {
   let match: RegExpExecArray | null;
   while ((match = startRegex.exec(text)) !== null) {
@@ -38,13 +38,13 @@ export function extractStringsFromBraces(
       if (inString) {
         if (isEscaped) {
           isEscaped = false;
-        } else if (char === "\\") {
+        } else if (char === '\\') {
           isEscaped = true;
         } else if (char === quoteChar) {
           inString = false;
         }
       } else {
-        if (char === '"' || char === "'" || char === "`") {
+        if (char === '"' || char === "'" || char === '`') {
           inString = true;
           quoteChar = char;
         } else if (char === openChar) {
@@ -61,11 +61,11 @@ export function extractStringsFromBraces(
       const exprStart = match.index + match[0].length;
 
       const extractFromTemplateLiteral = (value: string, offset: number) => {
-        let currentStr = "";
+        let currentStr = '';
         let currentStart = offset;
         let j = 0;
         while (j < value.length) {
-          if (value.substring(j, j + 2) === "${") {
+          if (value.substring(j, j + 2) === '${') {
             if (currentStr.trim().length > 0) {
               instances.push({
                 value: currentStr,
@@ -74,13 +74,13 @@ export function extractStringsFromBraces(
                 tagName: getTagNameBackwards(text, match!.index),
               });
             }
-            currentStr = "";
+            currentStr = '';
             j += 2;
             let innerBraceCount = 1;
-            let innerExprStart = j;
+            const innerExprStart = j;
             while (j < value.length && innerBraceCount > 0) {
-              if (value[j] === "{") innerBraceCount++;
-              else if (value[j] === "}") innerBraceCount--;
+              if (value[j] === '{') innerBraceCount++;
+              else if (value[j] === '}') innerBraceCount--;
               j++;
             }
             const innerExpr = value.substring(innerExprStart, j - 1);
@@ -92,7 +92,7 @@ export function extractStringsFromBraces(
               const innerStart =
                 offset + innerExprStart + innerMatch.index + innerQuoteIdx + 1;
               const innerValue = innerMatch[2];
-              if (innerMatch[1] === "`") {
+              if (innerMatch[1] === '`') {
                 extractFromTemplateLiteral(innerValue, innerStart);
               } else if (innerValue.trim().length > 0) {
                 instances.push({
@@ -125,14 +125,14 @@ export function extractStringsFromBraces(
         const quoteIdx = strMatch[0].indexOf(strMatch[1]);
         const start = exprStart + strMatch.index + quoteIdx + 1;
         const value = strMatch[2];
-        if (strMatch[1] === "`") {
+        if (strMatch[1] === '`') {
           extractFromTemplateLiteral(value, start);
         } else if (value.trim().length > 0) {
           instances.push({
             value: value,
             start: start,
             end: start + value.length,
-            tagName: getTagNameBackwards(text, match!.index),
+            tagName: getTagNameBackwards(text, match.index),
           });
         }
       }
@@ -140,8 +140,8 @@ export function extractStringsFromBraces(
   }
 }
 
-export function extractAllClasses(text: string): ClassInstance[] {
-  const instances: ClassInstance[] = [];
+export function extractAllClasses(text: string): Array<ClassInstance> {
+  const instances: Array<ClassInstance> = [];
 
   // 1. Standard attributes: class="", className="", CssClass=""
   // Must be preceded by space or start of tag to avoid matching the "class" inside ":class" or "[class]"
@@ -223,8 +223,8 @@ export function extractAllClasses(text: string): ClassInstance[] {
   extractStringsFromBraces(
     text,
     /(?:class|className|classList)\s*=\s*\{/gi,
-    "{",
-    "}",
+    '{',
+    '}',
     instances,
   );
 
@@ -232,14 +232,14 @@ export function extractAllClasses(text: string): ClassInstance[] {
   extractStringsFromBraces(
     text,
     /(?:clsx|classNames|cva)\s*\(/gi,
-    "(",
-    ")",
+    '(',
+    ')',
     instances,
   );
 
   // Deduplicate instances by start offset to prevent double highlights/diagnostics
   // from overlapping extractors (e.g., className={clsx(...)})
-  const uniqueInstances: ClassInstance[] = [];
+  const uniqueInstances: Array<ClassInstance> = [];
   const seenStarts = new Set<number>();
   for (const instance of instances) {
     if (!seenStarts.has(instance.start)) {
@@ -287,7 +287,7 @@ export function isInsideClassAttribute(
 
   // The quote character used or backtick if React template literal
   const quote =
-    lastMatch[1] || lastMatch[2] || lastMatch[3] || lastMatch[4] || "`";
+    lastMatch[1] || lastMatch[2] || lastMatch[3] || lastMatch[4] || '`';
 
   // The string contents from the quote to the offset
   const insideString = prefix.substring(
@@ -312,10 +312,10 @@ export function getExactWordRangeAtPosition(
     position,
     MAPLE_CLASS_REGEX_NON_GLOBAL,
   );
-  let currentWord = wordRange ? document.getText(wordRange) : "";
+  const currentWord = wordRange ? document.getText(wordRange) : '';
 
   if (!wordRange) {
-    return { wordRange: undefined, currentWord: "" };
+    return { wordRange: undefined, currentWord: '' };
   }
 
   const cursorOffsetInWord = position.character - wordRange.start.character;
@@ -323,14 +323,14 @@ export function getExactWordRangeAtPosition(
   let currentOffset = 0;
 
   let finalRange = wordRange;
-  let finalWord = "";
+  let finalWord = '';
 
   for (const token of tokens) {
     const start = currentOffset;
     const end = currentOffset + token.length;
 
     if (cursorOffsetInWord > start && cursorOffsetInWord <= end) {
-      if (token !== '"' && token !== "'" && token.trim() !== "") {
+      if (token !== '"' && token !== "'" && token.trim() !== '') {
         finalWord = token;
         finalRange = wordRange.with(
           wordRange.start.translate(0, start),
@@ -338,11 +338,11 @@ export function getExactWordRangeAtPosition(
         );
       } else {
         finalRange = undefined;
-        finalWord = "";
+        finalWord = '';
       }
       break;
     } else if (cursorOffsetInWord === 0 && start === 0) {
-      if (token !== '"' && token !== "'" && token.trim() !== "") {
+      if (token !== '"' && token !== "'" && token.trim() !== '') {
         finalWord = token;
         finalRange = wordRange.with(
           wordRange.start.translate(0, start),
@@ -356,7 +356,7 @@ export function getExactWordRangeAtPosition(
 
   if (finalWord && finalRange) {
     // Strip trailing HTML characters if it still bled (e.g. `bgc-red>`)
-    const cleanWord = finalWord.replace(/[><]+$/, "").replace(/<![\-]*$/, "");
+    const cleanWord = finalWord.replace(/[><]+$/, '').replace(/<![\-]*$/, '');
     if (cleanWord !== finalWord) {
       const diff = finalWord.length - cleanWord.length;
       finalRange = finalRange.with(

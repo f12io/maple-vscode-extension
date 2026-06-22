@@ -7,14 +7,14 @@ export class Position {
   translate(lineDelta?: number, characterDelta?: number): Position {
     return new Position(
       this.line + (lineDelta || 0),
-      this.character + (characterDelta || 0)
+      this.character + (characterDelta || 0),
     );
   }
 
   with(line?: number, character?: number): Position {
     return new Position(
       line !== undefined ? line : this.line,
-      character !== undefined ? character : this.character
+      character !== undefined ? character : this.character,
     );
   }
 }
@@ -33,14 +33,14 @@ export class Range {
       this.end = startCharacter;
     } else {
       this.start = new Position(startLine as number, startCharacter as number);
-      this.end = new Position(endLine as number, endCharacter as number);
+      this.end = new Position(endLine!, endCharacter!);
     }
   }
 
   with(start?: Position, end?: Position): Range {
     return new Range(
       start !== undefined ? start : this.start,
-      end !== undefined ? end : this.end
+      end !== undefined ? end : this.end,
     );
   }
 }
@@ -88,8 +88,8 @@ export class CompletionItem {
 
 export class CompletionList {
   constructor(
-    public items: CompletionItem[] = [],
-    public isIncomplete: boolean = false,
+    public items: Array<CompletionItem> = [],
+    public isIncomplete = false,
   ) {}
 }
 
@@ -99,13 +99,13 @@ export class MarkdownString {
 
 export class SemanticTokensLegend {
   constructor(
-    public readonly tokenTypes: string[],
-    public readonly tokenModifiers: string[],
+    public readonly tokenTypes: Array<string>,
+    public readonly tokenModifiers: Array<string>,
   ) {}
 }
 
 export class SemanticTokensBuilder {
-  private tokens: any[] = [];
+  private tokens: Array<any> = [];
   constructor(public legend?: SemanticTokensLegend) {}
 
   push(
@@ -128,7 +128,7 @@ export class SemanticTokens {
 }
 
 export const workspace = {
-  getWorkspaceFolder: () => ({ uri: { fsPath: "/test" } }),
+  getWorkspaceFolder: () => ({ uri: { fsPath: '/test' } }),
 };
 
 export class Color {
@@ -145,4 +145,10 @@ export class ColorInformation {
     public readonly range: Range,
     public readonly color: Color,
   ) {}
+}
+
+export class EventEmitter<T> {
+  event: any = () => ({ dispose: () => {} });
+  fire(data?: T): void {}
+  dispose(): void {}
 }

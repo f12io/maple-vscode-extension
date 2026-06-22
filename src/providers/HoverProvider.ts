@@ -1,10 +1,10 @@
-import { convert, parseClass } from "@f12io/maple";
-import * as prettier from "prettier";
-import * as vscode from "vscode";
-import { AliasCache } from "../helpers/alias-cache";
-import { getExactWordRangeAtPosition } from "../helpers/class-extractor";
-import { isExtensionEnabled } from "../helpers/config";
-import { getAliasName, isAliasMarker } from "../helpers/maple-parser";
+import { convert, parseClass } from '@f12io/maple';
+import * as prettier from 'prettier';
+import * as vscode from 'vscode';
+import { AliasCache } from '../helpers/alias-cache';
+import { getExactWordRangeAtPosition } from '../helpers/class-extractor';
+import { isExtensionEnabled } from '../helpers/config';
+import { getAliasName, isAliasMarker } from '../helpers/maple-parser';
 
 export class MapleHoverProvider implements vscode.HoverProvider {
   async provideHover(
@@ -17,12 +17,12 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     const exactRange = getExactWordRangeAtPosition(document, position);
     if (!exactRange.wordRange) return null;
 
-    let word = exactRange.currentWord;
+    const word = exactRange.currentWord;
 
     // 1. Try to parse the class to separate prefixes from the core utility
     const parsedClass = parseClass(word);
     if (parsedClass) {
-      let coreUtil = parsedClass.utilKey || "";
+      const coreUtil = parsedClass.utilKey || '';
 
       // Check if it's an alias
       if (isAliasMarker(coreUtil)) {
@@ -31,15 +31,16 @@ export class MapleHoverProvider implements vscode.HoverProvider {
 
         if (customAliases.has(aliasName)) {
           const aliasExpansion = customAliases.get(aliasName)!;
-          const utilities = aliasExpansion.split(";");
-          
+          const utilities = aliasExpansion.split(';');
+
           // Re-attach original prefixes (e.g. "@dark:^hover:")
           const srcClass = parsedClass.srcClass || word;
           const prefixEndIdx = srcClass.lastIndexOf(coreUtil);
-          const prefix = prefixEndIdx > 0 ? srcClass.substring(0, prefixEndIdx) : "";
+          const prefix =
+            prefixEndIdx > 0 ? srcClass.substring(0, prefixEndIdx) : '';
 
-          let expandedCss = "";
-          const expandedUtils: string[] = [];
+          let expandedCss = '';
+          const expandedUtils: Array<string> = [];
 
           for (const util of utilities) {
             if (!util) continue;
@@ -52,26 +53,26 @@ export class MapleHoverProvider implements vscode.HoverProvider {
               if (targetSelector && originalSelector) {
                 css = css.split(targetSelector).join(originalSelector);
               }
-              expandedCss += css + "\n";
+              expandedCss += css + '\n';
             }
           }
 
           const markdown = new vscode.MarkdownString();
           markdown.appendMarkdown(
-            `**Custom Maple Alias**\n\nExpands to: \`${expandedUtils.join(" ")}\``,
+            `**Custom Maple Alias**\n\nExpands to: \`${expandedUtils.join(' ')}\``,
           );
 
           if (expandedCss) {
             try {
               const formattedCss = await prettier.format(expandedCss, {
-                parser: "css",
+                parser: 'css',
                 printWidth: 80,
                 tabWidth: 2,
                 useTabs: false,
               });
-              markdown.appendCodeblock(formattedCss, "css");
-            } catch (e) {
-              markdown.appendCodeblock(expandedCss, "css");
+              markdown.appendCodeblock(formattedCss, 'css');
+            } catch (ignoreError) {
+              markdown.appendCodeblock(expandedCss, 'css');
             }
           }
 
@@ -85,17 +86,17 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     if (css) {
       const markdown = new vscode.MarkdownString();
 
-        try {
-          const formattedCss = await prettier.format(css, {
-            parser: "css",
-            printWidth: 80,
-            tabWidth: 2,
-            useTabs: false,
-          });
-          markdown.appendCodeblock(formattedCss, "css");
-        } catch (e) {
-          markdown.appendCodeblock(css, "css");
-        }
+      try {
+        const formattedCss = await prettier.format(css, {
+          parser: 'css',
+          printWidth: 80,
+          tabWidth: 2,
+          useTabs: false,
+        });
+        markdown.appendCodeblock(formattedCss, 'css');
+      } catch (ignoreError) {
+        markdown.appendCodeblock(css, 'css');
+      }
 
       return new vscode.Hover(markdown);
     }

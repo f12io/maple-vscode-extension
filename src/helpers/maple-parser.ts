@@ -1,29 +1,29 @@
-import { convert, parseClass } from "@f12io/maple";
-import { ABBREVIATIONS, BUILTIN_ALIASES } from "../mapleEngine/data";
+import { convert, parseClass } from '@f12io/maple';
+import { ABBREVIATIONS, BUILTIN_ALIASES } from '../mapleEngine/data';
 
 export interface MapleTokenInfo {
   activeWord: string;
-  prefixes: string[];
-  activeParts: string[];
+  prefixes: Array<string>;
+  activeParts: Array<string>;
   activePrefix: string;
   isMaplePrefix: boolean;
   isMapleIntent: boolean;
 }
 
 export function isAliasMarker(word: string): boolean {
-  return word.startsWith("@");
+  return word.startsWith('@');
 }
 
 export function isAliasDefinition(word: string): boolean {
-  return word.startsWith("--alias-");
+  return word.startsWith('--alias-');
 }
 
 export function isVariable(word: string): boolean {
-  return word.startsWith("--") && !isAliasDefinition(word);
+  return word.startsWith('--') && !isAliasDefinition(word);
 }
 
 export function stripImportant(word: string): string {
-  return word.replace(/!$/, "");
+  return word.replace(/!$/, '');
 }
 
 export function getAliasName(word: string): string {
@@ -76,28 +76,28 @@ export function parseMapleToken(word: string): MapleTokenInfo {
       activeWord: word,
       prefixes: [],
       activeParts: [],
-      activePrefix: "",
+      activePrefix: '',
       isMaplePrefix: false,
       isMapleIntent: false,
     };
   }
 
-  const utilOp = parsed.utilOp || "";
-  const utilVal = parsed.utilVal || "";
+  const utilOp = parsed.utilOp || '';
+  const utilVal = parsed.utilVal || '';
   const baseKey =
-    parsed.utilKey || parsed.propKeyKebab || parsed.propKeyCamel || "";
+    parsed.utilKey || parsed.propKeyKebab || parsed.propKeyCamel || '';
   const activeWord = baseKey + utilOp + utilVal;
 
-  const prefixes: string[] = [];
+  const prefixes: Array<string> = [];
   if (parsed.mediaQuery) {
-    prefixes.push(...parsed.mediaQuery.split(":"));
+    prefixes.push(...parsed.mediaQuery.split(':'));
   }
   if (parsed.parentSel) prefixes.push(`^${parsed.parentSel}`);
   if (parsed.selfSel) prefixes.push(`&${parsed.selfSel}`);
   if (parsed.childSel) prefixes.push(`*${parsed.childSel}`);
 
   const activePrefix = parsed.utilKey;
-  const activeParts = [parsed.utilKey, ...utilVal.split("-")];
+  const activeParts = [parsed.utilKey, ...utilVal.split('-')];
 
   const cleanActiveWord = isAliasMarker(activeWord)
     ? activeWord.substring(1)

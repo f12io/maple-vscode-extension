@@ -4,14 +4,14 @@ import {
   COLOR_MAX_TONE,
   COLOR_MIN_TONE,
   PROP_TYPE_COLOR,
-} from "@f12io/maple";
-import * as vscode from "vscode";
-import { AliasCache } from "../helpers/alias-cache";
+} from '@f12io/maple';
+import * as vscode from 'vscode';
+import { AliasCache } from '../helpers/alias-cache';
 import {
   extractAllClasses,
   MAPLE_CLASS_REGEX,
-} from "../helpers/class-extractor";
-import { isExtensionEnabled } from "../helpers/config";
+} from '../helpers/class-extractor';
+import { isExtensionEnabled } from '../helpers/config';
 import {
   checkConverted,
   getAliasName,
@@ -19,7 +19,7 @@ import {
   isAliasMarker,
   parseMapleToken,
   stripQuotes,
-} from "../helpers/maple-parser";
+} from '../helpers/maple-parser';
 
 export function refreshDiagnostics(
   doc: vscode.TextDocument,
@@ -30,7 +30,7 @@ export function refreshDiagnostics(
     return;
   }
 
-  const diagnostics: vscode.Diagnostic[] = [];
+  const diagnostics: Array<vscode.Diagnostic> = [];
   const text = doc.getText();
 
   const classInstances = extractAllClasses(text);
@@ -59,20 +59,20 @@ export function refreshDiagnostics(
       }
 
       let hasError = false;
-      let errorMsg = "";
+      let errorMsg = '';
 
       if (isMapleIntent) {
         // Let the engine validate the syntax
         const converted = checkConverted(cls);
-        
+
         const rule = buildRule(cls);
 
         let isShadeError = false;
         if (rule?.parsed?.propType === PROP_TYPE_COLOR) {
-          const parts = rule.parsed.utilVal.split("-");
+          const parts = rule.parsed.utilVal.split('-');
           if (parts.length > 1) {
             const tonePart = parts[parts.length - 1];
-            const tone = parseInt(tonePart.split("/")[0]);
+            const tone = parseInt(tonePart.split('/')[0]);
             if (
               !isNaN(tone) &&
               (tone < COLOR_MIN_TONE || tone > COLOR_MAX_TONE)
@@ -86,29 +86,26 @@ export function refreshDiagnostics(
 
         if (isShadeError) {
           // already set
-        } else if (cls.endsWith("!")) {
+        } else if (cls.endsWith('!')) {
           hasError = true;
           errorMsg = `Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!${cls.slice(0, -1)}').`;
         } else if (
-          rule &&
-          rule.parsed &&
-          rule.parsed.utilOp === "-" &&
-          !rule.parsed.utilVal.startsWith("[") &&
-          rule.parsed.utilVal.includes("_!important")
+          rule?.parsed?.utilOp === '-' &&
+          !rule.parsed.utilVal.startsWith('[') &&
+          rule.parsed.utilVal.includes('_!important')
         ) {
           hasError = true;
           errorMsg = `Invalid usage of '!important'. Use '=' operator or '[]' brackets for string literals.`;
-        } else if (
-          isAliasDefinition(activeWord) &&
-          activeWord.includes("=")
-        ) {
-          if (instance.tagName && instance.tagName !== "html") {
+        } else if (isAliasDefinition(activeWord) && activeWord.includes('=')) {
+          if (instance.tagName && instance.tagName !== 'html') {
             hasError = true;
             errorMsg = `Maple aliases can only be defined on the 'html' element. Found on '${instance.tagName}'.`;
           }
         } else if (!converted) {
           // Check if it's a valid alias before flagging as invalid
-          const rawAliasBase = activeWord.replace(/=$/, "").replace(/\(.*\)$/, "");
+          const rawAliasBase = activeWord
+            .replace(/=$/, '')
+            .replace(/\(.*\)$/, '');
           const aliasName = getAliasName(rawAliasBase);
           let isAlias = false;
 
@@ -142,7 +139,7 @@ export function refreshDiagnostics(
           errorMsg,
           vscode.DiagnosticSeverity.Warning,
         );
-        diagnostic.source = "Maple";
+        diagnostic.source = 'Maple';
         diagnostics.push(diagnostic);
       } else if (isMapleIntent) {
         // If it's valid, check for conflicts
@@ -170,7 +167,7 @@ export function refreshDiagnostics(
                   `Conflicted utility usage: '${conflictKey}'`,
                   vscode.DiagnosticSeverity.Warning,
                 );
-                firstDiagnostic.source = "Maple";
+                firstDiagnostic.source = 'Maple';
                 diagnostics.push(firstDiagnostic);
               }
 
@@ -179,7 +176,7 @@ export function refreshDiagnostics(
                 `Conflicted utility usage: '${conflictKey}'`,
                 vscode.DiagnosticSeverity.Warning,
               );
-              diagnostic.source = "Maple";
+              diagnostic.source = 'Maple';
               diagnostics.push(diagnostic);
             } else {
               seenSelectors.set(conflictKey, { range, isAdded: false });

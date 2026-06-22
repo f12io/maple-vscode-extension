@@ -1,4 +1,4 @@
-import { coco } from "@f12io/coco";
+import { coco } from '@f12io/coco';
 import {
   buildRule,
   COLOR_MAX_TONE,
@@ -6,27 +6,27 @@ import {
   REGEX_COLOR_TOKEN,
   REGEX_RESERVED_KEYWORDS,
   StringHelper,
-} from "@f12io/maple";
-import * as vscode from "vscode";
+} from '@f12io/maple';
+import * as vscode from 'vscode';
 import {
   extractAllClasses,
   MAPLE_CLASS_REGEX,
-} from "../helpers/class-extractor";
+} from '../helpers/class-extractor';
 import {
   cocoWithResolver,
   colorPrefixes,
   findNamedColorAndTone,
-} from "../helpers/color-helpers";
-import { isExtensionEnabled } from "../helpers/config";
+} from '../helpers/color-helpers';
+import { isExtensionEnabled } from '../helpers/config';
 
 export class MapleColorProvider implements vscode.DocumentColorProvider {
   public provideDocumentColors(
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
-  ): vscode.ProviderResult<vscode.ColorInformation[]> {
+  ): vscode.ProviderResult<Array<vscode.ColorInformation>> {
     if (!isExtensionEnabled()) return [];
 
-    const colors: vscode.ColorInformation[] = [];
+    const colors: Array<vscode.ColorInformation> = [];
     const text = document.getText();
     const classInstances = extractAllClasses(text);
 
@@ -49,10 +49,10 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
 
         if (word.length === 0) continue;
 
-        if (word.startsWith("--") && word.includes("=")) {
-          const equalsIdx = word.indexOf("=");
+        if (word.startsWith('--') && word.includes('=')) {
+          const equalsIdx = word.indexOf('=');
           const rightSide = word.substring(equalsIdx + 1);
-          const utilities = rightSide.split(";");
+          const utilities = rightSide.split(';');
 
           let currentOffset = wordOffset + equalsIdx + 1;
           for (const util of utilities) {
@@ -72,7 +72,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     color: vscode.Color,
     context: { document: vscode.TextDocument; range: vscode.Range },
     token: vscode.CancellationToken,
-  ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+  ): vscode.ProviderResult<Array<vscode.ColorPresentation>> {
     const r = Math.round(color.red * 255);
     const g = Math.round(color.green * 255);
     const b = Math.round(color.blue * 255);
@@ -83,10 +83,10 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
       color.alpha < 1
         ? `rgba(${r},${g},${b},${color.alpha})`
         : `rgb(${r},${g},${b})`;
-    const hex6 = coco(rgbaStr, "hex6") || "";
+    const hex6 = coco(rgbaStr, 'hex6') || '';
 
     const namedResult = findNamedColorAndTone(hex6);
-    let namedStr = "";
+    let namedStr = '';
     if (namedResult) {
       namedStr = namedResult.id;
       if (a < 100) {
@@ -94,11 +94,9 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
       }
     }
 
-    const hexStr = coco(rgbaStr, "hex8") || rgbaStr;
-    const oklchStrRaw = coco(rgbaStr, "oklch");
-    const oklchStr = oklchStrRaw ? oklchStrRaw.replace(/ /g, "_") : "";
-
-    const formats: string[] = [];
+    const hexStr = coco(rgbaStr, 'hex8') || rgbaStr;
+    const oklchStrRaw = coco(rgbaStr, 'oklch');
+    const oklchStr = oklchStrRaw ? oklchStrRaw.replace(/ /g, '_') : '';
 
     const startOffset = context.document.offsetAt(context.range.start);
     const endOffset = context.document.offsetAt(context.range.end);
@@ -117,7 +115,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
           context.document.positionAt(endOffset + 1),
         ),
       );
-      if (charBefore === "[" && charAfter === "]") {
+      if (charBefore === '[' && charAfter === ']') {
         isSurroundedByBrackets = true;
       }
     }
@@ -130,7 +128,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
       : context.range;
 
     let canUseNamedColor = false;
-    let operatorChar = "";
+    let operatorChar = '';
 
     if (isSurroundedByBrackets && startOffset > 1) {
       operatorChar = context.document.getText(
@@ -149,25 +147,25 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     }
 
     if (
-      operatorChar === "-" ||
-      operatorChar === "_" ||
-      operatorChar === "|" ||
-      operatorChar === "("
+      operatorChar === '-' ||
+      operatorChar === '_' ||
+      operatorChar === '|' ||
+      operatorChar === '('
     ) {
       canUseNamedColor = true;
     }
 
     const originalText = context.document.getText(context.range);
     const innerText =
-      originalText.startsWith("[") && originalText.endsWith("]")
+      originalText.startsWith('[') && originalText.endsWith(']')
         ? originalText.substring(1, originalText.length - 1)
         : originalText;
 
-    let preferredFormat = "named";
-    if (innerText.startsWith("oklch")) preferredFormat = "oklch";
-    else if (innerText.startsWith("rgb") || innerText.startsWith("rgba"))
-      preferredFormat = "rgb";
-    else if (innerText.startsWith("#")) preferredFormat = "hex";
+    let preferredFormat = 'named';
+    if (innerText.startsWith('oklch')) preferredFormat = 'oklch';
+    else if (innerText.startsWith('rgb') || innerText.startsWith('rgba'))
+      preferredFormat = 'rgb';
+    else if (innerText.startsWith('#')) preferredFormat = 'hex';
 
     const colorLabels = {
       named: namedStr,
@@ -176,37 +174,37 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
       hex: hexStr,
     };
 
-    const orderedFormats: (keyof typeof colorLabels)[] = [];
+    const orderedFormats: Array<keyof typeof colorLabels> = [];
 
     // Push the preferred format first
-    if (preferredFormat === "named" && namedStr && canUseNamedColor) {
-      orderedFormats.push("named");
-    } else if (preferredFormat === "oklch" && oklchStr) {
-      orderedFormats.push("oklch");
-    } else if (preferredFormat === "rgb") {
-      orderedFormats.push("rgb");
-    } else if (preferredFormat === "hex") {
-      orderedFormats.push("hex");
+    if (preferredFormat === 'named' && namedStr && canUseNamedColor) {
+      orderedFormats.push('named');
+    } else if (preferredFormat === 'oklch' && oklchStr) {
+      orderedFormats.push('oklch');
+    } else if (preferredFormat === 'rgb') {
+      orderedFormats.push('rgb');
+    } else if (preferredFormat === 'hex') {
+      orderedFormats.push('hex');
     }
 
     // Then push the rest
-    if (preferredFormat !== "named" && namedStr && canUseNamedColor) {
-      orderedFormats.push("named");
+    if (preferredFormat !== 'named' && namedStr && canUseNamedColor) {
+      orderedFormats.push('named');
     }
-    if (preferredFormat !== "oklch" && oklchStr) {
-      orderedFormats.push("oklch");
+    if (preferredFormat !== 'oklch' && oklchStr) {
+      orderedFormats.push('oklch');
     }
-    if (preferredFormat !== "rgb") {
-      orderedFormats.push("rgb");
+    if (preferredFormat !== 'rgb') {
+      orderedFormats.push('rgb');
     }
-    if (preferredFormat !== "hex") {
-      orderedFormats.push("hex");
+    if (preferredFormat !== 'hex') {
+      orderedFormats.push('hex');
     }
 
     return orderedFormats.map((formatName) => {
-      const label = colorLabels[formatName]!;
+      const label = colorLabels[formatName];
       // Non-named colors are always wrapped in brackets for the actual text edit to ensure CSS/Maple validity
-      const textToInsert = formatName === "named" ? label : `[${label}]`;
+      const textToInsert = formatName === 'named' ? label : `[${label}]`;
 
       const presentation = new vscode.ColorPresentation(label);
       presentation.textEdit = new vscode.TextEdit(editRange, textToInsert);
@@ -216,7 +214,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
 }
 
 function isValidColorTone(colorStr: string): boolean {
-  if (colorStr.startsWith("[") && colorStr.endsWith("]")) return true;
+  if (colorStr.startsWith('[') && colorStr.endsWith(']')) return true;
 
   const colorMatch = REGEX_COLOR_TOKEN.exec(colorStr);
   if (colorMatch) {
@@ -237,10 +235,10 @@ function extractColorFromUtility(
   utilStr: string,
   absoluteIndex: number,
   document: vscode.TextDocument,
-  colors: vscode.ColorInformation[],
+  colors: Array<vscode.ColorInformation>,
 ) {
   const rule = buildRule(utilStr);
-  if (!rule || !rule.parsed) return;
+  if (!rule?.parsed) return;
 
   const prefix = rule.parsed.utilKey;
   const value = rule.parsed.utilVal;
@@ -253,20 +251,21 @@ function extractColorFromUtility(
           const colorPart = token.part;
           const tokenAbsoluteOffset = absoluteOffset + token.offset;
 
-          if (colorPart.startsWith("[") && colorPart.endsWith("]")) {
+          if (colorPart.startsWith('[') && colorPart.endsWith(']')) {
             const innerContent = colorPart.substring(1, colorPart.length - 1);
             processTokens(innerContent, tokenAbsoluteOffset + 1);
           } else {
             if (!isValidColorTone(colorPart)) continue;
 
             const rgbString = cocoWithResolver(
-              colorPart.replace(/_/g, " "),
-              "rgb",
+              colorPart.replace(/_/g, ' '),
+              'rgb',
             );
             if (rgbString) {
-              const rgbMatch = rgbString.match(
-                /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,
-              );
+              const rgbMatch =
+                /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(
+                  rgbString,
+                );
               if (rgbMatch) {
                 const r = parseFloat(rgbMatch[1]) / 255;
                 const g = parseFloat(rgbMatch[2]) / 255;
@@ -295,24 +294,24 @@ function extractColorFromUtility(
   }
 }
 
-function getTokens(valueStr: string): { part: string; offset: number }[] {
-  const tokens: { part: string; offset: number }[] = [];
+function getTokens(valueStr: string): Array<{ part: string; offset: number }> {
+  const tokens: Array<{ part: string; offset: number }> = [];
 
-  const commaParts = StringHelper.split(valueStr, ",");
+  const commaParts = StringHelper.split(valueStr, ',');
   let currentCommaOffset = 0;
 
   for (const cPart of commaParts) {
     const cIdx = valueStr.indexOf(cPart, currentCommaOffset);
     currentCommaOffset = cIdx + cPart.length;
 
-    const pipeParts = StringHelper.split(cPart, "|");
+    const pipeParts = StringHelper.split(cPart, '|');
     let currentPipeOffset = 0;
 
     for (const pPart of pipeParts) {
       const pIdx = cPart.indexOf(pPart, currentPipeOffset);
       currentPipeOffset = pIdx + pPart.length;
 
-      const spaceParts = StringHelper.split(pPart, "_");
+      const spaceParts = StringHelper.split(pPart, '_');
       let currentSpaceOffset = 0;
 
       for (const sPart of spaceParts) {

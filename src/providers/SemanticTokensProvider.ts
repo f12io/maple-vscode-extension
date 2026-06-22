@@ -1,38 +1,37 @@
-import { BUILTIN_ALIASES, parseClass } from "@f12io/maple";
-import * as vscode from "vscode";
-import { AliasCache } from "../helpers/alias-cache";
+import { BUILTIN_ALIASES, parseClass } from '@f12io/maple';
+import * as vscode from 'vscode';
+import { AliasCache } from '../helpers/alias-cache';
 import {
   extractAllClasses,
   MAPLE_CLASS_REGEX,
-} from "../helpers/class-extractor";
-import { isExtensionEnabled } from "../helpers/config";
-import { getUtilKey } from "../helpers/get-util-key";
+} from '../helpers/class-extractor';
+import { isExtensionEnabled } from '../helpers/config';
+import { getUtilKey } from '../helpers/get-util-key';
 import {
   checkConverted,
   getAliasName,
   isAliasDefinition,
   isAliasMarker,
   isVariable,
-  stripImportant,
   stripQuotes,
-} from "../helpers/maple-parser";
+} from '../helpers/maple-parser';
 
 export const tokenTypes = [
-  "maple-mediaQuery",
-  "maple-utility",
-  "maple-value",
-  "maple-parent-selector",
-  "maple-self-selector",
-  "maple-child-selector",
-  "maple-selector-operator",
-  "maple-separator",
-  "maple-underscore",
-  "maple-alias",
-  "maple-variable",
-  "maple-important",
+  'maple-mediaQuery',
+  'maple-utility',
+  'maple-value',
+  'maple-parent-selector',
+  'maple-self-selector',
+  'maple-child-selector',
+  'maple-selector-operator',
+  'maple-separator',
+  'maple-underscore',
+  'maple-alias',
+  'maple-variable',
+  'maple-important',
 ];
 
-export const tokenModifiers: string[] = [];
+export const tokenModifiers: Array<string> = [];
 export const semanticTokensLegend = new vscode.SemanticTokensLegend(
   tokenTypes,
   tokenModifiers,
@@ -67,13 +66,13 @@ export class MapleSemanticTokensProvider
     const text = document.getText();
     const matches = extractAllClasses(text);
 
-    const tokens: {
+    const tokens: Array<{
       line: number;
       character: number;
       length: number;
       tokenType: number;
       tokenModifiers: number;
-    }[] = [];
+    }> = [];
 
     const pushKeyValueTokens = (
       tokenType: number,
@@ -82,7 +81,7 @@ export class MapleSemanticTokensProvider
       startPos: vscode.Position,
       pushValue: boolean,
     ) => {
-      const equalsIndex = className.indexOf("=");
+      const equalsIndex = className.indexOf('=');
       if (equalsIndex !== -1) {
         tokens.push({
           line: startPos.line,
@@ -130,7 +129,7 @@ export class MapleSemanticTokensProvider
     };
 
     for (const instance of matches) {
-      let classStr = instance.value;
+      const classStr = instance.value;
       let match;
       while ((match = MAPLE_CLASS_REGEX.exec(classStr)) !== null) {
         let className = match[0];
@@ -175,19 +174,19 @@ export class MapleSemanticTokensProvider
         if (!parsedClass) continue;
 
         const srcClass = parsedClass.srcClass || className;
-        let mediaQuery = "";
-        let parentSel = "";
-        let selfSel = "";
-        let childSel = "";
-        let utilKey = "";
+        let mediaQuery = '';
+        let parentSel = '';
+        let selfSel = '';
+        let childSel = '';
+        let utilKey = '';
 
         if (parsedClass.mediaQuery) mediaQuery = `${parsedClass.mediaQuery}:`;
         if (parsedClass.parentSel)
-          parentSel = `^${parsedClass.parentSel.replace(/ /g, "_")}`;
+          parentSel = `^${parsedClass.parentSel.replace(/ /g, '_')}`;
         if (parsedClass.selfSel)
-          selfSel = `&${parsedClass.selfSel.replace(/ /g, "_")}`;
+          selfSel = `&${parsedClass.selfSel.replace(/ /g, '_')}`;
         if (parsedClass.childSel)
-          childSel = `/${parsedClass.childSel.replace(/ /g, "_")}`;
+          childSel = `/${parsedClass.childSel.replace(/ /g, '_')}`;
 
         const importantOffset = parsedClass.isImportant ? 1 : 0;
         const othersLength =
@@ -203,7 +202,7 @@ export class MapleSemanticTokensProvider
 
         const rawUtilStart = expectsSeparator ? othersLength + 1 : othersLength;
         const rawUtilString = className.substring(rawUtilStart);
-        const rawAliasBase = rawUtilString.replace(/\(.*\)$/, "");
+        const rawAliasBase = rawUtilString.replace(/\(.*\)$/, '');
         const aliasName = getAliasName(rawAliasBase);
 
         let isAlias = false;
@@ -215,12 +214,12 @@ export class MapleSemanticTokensProvider
           isAlias = true;
           parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;
-          parsedClass.utilVal = "";
+          parsedClass.utilVal = '';
         } else if (BUILTIN_ALIASES[aliasName]) {
           isAlias = true;
           parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;
-          parsedClass.utilVal = "";
+          parsedClass.utilVal = '';
         }
 
         const isConverted = checkConverted(className);
@@ -277,7 +276,7 @@ export class MapleSemanticTokensProvider
           for (const part of parts) {
             if (part.length === 0) continue;
             const pos = document.positionAt(currentOffset);
-            if (part === "_") {
+            if (part === '_') {
               tokens.push({
                 line: pos.line,
                 character: pos.character,
@@ -285,7 +284,7 @@ export class MapleSemanticTokensProvider
                 tokenType: semanticTokenIndexes.mapleUnderscore,
                 tokenModifiers: 0,
               });
-            } else if (part === "!important") {
+            } else if (part === '!important') {
               tokens.push({
                 line: pos.line,
                 character: pos.character,
@@ -293,7 +292,7 @@ export class MapleSemanticTokensProvider
                 tokenType: semanticTokenIndexes.mapleImportant,
                 tokenModifiers: 0,
               });
-            } else if (part === "!important]") {
+            } else if (part === '!important]') {
               tokens.push({
                 line: pos.line,
                 character: pos.character,
@@ -322,7 +321,7 @@ export class MapleSemanticTokensProvider
         };
 
         if (parsedClass.parentSel) {
-          parentSel = `^${parsedClass.parentSel.replace(/ /g, "_")}`;
+          parentSel = `^${parsedClass.parentSel.replace(/ /g, '_')}`;
           const relativeOffset = srcClass.indexOf(parentSel);
           if (relativeOffset !== -1) {
             const wordOffset = currentClassNameOffset + relativeOffset;
@@ -337,7 +336,7 @@ export class MapleSemanticTokensProvider
             });
 
             pushTokensWithUnderscores(
-              parsedClass.parentSel.replace(/ /g, "_"),
+              parsedClass.parentSel.replace(/ /g, '_'),
               wordOffset + 1,
               semanticTokenIndexes.mapleParentSelector,
             );
@@ -345,7 +344,7 @@ export class MapleSemanticTokensProvider
         }
 
         if (parsedClass.selfSel) {
-          selfSel = `&${parsedClass.selfSel.replace(/ /g, "_")}`;
+          selfSel = `&${parsedClass.selfSel.replace(/ /g, '_')}`;
           const relativeOffset = srcClass.indexOf(selfSel);
           if (relativeOffset !== -1) {
             const wordOffset = currentClassNameOffset + relativeOffset;
@@ -360,7 +359,7 @@ export class MapleSemanticTokensProvider
             });
 
             pushTokensWithUnderscores(
-              parsedClass.selfSel.replace(/ /g, "_"),
+              parsedClass.selfSel.replace(/ /g, '_'),
               wordOffset + 1,
               semanticTokenIndexes.mapleSelfSelector,
             );
@@ -368,7 +367,7 @@ export class MapleSemanticTokensProvider
         }
 
         if (parsedClass.childSel) {
-          childSel = `/${parsedClass.childSel.replace(/ /g, "_")}`;
+          childSel = `/${parsedClass.childSel.replace(/ /g, '_')}`;
           const relativeOffset = srcClass.indexOf(childSel);
           if (relativeOffset !== -1) {
             const wordOffset = currentClassNameOffset + relativeOffset;
@@ -383,7 +382,7 @@ export class MapleSemanticTokensProvider
             });
 
             pushTokensWithUnderscores(
-              parsedClass.childSel.replace(/ /g, "_"),
+              parsedClass.childSel.replace(/ /g, '_'),
               wordOffset + 1,
               semanticTokenIndexes.mapleChildSelector,
             );
@@ -405,7 +404,7 @@ export class MapleSemanticTokensProvider
               othersLength > 0 &&
               othersLength !== mediaQuery.length + importantOffset;
 
-            utilKey = `${expectsSeparator ? ":" : ""}${util}`;
+            utilKey = `${expectsSeparator ? ':' : ''}${util}`;
             const wordOffset = currentClassNameOffset + othersLength;
 
             if (expectsSeparator) {

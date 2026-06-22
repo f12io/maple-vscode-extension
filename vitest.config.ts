@@ -1,13 +1,13 @@
-import path from "path";
-import { defineConfig } from "vitest/config";
+import path from 'path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
     globals: true,
-    environment: "node",
+    environment: 'node',
     alias: {
-      vscode: path.resolve(__dirname, "__mocks__/vscode.ts"),
+      vscode: path.resolve(__dirname, '__mocks__/vscode.ts'),
     },
-    exclude: ["out/**", "node_modules/**"],
+    exclude: ['out/**', 'node_modules/**'],
   },
 });

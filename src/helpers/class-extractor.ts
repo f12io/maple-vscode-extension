@@ -18,20 +18,78 @@ function getTagNameBackwards(text: string, index: number): string | undefined {
   return undefined;
 }
 
+export function extractStringsFromBraces(
+  text: string,
+  startRegex: RegExp,
+  openChar: string,
+  closeChar: string,
+  instances: ClassInstance[],
+) {
+  let match;
+  while ((match = startRegex.exec(text)) !== null) {
+    let braceCount = 1;
+    let i = match.index + match[0].length;
+    let inString = false;
+    let quoteChar = null;
+    let isEscaped = false;
+
+    while (i < text.length && braceCount > 0) {
+      const char = text[i];
+      if (inString) {
+        if (isEscaped) {
+          isEscaped = false;
+        } else if (char === "\\") {
+          isEscaped = true;
+        } else if (char === quoteChar) {
+          inString = false;
+        }
+      } else {
+        if (char === '"' || char === "'" || char === "`") {
+          inString = true;
+          quoteChar = char;
+        } else if (char === openChar) {
+          braceCount++;
+        } else if (char === closeChar) {
+          braceCount--;
+        }
+      }
+      i++;
+    }
+
+    if (braceCount === 0) {
+      const expr = text.substring(match.index + match[0].length, i - 1);
+      const exprStart = match.index + match[0].length;
+
+      const stringLiteralRegex = /(["'`])([\s\S]*?)\1/g;
+      let strMatch;
+      while ((strMatch = stringLiteralRegex.exec(expr)) !== null) {
+        const quoteIdx = strMatch[0].indexOf(strMatch[1]);
+        const start = exprStart + strMatch.index + quoteIdx + 1;
+        const value = strMatch[2];
+        if (value.trim().length > 0) {
+          instances.push({
+            value: value,
+            start: start,
+            end: start + value.length,
+            tagName: getTagNameBackwards(text, match.index),
+          });
+        }
+      }
+    }
+  }
+}
+
 export function extractAllClasses(text: string): ClassInstance[] {
   const instances: ClassInstance[] = [];
 
   // 1. Standard attributes: class="", className="", CssClass=""
   // Must be preceded by space or start of tag to avoid matching the "class" inside ":class" or "[class]"
-  // Also support React template literals: className={\`...\`}
   const attrRegex =
-    /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1|(?:^|[\s<>])className\s*=\s*\{\s*`([^`]*)`\s*\}/gi;
+    /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1/gi;
   let match;
   while ((match = attrRegex.exec(text)) !== null) {
-    const value = match[2] || match[3];
-    const valueMatchStr = match[1]
-      ? match[1] + value + match[1]
-      : `\`${value}\``;
+    const value = match[2];
+    const valueMatchStr = match[1] + value + match[1];
     const start = match.index + match[0].indexOf(valueMatchStr) + 1; // +1 to skip the quote/backtick
     instances.push({
       value: value,
@@ -41,13 +99,13 @@ export function extractAllClasses(text: string): ClassInstance[] {
     });
   }
 
-  // 2. Angular / Vue / React expressions: [ngClass]="...", :class="...", [class]="...", className={...}
+  // 2. Angular / Vue expressions: [ngClass]="...", :class="...", [class]="..."
   // This matches the container of the expression
   // We use this for objects, arrays, and ternaries where classes are inside strings: :class="{ 'c-red': isActive }"
   const exprRegex =
-    /(?:\[ngClass\]|:class|\[class\])\s*=\s*(["'])([\s\S]*?)\1|className\s*=\s*\{\s*(["'])([\s\S]*?)\3\s*\}/gi;
+    /(?:\[ngClass\]|:class|\[class\])\s*=\s*(["'])([\s\S]*?)\1/gi;
   while ((match = exprRegex.exec(text)) !== null) {
-    const expr = match[2] || match[4];
+    const expr = match[2];
     const exprStart = match.index + match[0].indexOf(expr);
 
     // Find all string literals inside the expression: '...', "...", `...`
@@ -100,11 +158,36 @@ export function extractAllClasses(text: string): ClassInstance[] {
     });
   }
 
-  // 5. Angular `<html --alias-btn="...">`
-  // Wait, the user has aliases on html: `<html class="--alias-btn=...">`
-  // That is covered by `class="..."`.
+  // 5. React / Solid JSX expressions: className={...}, class={...}, classList={...}
+  extractStringsFromBraces(
+    text,
+    /(?:class|className|classList)\s*=\s*\{/gi,
+    "{",
+    "}",
+    instances,
+  );
 
-  return instances;
+  // 6. Utility functions: clsx(...), classNames(...), cva(...)
+  extractStringsFromBraces(
+    text,
+    /(?:clsx|classNames|cva)\s*\(/gi,
+    "(",
+    ")",
+    instances,
+  );
+
+  // Deduplicate instances by start offset to prevent double highlights/diagnostics
+  // from overlapping extractors (e.g., className={clsx(...)})
+  const uniqueInstances: ClassInstance[] = [];
+  const seenStarts = new Set<number>();
+  for (const instance of instances) {
+    if (!seenStarts.has(instance.start)) {
+      seenStarts.add(instance.start);
+      uniqueInstances.push(instance);
+    }
+  }
+
+  return uniqueInstances;
 }
 
 export function isInsideClassAttribute(

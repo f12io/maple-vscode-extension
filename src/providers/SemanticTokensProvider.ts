@@ -184,9 +184,12 @@ export class MapleSemanticTokensProvider
         let utilKey = "";
 
         if (parsedClass.mediaQuery) mediaQuery = `${parsedClass.mediaQuery}:`;
-        if (parsedClass.parentSel) parentSel = `^${parsedClass.parentSel.replace(/ /g, "_")}`;
-        if (parsedClass.selfSel) selfSel = `&${parsedClass.selfSel.replace(/ /g, "_")}`;
-        if (parsedClass.childSel) childSel = `/${parsedClass.childSel.replace(/ /g, "_")}`;
+        if (parsedClass.parentSel)
+          parentSel = `^${parsedClass.parentSel.replace(/ /g, "_")}`;
+        if (parsedClass.selfSel)
+          selfSel = `&${parsedClass.selfSel.replace(/ /g, "_")}`;
+        if (parsedClass.childSel)
+          childSel = `/${parsedClass.childSel.replace(/ /g, "_")}`;
 
         const importantOffset = parsedClass.isImportant ? 1 : 0;
         const othersLength =
@@ -203,43 +206,31 @@ export class MapleSemanticTokensProvider
         const rawUtilStart = expectsSeparator ? othersLength + 1 : othersLength;
         const rawUtilString = className.substring(rawUtilStart);
         const rawAliasBase = rawUtilString.replace(/\(.*\)$/, "");
-        const fullAliasName = rawAliasBase.startsWith("@") ? rawAliasBase.substring(1) : rawAliasBase;
+        const fullAliasName = rawAliasBase.startsWith("@")
+          ? rawAliasBase.substring(1)
+          : rawAliasBase;
+
+        const rawAliasBaseWithoutImportant = rawAliasBase.replace(/!$/, "");
+        const fullAliasNameWithoutImportant = fullAliasName.replace(/!$/, "");
 
         let isAlias = false;
-        
+
         if (
           rawAliasBase.startsWith("@") &&
-          AliasCache.getAliases(document.uri).has(fullAliasName)
+          AliasCache.getAliases(document.uri).has(fullAliasNameWithoutImportant)
         ) {
           isAlias = true;
           parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;
           parsedClass.utilVal = "";
-        } else if (BUILTIN_ALIASES[fullAliasName]) {
+        } else if (BUILTIN_ALIASES[fullAliasNameWithoutImportant]) {
           isAlias = true;
           parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;
           parsedClass.utilVal = "";
-        } else {
-          let coreUtil = parsedClass.utilKey || "";
-          const aliasName = coreUtil.startsWith("@")
-            ? coreUtil.substring(1)
-            : coreUtil;
-
-          if (
-            coreUtil.startsWith("@") &&
-            AliasCache.getAliases(document.uri).has(aliasName) &&
-            !parsedClass.utilVal
-          ) {
-            isAlias = true;
-          } else if (BUILTIN_ALIASES[aliasName] && !parsedClass.utilVal) {
-            isAlias = true;
-          }
         }
 
-        if (parsedClass.utilOp === "-" && !parsedClass.utilVal?.startsWith("[") && parsedClass.utilVal?.includes("_!important")) {
-          continue;
-        }
+
 
         let isConverted = convertCache.get(className);
         if (isConverted === undefined) {

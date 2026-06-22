@@ -1,5 +1,5 @@
+import { parseClass } from "@f12io/maple";
 import { ABBREVIATIONS, BUILTIN_ALIASES } from "../mapleEngine/data";
-import { buildRule } from "@f12io/maple";
 
 export interface MapleTokenInfo {
   activeWord: string;
@@ -20,8 +20,7 @@ export interface MapleTokenInfo {
  * activePrefix: "bgc"
  */
 export function parseMapleToken(word: string): MapleTokenInfo {
-  const rule = buildRule(word);
-  const parsed = rule?.parsed;
+  const parsed = parseClass(word);
 
   if (!parsed) {
     return {
@@ -36,7 +35,9 @@ export function parseMapleToken(word: string): MapleTokenInfo {
 
   const utilOp = parsed.utilOp || "";
   const utilVal = parsed.utilVal || "";
-  const activeWord = parsed.utilKey + utilOp + utilVal;
+  const baseKey =
+    parsed.utilKey || parsed.propKeyKebab || parsed.propKeyCamel || "";
+  const activeWord = baseKey + utilOp + utilVal;
 
   const prefixes: string[] = [];
   if (parsed.mediaQuery) {
@@ -49,11 +50,20 @@ export function parseMapleToken(word: string): MapleTokenInfo {
   const activePrefix = parsed.utilKey;
   const activeParts = [parsed.utilKey, ...utilVal.split("-")];
 
-  const cleanActiveWord = activeWord.startsWith("@") ? activeWord.substring(1) : activeWord;
+  const cleanActiveWord = activeWord.startsWith("@")
+    ? activeWord.substring(1)
+    : activeWord;
+  const cleanActiveWordWithoutImportant = cleanActiveWord.replace(/!$/, "");
+  const activePrefixWithoutImportant = activePrefix.replace(/!$/, "");
+
   const isMaplePrefix =
-    !!ABBREVIATIONS[activePrefix] || !!BUILTIN_ALIASES[cleanActiveWord];
+    !!ABBREVIATIONS[activePrefixWithoutImportant] ||
+    !!BUILTIN_ALIASES[cleanActiveWordWithoutImportant];
   const isMapleIntent =
-    prefixes.length > 0 || isMaplePrefix || activeWord.startsWith("--alias-");
+    prefixes.length > 0 ||
+    isMaplePrefix ||
+    activeWord.startsWith("--alias-") ||
+    activeWord.startsWith("@");
 
   return {
     activeWord,

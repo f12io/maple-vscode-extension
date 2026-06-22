@@ -988,6 +988,8 @@
 
     <div class="-m-4!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="p-4!"><!-- Expected warning: Invalid usage of '!' --></div>
+    <div class="fxcol-ss!"><!-- Expected warning: Invalid usage of '!' --></div>
+    <div class="@btn!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="bgc-#00f_!important"><!-- Expexted important warning --></div>
 
     <div class="--alias-card=p-4">
@@ -1013,12 +1015,12 @@
     <div class="invalid=maple-class-name">
       <!-- No warning: literal setter -->
     </div>
-    <div class="@space(4)"><!-- Undefined alias, no highlight--></div>
     <div class="invalid-maple-class-name">
       <!-- Regular class, no highlight -->
     </div>
+    <div class="@space(4)"><!-- Expected warning: Invalid Maple class--></div>
     <div class="md:invalid-maple-class-name">
-      <!-- Regular class, no highlight -->
+      <!-- Expected warning: Invalid Maple class -->
     </div>
   </body>
 </html>

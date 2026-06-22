@@ -402,6 +402,430 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
     "warnings": [],
   },
+  {
+    "classValue": "fw-bold",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-4",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-6",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "6",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "fw-bold m-4",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-6",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "6",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "fw-bold m-4",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-6",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "6",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "fw-bold",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-6",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "6",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-4",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "primary",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "p-2",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "2",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-2",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "2",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "fw-bold",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "
+          fxcol-ss invalid-maple-class
+          \${isActive ? "bgc-green-500" : "bgc-red-500"}
+        ",
+    "colors": [
+      {
+        "color": "rgba(0, 128, 0, 1)",
+        "text": "green-500",
+      },
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "fxcol-ss",
+        "type": "maple-alias",
+      },
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "green-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "btn bgc-blue-500",
+    "colors": [
+      {
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "blue-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "blue-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-white fw-bold",
+    "colors": [
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
+        "type": "maple-value",
+      },
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-gray-500 bgc-gray-100",
+    "colors": [
+      {
+        "color": "rgba(128, 128, 128, 1)",
+        "text": "gray-500",
+      },
+      {
+        "color": "rgba(228, 228, 228, 1)",
+        "text": "gray-100",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-100",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
 ]
 `;
 
@@ -1627,49 +2051,65 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "classValue": "@btn",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '@btn'",
+    ],
   },
   {
     "classValue": "@dark:@btn",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '@dark:@btn'",
+    ],
   },
   {
     "classValue": "md:@card",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: 'md:@card'",
+    ],
   },
   {
     "classValue": "@md:@card",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '@md:@card'",
+    ],
   },
   {
     "classValue": "@md:@card(4)",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '@md:@card(4)'",
+    ],
   },
   {
     "classValue": "@md:@card(space:4)",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '@md:@card(space:4)'",
+    ],
   },
   {
     "classValue": "&:hover:@card",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '&:hover:@card'",
+    ],
   },
   {
     "classValue": "&:before:@card",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '&:before:@card'",
+    ],
   },
   {
     "classValue": "@fx",
@@ -3691,7 +4131,9 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "classValue": "@container",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: '@container'",
+    ],
   },
   {
     "classValue": "bdf-blur-soft_shadow-soft",
@@ -22761,6 +23203,27 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
   },
   {
+    "classValue": "fxcol-ss!",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fxcol-ss!",
+        "type": "maple-alias",
+      },
+    ],
+    "warnings": [
+      "Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!fxcol-ss').",
+    ],
+  },
+  {
+    "classValue": "@btn!",
+    "colors": [],
+    "tokens": [],
+    "warnings": [
+      "Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!@btn').",
+    ],
+  },
+  {
     "classValue": "bgc-#00f_!important",
     "colors": [
       {
@@ -22768,7 +23231,28 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "#00f",
       },
     ],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "#00f",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "!important",
+        "type": "maple-important",
+      },
+    ],
     "warnings": [
       "Invalid usage of '!important'. Use '=' operator or '[]' brackets for string literals.",
     ],
@@ -23042,22 +23526,26 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "@space(4)",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
     "classValue": "invalid-maple-class-name",
     "colors": [],
     "tokens": [],
     "warnings": [],
   },
   {
+    "classValue": "@space(4)",
+    "colors": [],
+    "tokens": [],
+    "warnings": [
+      "Invalid maple class: '@space(4)'",
+    ],
+  },
+  {
     "classValue": "md:invalid-maple-class-name",
     "colors": [],
     "tokens": [],
-    "warnings": [],
+    "warnings": [
+      "Invalid maple class: 'md:invalid-maple-class-name'",
+    ],
   },
 ]
 `;

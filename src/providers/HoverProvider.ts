@@ -4,6 +4,7 @@ import * as vscode from "vscode";
 import { AliasCache } from "../helpers/alias-cache";
 import { getExactWordRangeAtPosition } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
+import { getAliasName, isAliasMarker } from "../helpers/maple-parser";
 
 export class MapleHoverProvider implements vscode.HoverProvider {
   async provideHover(
@@ -24,8 +25,8 @@ export class MapleHoverProvider implements vscode.HoverProvider {
       let coreUtil = parsedClass.utilKey || "";
 
       // Check if it's an alias
-      if (coreUtil.startsWith("@")) {
-        const aliasName = coreUtil.substring(1);
+      if (isAliasMarker(coreUtil)) {
+        const aliasName = getAliasName(coreUtil);
         const customAliases = AliasCache.getAliases(document.uri);
 
         if (customAliases.has(aliasName)) {

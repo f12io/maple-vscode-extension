@@ -7,6 +7,13 @@ import {
 } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
 import { getUtilKey } from "../helpers/get-util-key";
+import {
+  getAliasName,
+  isAliasDefinition,
+  isAliasMarker,
+  isVariable,
+  stripImportant,
+} from "../helpers/maple-parser";
 
 export const tokenTypes = [
   "maple-mediaQuery",
@@ -90,7 +97,7 @@ export class MapleSemanticTokensProvider
 
         const startPos = document.positionAt(currentClassNameOffset);
 
-        if (className.startsWith("--alias-")) {
+        if (isAliasDefinition(className)) {
           const equalsIndex = className.indexOf("=");
           if (equalsIndex !== -1) {
             tokens.push({
@@ -126,7 +133,7 @@ export class MapleSemanticTokensProvider
             });
             continue;
           }
-        } else if (className.startsWith("--")) {
+        } else if (isVariable(className)) {
           const equalsIndex = className.indexOf("=");
           if (equalsIndex !== -1) {
             tokens.push({
@@ -206,24 +213,19 @@ export class MapleSemanticTokensProvider
         const rawUtilStart = expectsSeparator ? othersLength + 1 : othersLength;
         const rawUtilString = className.substring(rawUtilStart);
         const rawAliasBase = rawUtilString.replace(/\(.*\)$/, "");
-        const fullAliasName = rawAliasBase.startsWith("@")
-          ? rawAliasBase.substring(1)
-          : rawAliasBase;
-
-        const rawAliasBaseWithoutImportant = rawAliasBase.replace(/!$/, "");
-        const fullAliasNameWithoutImportant = fullAliasName.replace(/!$/, "");
+        const aliasName = getAliasName(rawAliasBase);
 
         let isAlias = false;
 
         if (
-          rawAliasBase.startsWith("@") &&
-          AliasCache.getAliases(document.uri).has(fullAliasNameWithoutImportant)
+          isAliasMarker(rawAliasBase) &&
+          AliasCache.getAliases(document.uri).has(aliasName)
         ) {
           isAlias = true;
           parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;
           parsedClass.utilVal = "";
-        } else if (BUILTIN_ALIASES[fullAliasNameWithoutImportant]) {
+        } else if (BUILTIN_ALIASES[aliasName]) {
           isAlias = true;
           parsedClass.utilKey = rawUtilString;
           parsedClass.utilOp = undefined as any;

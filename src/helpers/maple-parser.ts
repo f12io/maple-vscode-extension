@@ -10,6 +10,27 @@ export interface MapleTokenInfo {
   isMapleIntent: boolean;
 }
 
+export function isAliasMarker(word: string): boolean {
+  return word.startsWith("@");
+}
+
+export function isAliasDefinition(word: string): boolean {
+  return word.startsWith("--alias-");
+}
+
+export function isVariable(word: string): boolean {
+  return word.startsWith("--") && !isAliasDefinition(word);
+}
+
+export function stripImportant(word: string): string {
+  return word.replace(/!$/, "");
+}
+
+export function getAliasName(word: string): string {
+  const stripped = stripImportant(word);
+  return isAliasMarker(stripped) ? stripped.substring(1) : stripped;
+}
+
 /**
  * Parses a word into its maple parts (prefixes, utility, etc.)
  * and checks if it's a valid maple intent.
@@ -50,11 +71,11 @@ export function parseMapleToken(word: string): MapleTokenInfo {
   const activePrefix = parsed.utilKey;
   const activeParts = [parsed.utilKey, ...utilVal.split("-")];
 
-  const cleanActiveWord = activeWord.startsWith("@")
+  const cleanActiveWord = isAliasMarker(activeWord)
     ? activeWord.substring(1)
     : activeWord;
-  const cleanActiveWordWithoutImportant = cleanActiveWord.replace(/!$/, "");
-  const activePrefixWithoutImportant = activePrefix.replace(/!$/, "");
+  const cleanActiveWordWithoutImportant = stripImportant(cleanActiveWord);
+  const activePrefixWithoutImportant = stripImportant(activePrefix);
 
   const isMaplePrefix =
     !!ABBREVIATIONS[activePrefixWithoutImportant] ||
@@ -62,8 +83,8 @@ export function parseMapleToken(word: string): MapleTokenInfo {
   const isMapleIntent =
     prefixes.length > 0 ||
     isMaplePrefix ||
-    activeWord.startsWith("--alias-") ||
-    activeWord.startsWith("@");
+    isAliasDefinition(activeWord) ||
+    isAliasMarker(activeWord);
 
   return {
     activeWord,

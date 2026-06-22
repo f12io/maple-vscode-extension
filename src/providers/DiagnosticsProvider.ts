@@ -11,7 +11,7 @@ import {
   MAPLE_CLASS_REGEX,
 } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
-import { parseMapleToken } from "../helpers/maple-parser";
+import { isAliasDefinition, parseMapleToken } from "../helpers/maple-parser";
 
 // Cache to prevent re-compiling unmodified classes on every keystroke
 const convertCache = new Map<string, boolean>();
@@ -97,7 +97,7 @@ export function refreshDiagnostics(
           hasError = true;
           errorMsg = `Invalid usage of '!important'. Use '=' operator or '[]' brackets for string literals.`;
         } else if (
-          activeWord.startsWith("--alias-") &&
+          isAliasDefinition(activeWord) &&
           activeWord.includes("=")
         ) {
           if (instance.tagName && instance.tagName !== "html") {

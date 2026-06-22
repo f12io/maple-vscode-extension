@@ -1,4 +1,4 @@
-import { BUILTIN_ALIASES, convert, parseClass } from "@f12io/maple";
+import { BUILTIN_ALIASES, parseClass } from "@f12io/maple";
 import * as vscode from "vscode";
 import { AliasCache } from "../helpers/alias-cache";
 import {
@@ -8,11 +8,13 @@ import {
 import { isExtensionEnabled } from "../helpers/config";
 import { getUtilKey } from "../helpers/get-util-key";
 import {
+  checkConverted,
   getAliasName,
   isAliasDefinition,
   isAliasMarker,
   isVariable,
   stripImportant,
+  stripQuotes,
 } from "../helpers/maple-parser";
 
 export const tokenTypes = [
@@ -51,9 +53,6 @@ const semanticTokenIndexes = {
   mapleImportant: 11,
 };
 
-// Cache to prevent re-compiling unmodified classes on every keystroke
-const convertCache = new Map<string, boolean>();
-
 export class MapleSemanticTokensProvider
   implements vscode.DocumentSemanticTokensProvider
 {
@@ -76,107 +75,99 @@ export class MapleSemanticTokensProvider
       tokenModifiers: number;
     }[] = [];
 
+    const pushKeyValueTokens = (
+      tokenType: number,
+      className: string,
+      currentOffset: number,
+      startPos: vscode.Position,
+      pushValue: boolean,
+    ) => {
+      const equalsIndex = className.indexOf("=");
+      if (equalsIndex !== -1) {
+        tokens.push({
+          line: startPos.line,
+          character: startPos.character,
+          length: equalsIndex,
+          tokenType,
+          tokenModifiers: 0,
+        });
+
+        const eqPos = document.positionAt(currentOffset + equalsIndex);
+        tokens.push({
+          line: eqPos.line,
+          character: eqPos.character,
+          length: 1,
+          tokenType: semanticTokenIndexes.mapleSeparator,
+          tokenModifiers: 0,
+        });
+
+        if (pushValue) {
+          const valuePart = className.substring(equalsIndex + 1);
+          if (valuePart.length > 0) {
+            const valuePos = document.positionAt(
+              currentOffset + equalsIndex + 1,
+            );
+            tokens.push({
+              line: valuePos.line,
+              character: valuePos.character,
+              length: valuePart.length,
+              tokenType: semanticTokenIndexes.mapleValue,
+              tokenModifiers: 0,
+            });
+          }
+        }
+        return equalsIndex;
+      } else {
+        tokens.push({
+          line: startPos.line,
+          character: startPos.character,
+          length: className.length,
+          tokenType,
+          tokenModifiers: 0,
+        });
+        return -1;
+      }
+    };
+
     for (const instance of matches) {
       let classStr = instance.value;
       let match;
-      // Need to import MAPLE_CLASS_REGEX from class-extractor! Let's make sure it's imported at the top.
       while ((match = MAPLE_CLASS_REGEX.exec(classStr)) !== null) {
         let className = match[0];
         let currentClassNameOffset = instance.start + match.index;
 
-        // Strip leading/trailing quotes if matched
-        if (className.startsWith('"') || className.startsWith("'")) {
-          className = className.substring(1);
-          currentClassNameOffset += 1;
-        }
-        if (className.endsWith('"') || className.endsWith("'")) {
-          className = className.substring(0, className.length - 1);
-        }
+        const stripped = stripQuotes(className);
+        className = stripped.word;
+        currentClassNameOffset += stripped.offset;
 
         if (className.length === 0) continue;
 
         const startPos = document.positionAt(currentClassNameOffset);
 
         if (isAliasDefinition(className)) {
-          const equalsIndex = className.indexOf("=");
+          const equalsIndex = pushKeyValueTokens(
+            semanticTokenIndexes.mapleAlias,
+            className,
+            currentClassNameOffset,
+            startPos,
+            false,
+          );
           if (equalsIndex !== -1) {
-            tokens.push({
-              line: startPos.line,
-              character: startPos.character,
-              length: equalsIndex,
-              tokenType: semanticTokenIndexes.mapleAlias,
-              tokenModifiers: 0,
-            });
-
-            // let's highlight the '=' as mapleSeparator
-            const eqPos = document.positionAt(
-              currentClassNameOffset + equalsIndex,
-            );
-            tokens.push({
-              line: eqPos.line,
-              character: eqPos.character,
-              length: 1,
-              tokenType: semanticTokenIndexes.mapleSeparator,
-              tokenModifiers: 0,
-            });
-
             className = className.substring(equalsIndex + 1);
             currentClassNameOffset += equalsIndex + 1;
             if (className.length === 0) continue;
+            // Fall through to parse the value
           } else {
-            tokens.push({
-              line: startPos.line,
-              character: startPos.character,
-              length: className.length,
-              tokenType: semanticTokenIndexes.mapleAlias,
-              tokenModifiers: 0,
-            });
             continue;
           }
         } else if (isVariable(className)) {
-          const equalsIndex = className.indexOf("=");
-          if (equalsIndex !== -1) {
-            tokens.push({
-              line: startPos.line,
-              character: startPos.character,
-              length: equalsIndex,
-              tokenType: semanticTokenIndexes.mapleVariable,
-              tokenModifiers: 0,
-            });
-
-            const eqPos = document.positionAt(
-              currentClassNameOffset + equalsIndex,
-            );
-            tokens.push({
-              line: eqPos.line,
-              character: eqPos.character,
-              length: 1,
-              tokenType: semanticTokenIndexes.mapleSeparator,
-              tokenModifiers: 0,
-            });
-
-            const valuePart = className.substring(equalsIndex + 1);
-            if (valuePart.length > 0) {
-              const valuePos = document.positionAt(
-                currentClassNameOffset + equalsIndex + 1,
-              );
-              tokens.push({
-                line: valuePos.line,
-                character: valuePos.character,
-                length: valuePart.length,
-                tokenType: semanticTokenIndexes.mapleValue,
-                tokenModifiers: 0,
-              });
-            }
-          } else {
-            tokens.push({
-              line: startPos.line,
-              character: startPos.character,
-              length: className.length,
-              tokenType: semanticTokenIndexes.mapleVariable,
-              tokenModifiers: 0,
-            });
-          }
+          pushKeyValueTokens(
+            semanticTokenIndexes.mapleVariable,
+            className,
+            currentClassNameOffset,
+            startPos,
+            true,
+          );
           continue;
         }
 
@@ -232,17 +223,7 @@ export class MapleSemanticTokensProvider
           parsedClass.utilVal = "";
         }
 
-
-
-        let isConverted = convertCache.get(className);
-        if (isConverted === undefined) {
-          isConverted = !!convert(className);
-          if (convertCache.size > 5000) {
-            const firstKey = convertCache.keys().next().value;
-            if (firstKey !== undefined) convertCache.delete(firstKey);
-          }
-          convertCache.set(className, isConverted);
-        }
+        const isConverted = checkConverted(className);
 
         if (!isConverted && !isAlias) {
           continue;

@@ -1,4 +1,4 @@
-import { parseClass } from "@f12io/maple";
+import { convert, parseClass } from "@f12io/maple";
 import { ABBREVIATIONS, BUILTIN_ALIASES } from "../mapleEngine/data";
 
 export interface MapleTokenInfo {
@@ -29,6 +29,34 @@ export function stripImportant(word: string): string {
 export function getAliasName(word: string): string {
   const stripped = stripImportant(word);
   return isAliasMarker(stripped) ? stripped.substring(1) : stripped;
+}
+
+export function stripQuotes(word: string): { word: string; offset: number } {
+  let result = word;
+  let offset = 0;
+  if (result.startsWith('"') || result.startsWith("'")) {
+    result = result.substring(1);
+    offset = 1;
+  }
+  if (result.endsWith('"') || result.endsWith("'")) {
+    result = result.substring(0, result.length - 1);
+  }
+  return { word: result, offset };
+}
+
+const convertCache = new Map<string, boolean>();
+
+export function checkConverted(cls: string): boolean {
+  let isConverted = convertCache.get(cls);
+  if (isConverted === undefined) {
+    isConverted = !!convert(cls);
+    if (convertCache.size > 5000) {
+      const firstKey = convertCache.keys().next().value;
+      if (firstKey !== undefined) convertCache.delete(firstKey);
+    }
+    convertCache.set(cls, isConverted);
+  }
+  return isConverted;
 }
 
 /**

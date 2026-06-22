@@ -360,7 +360,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "fw-bold \${true ? "m-4" : "m-6"}",
+    "classValue": "fw-bold ",
     "colors": [],
     "tokens": [
       {
@@ -375,6 +375,13 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "bold",
         "type": "maple-value",
       },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-4",
+    "colors": [],
+    "tokens": [
       {
         "text": "m",
         "type": "maple-utility",
@@ -387,6 +394,13 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "4",
         "type": "maple-value",
       },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-6",
+    "colors": [],
+    "tokens": [
       {
         "text": "m",
         "type": "maple-utility",
@@ -682,23 +696,25 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "
           fxcol-ss invalid-maple-class
-          \${isActive ? "bgc-green-500" : "bgc-red-500"}
-        ",
-    "colors": [
-      {
-        "color": "rgba(0, 128, 0, 1)",
-        "text": "green-500",
-      },
-      {
-        "color": "rgba(255, 0, 0, 1)",
-        "text": "red-500",
-      },
-    ],
+          ",
+    "colors": [],
     "tokens": [
       {
         "text": "fxcol-ss",
         "type": "maple-alias",
       },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-green-500",
+    "colors": [
+      {
+        "color": "rgba(0, 128, 0, 1)",
+        "text": "green-500",
+      },
+    ],
+    "tokens": [
       {
         "text": "bgc",
         "type": "maple-utility",
@@ -711,6 +727,18 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "green-500",
         "type": "maple-value",
       },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-red-500",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red-500",
+      },
+    ],
+    "tokens": [
       {
         "text": "bgc",
         "type": "maple-utility",

@@ -25,7 +25,7 @@ export function extractStringsFromBraces(
   closeChar: string,
   instances: ClassInstance[],
 ) {
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = startRegex.exec(text)) !== null) {
     let braceCount = 1;
     let i = match.index + match[0].length;
@@ -60,18 +60,79 @@ export function extractStringsFromBraces(
       const expr = text.substring(match.index + match[0].length, i - 1);
       const exprStart = match.index + match[0].length;
 
+      const extractFromTemplateLiteral = (value: string, offset: number) => {
+        let currentStr = "";
+        let currentStart = offset;
+        let j = 0;
+        while (j < value.length) {
+          if (value.substring(j, j + 2) === "${") {
+            if (currentStr.trim().length > 0) {
+              instances.push({
+                value: currentStr,
+                start: currentStart,
+                end: currentStart + currentStr.length,
+                tagName: getTagNameBackwards(text, match!.index),
+              });
+            }
+            currentStr = "";
+            j += 2;
+            let innerBraceCount = 1;
+            let innerExprStart = j;
+            while (j < value.length && innerBraceCount > 0) {
+              if (value[j] === "{") innerBraceCount++;
+              else if (value[j] === "}") innerBraceCount--;
+              j++;
+            }
+            const innerExpr = value.substring(innerExprStart, j - 1);
+
+            const innerRegex = /(["'`])([\s\S]*?)\1/g;
+            let innerMatch;
+            while ((innerMatch = innerRegex.exec(innerExpr)) !== null) {
+              const innerQuoteIdx = innerMatch[0].indexOf(innerMatch[1]);
+              const innerStart =
+                offset + innerExprStart + innerMatch.index + innerQuoteIdx + 1;
+              const innerValue = innerMatch[2];
+              if (innerMatch[1] === "`") {
+                extractFromTemplateLiteral(innerValue, innerStart);
+              } else if (innerValue.trim().length > 0) {
+                instances.push({
+                  value: innerValue,
+                  start: innerStart,
+                  end: innerStart + innerValue.length,
+                  tagName: getTagNameBackwards(text, match!.index),
+                });
+              }
+            }
+            currentStart = offset + j;
+          } else {
+            currentStr += value[j];
+            j++;
+          }
+        }
+        if (currentStr.trim().length > 0) {
+          instances.push({
+            value: currentStr,
+            start: currentStart,
+            end: currentStart + currentStr.length,
+            tagName: getTagNameBackwards(text, match!.index),
+          });
+        }
+      };
+
       const stringLiteralRegex = /(["'`])([\s\S]*?)\1/g;
       let strMatch;
       while ((strMatch = stringLiteralRegex.exec(expr)) !== null) {
         const quoteIdx = strMatch[0].indexOf(strMatch[1]);
         const start = exprStart + strMatch.index + quoteIdx + 1;
         const value = strMatch[2];
-        if (value.trim().length > 0) {
+        if (strMatch[1] === "`") {
+          extractFromTemplateLiteral(value, start);
+        } else if (value.trim().length > 0) {
           instances.push({
             value: value,
             start: start,
             end: start + value.length,
-            tagName: getTagNameBackwards(text, match.index),
+            tagName: getTagNameBackwards(text, match!.index),
           });
         }
       }
@@ -86,7 +147,7 @@ export function extractAllClasses(text: string): ClassInstance[] {
   // Must be preceded by space or start of tag to avoid matching the "class" inside ":class" or "[class]"
   const attrRegex =
     /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1/gi;
-  let match;
+  let match: RegExpExecArray | null;
   while ((match = attrRegex.exec(text)) !== null) {
     const value = match[2];
     const valueMatchStr = match[1] + value + match[1];

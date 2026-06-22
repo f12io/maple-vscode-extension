@@ -2,7 +2,6 @@ import {
   buildRule,
   COLOR_MAX_TONE,
   COLOR_MIN_TONE,
-  convert,
   PROP_TYPE_COLOR,
 } from "@f12io/maple";
 import * as vscode from "vscode";
@@ -11,10 +10,12 @@ import {
   MAPLE_CLASS_REGEX,
 } from "../helpers/class-extractor";
 import { isExtensionEnabled } from "../helpers/config";
-import { isAliasDefinition, parseMapleToken } from "../helpers/maple-parser";
-
-// Cache to prevent re-compiling unmodified classes on every keystroke
-const convertCache = new Map<string, boolean>();
+import {
+  checkConverted,
+  isAliasDefinition,
+  parseMapleToken,
+  stripQuotes,
+} from "../helpers/maple-parser";
 
 export function refreshDiagnostics(
   doc: vscode.TextDocument,
@@ -40,7 +41,12 @@ export function refreshDiagnostics(
     MAPLE_CLASS_REGEX.lastIndex = 0;
     let wordMatch;
     while ((wordMatch = MAPLE_CLASS_REGEX.exec(classValue))) {
-      const cls = wordMatch[0];
+      let cls = wordMatch[0];
+
+      const stripped = stripQuotes(cls);
+      cls = stripped.word;
+
+      if (cls.length === 0) continue;
 
       const { activeWord, isMapleIntent } = parseMapleToken(cls);
 
@@ -53,15 +59,7 @@ export function refreshDiagnostics(
 
       if (isMapleIntent) {
         // Let the engine validate the syntax
-        let converted = convertCache.get(cls);
-        if (converted === undefined) {
-          converted = !!convert(cls);
-          if (convertCache.size > 5000) {
-            const firstKey = convertCache.keys().next().value;
-            if (firstKey !== undefined) convertCache.delete(firstKey);
-          }
-          convertCache.set(cls, converted);
-        }
+        const converted = checkConverted(cls);
         
         const rule = buildRule(cls);
 
@@ -128,7 +126,7 @@ export function refreshDiagnostics(
         diagnostics.push(diagnostic);
       } else if (isMapleIntent) {
         // If it's valid, check for conflicts
-        const converted = convert(cls);
+        const converted = checkConverted(cls);
         if (converted) {
           const rule = buildRule(cls);
           const conflictKey = rule?.parsed?.conflictKey;

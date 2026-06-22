@@ -2078,66 +2078,154 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "@btn",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: '@btn'",
+    "tokens": [
+      {
+        "text": "@btn",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "@dark:@btn",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: '@dark:@btn'",
+    "tokens": [
+      {
+        "text": "@dark",
+        "type": "maple-mediaQuery",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@btn",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "md:@card",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: 'md:@card'",
+    "tokens": [
+      {
+        "text": "md",
+        "type": "maple-mediaQuery",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@card",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "@md:@card",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: '@md:@card'",
+    "tokens": [
+      {
+        "text": "@md",
+        "type": "maple-mediaQuery",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@card",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "@md:@card(4)",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: '@md:@card(4)'",
+    "tokens": [
+      {
+        "text": "@md",
+        "type": "maple-mediaQuery",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@card(4)",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "@md:@card(space:4)",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: '@md:@card(space:4)'",
+    "tokens": [
+      {
+        "text": "@md",
+        "type": "maple-mediaQuery",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@card(space:4)",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "&:hover:@card",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: '&:hover:@card'",
+    "tokens": [
+      {
+        "text": "&",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ":hover",
+        "type": "maple-self-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@card",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "&:before:@card",
     "colors": [],
-    "tokens": [],
-    "warnings": [
-      "Invalid maple class: '&:before:@card'",
+    "tokens": [
+      {
+        "text": "&",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ":before",
+        "type": "maple-self-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@card",
+        "type": "maple-alias",
+      },
     ],
+    "warnings": [],
   },
   {
     "classValue": "@fx",
@@ -23246,7 +23334,12 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "@btn!",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "@btn!",
+        "type": "maple-alias",
+      },
+    ],
     "warnings": [
       "Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!@btn').",
     ],

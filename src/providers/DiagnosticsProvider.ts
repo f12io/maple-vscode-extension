@@ -1,10 +1,12 @@
 import {
   buildRule,
+  BUILTIN_ALIASES,
   COLOR_MAX_TONE,
   COLOR_MIN_TONE,
   PROP_TYPE_COLOR,
 } from "@f12io/maple";
 import * as vscode from "vscode";
+import { AliasCache } from "../helpers/alias-cache";
 import {
   extractAllClasses,
   MAPLE_CLASS_REGEX,
@@ -12,7 +14,9 @@ import {
 import { isExtensionEnabled } from "../helpers/config";
 import {
   checkConverted,
+  getAliasName,
   isAliasDefinition,
+  isAliasMarker,
   parseMapleToken,
   stripQuotes,
 } from "../helpers/maple-parser";
@@ -103,8 +107,24 @@ export function refreshDiagnostics(
             errorMsg = `Maple aliases can only be defined on the 'html' element. Found on '${instance.tagName}'.`;
           }
         } else if (!converted) {
-          hasError = true;
-          errorMsg = `Invalid maple class: '${cls}'`;
+          // Check if it's a valid alias before flagging as invalid
+          const rawAliasBase = activeWord.replace(/=$/, "").replace(/\(.*\)$/, "");
+          const aliasName = getAliasName(rawAliasBase);
+          let isAlias = false;
+
+          if (
+            isAliasMarker(rawAliasBase) &&
+            AliasCache.getAliases(doc.uri).has(aliasName)
+          ) {
+            isAlias = true;
+          } else if (BUILTIN_ALIASES[aliasName]) {
+            isAlias = true;
+          }
+
+          if (!isAlias) {
+            hasError = true;
+            errorMsg = `Invalid maple class: '${cls}'`;
+          }
         }
       }
 

@@ -1,5 +1,5 @@
-import * as vscode from "vscode";
 import * as fs from "fs";
+import * as vscode from "vscode";
 
 /**
  * A workspace-wide cache that scans files for custom Maple aliases
@@ -8,6 +8,9 @@ import * as fs from "fs";
 export class AliasCache {
   // Map of workspaceFolder.uri.toString() -> Map<fileUri.toString(), Map<aliasName, expansionString>>
   private static cache = new Map<string, Map<string, Map<string, string>>>();
+
+  // Event emitter for alias updates
+  public static readonly onDidUpdateAliases = new vscode.EventEmitter<void>();
 
   // Regular expression used to extract aliases from file content
   private static readonly ALIAS_REGEX = /--alias-([a-zA-Z0-9\-]+)=([^"'\s]+)/g;
@@ -62,7 +65,10 @@ export class AliasCache {
     this.cache.clear();
 
     const folders = vscode.workspace.workspaceFolders;
-    if (!folders) return;
+    if (!folders) {
+      this.onDidUpdateAliases.fire();
+      return;
+    }
 
     // Initialize maps for all folders
     for (const folder of folders) {
@@ -80,17 +86,24 @@ export class AliasCache {
       );
 
       for (const file of files) {
-        await this.processFile(file);
+        await this.processFile(file, false);
       }
     } catch (error) {
       console.error("Error scanning workspace for aliases:", error);
     }
+    this.onDidUpdateAliases.fire();
   }
 
-  private static async processFile(uri: vscode.Uri) {
+  private static async processFile(uri: vscode.Uri, fireEvent = true) {
+    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    if (!folder) return;
+
     try {
-      const folder = vscode.workspace.getWorkspaceFolder(uri);
-      if (!folder) return;
+      // Read file content
+      const content = await fs.promises.readFile(uri.fsPath, "utf-8");
+
+      const fileMap = new Map<string, string>();
+      this.parseContentIntoMap(content, fileMap);
 
       const folderKey = folder.uri.toString();
       if (!this.cache.has(folderKey)) {
@@ -98,14 +111,15 @@ export class AliasCache {
       }
 
       const folderMap = this.cache.get(folderKey)!;
+      if (fileMap.size > 0) {
+        folderMap.set(uri.toString(), fileMap);
+      } else {
+        folderMap.delete(uri.toString());
+      }
 
-      // Read file content
-      const content = await fs.promises.readFile(uri.fsPath, "utf-8");
-
-      const fileMap = new Map<string, string>();
-      this.parseContentIntoMap(content, fileMap);
-
-      folderMap.set(uri.toString(), fileMap);
+      if (fireEvent) {
+        this.onDidUpdateAliases.fire();
+      }
     } catch (error) {
       // Ignore file read errors (e.g. file locked or deleted)
     }

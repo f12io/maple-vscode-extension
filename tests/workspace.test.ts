@@ -14,6 +14,18 @@ vi.mock("../src/helpers/config", () => ({
   isExtensionEnabled: () => true,
 }));
 
+vi.mock("../src/helpers/alias-cache", () => {
+  const dummyMap = new Map<string, string>();
+  dummyMap.set("btn", "bgc-red-500;p-2");
+  dummyMap.set("card", "p-{value,4}");
+  dummyMap.set("l-shift", "-0.7");
+  return {
+    AliasCache: {
+      getAliases: () => dummyMap,
+    },
+  };
+});
+
 describe("Workspace Highlights and Colors", () => {
   const testFiles = [
     "test-workspace.html",

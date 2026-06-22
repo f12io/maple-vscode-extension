@@ -67,7 +67,18 @@ export function activate(context: vscode.ExtensionContext) {
   const mapleDiagnostics = vscode.languages.createDiagnosticCollection("maple");
   context.subscriptions.push(mapleDiagnostics);
   subscribeToDocumentChanges(context, mapleDiagnostics);
-
+  context.subscriptions.push(
+    AliasCache.onDidUpdateAliases.event(() => {
+      if (!isExtensionEnabled()) return;
+      for (const editor of vscode.window.visibleTextEditors) {
+        import("./providers/DiagnosticsProvider").then(
+          ({ refreshDiagnostics }) => {
+            refreshDiagnostics(editor.document, mapleDiagnostics);
+          },
+        );
+      }
+    })
+  );
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("maple.enabled")) {

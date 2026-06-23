@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
 import { getExactWordRangeAtPosition } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
+import { isFileExcluded } from '../helpers/exclude';
 import { getAliasName, isAliasMarker } from '../helpers/maple-parser';
 
 export class MapleHoverProvider implements vscode.HoverProvider {
@@ -12,7 +13,7 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     position: vscode.Position,
     token: vscode.CancellationToken,
   ): Promise<vscode.Hover | null> {
-    if (!isExtensionEnabled()) return null;
+    if (!isExtensionEnabled() || isFileExcluded(document.uri)) return null;
 
     const exactRange = getExactWordRangeAtPosition(document, position);
     if (!exactRange.wordRange) return null;

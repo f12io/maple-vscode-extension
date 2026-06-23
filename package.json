@@ -132,6 +132,12 @@
           "type": "boolean",
           "default": false,
           "description": "Enable Maple CSS extension features in this workspace."
+        },
+        "maple.exclude": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["**/node_modules/**", "**/.git/**"],
+          "description": "Glob patterns for files where Maple CSS extension features should be disabled."
         }
       }
     }
@@ -149,6 +155,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/node": "^20.19.43",
+    "@types/picomatch": "^4.0.3",
     "@types/vscode": "^1.125.0",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^10.5.0",
@@ -161,6 +168,7 @@
   "dependencies": {
     "@f12io/coco": "^2.1.9",
     "@f12io/maple": "^2.0.20",
+    "picomatch": "^4.0.4",
     "prettier": "^3.8.4"
   }
 }

@@ -27,6 +27,7 @@ import {
   getExactWordRangeAtPosition,
 } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
+import { isFileExcluded } from '../helpers/exclude';
 import { AliasCache } from '../helpers/alias-cache';
 
 export class MapleCompletionProvider implements vscode.CompletionItemProvider {
@@ -36,7 +37,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     token: vscode.CancellationToken,
     context: vscode.CompletionContext,
   ): vscode.ProviderResult<Array<vscode.CompletionItem> | vscode.CompletionList> {
-    if (!isExtensionEnabled()) return undefined;
+    if (!isExtensionEnabled() || isFileExcluded(document.uri)) return undefined;
 
     const documentText = document.getText();
     const offset = document.offsetAt(position);

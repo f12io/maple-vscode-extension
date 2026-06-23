@@ -28,6 +28,28 @@ export function isCommentedOut(text: string, index: number): boolean {
   return false;
 }
 
+export function isLineDisabled(text: string, index: number): boolean {
+  const lastNewline = text.lastIndexOf('\n', index);
+  let nextNewline = text.indexOf('\n', index);
+  if (nextNewline === -1) nextNewline = text.length;
+  
+  const fullLine = text.substring(lastNewline + 1, nextNewline);
+
+  if (fullLine.includes('maple-disable-line')) return true;
+
+  if (lastNewline !== -1) {
+    const prevNewline = text.lastIndexOf('\n', lastNewline - 1);
+    const prevLine = text.substring(prevNewline + 1, lastNewline);
+    if (prevLine.includes('maple-disable-next-line')) return true;
+  }
+
+  return false;
+}
+
+export function shouldSkipMatch(text: string, index: number): boolean {
+  return isCommentedOut(text, index) || isLineDisabled(text, index);
+}
+
 export function pushInstance(
   instances: Array<ClassInstance>,
   value: string,
@@ -133,7 +155,7 @@ export function extractStringsFromBraces(
 ) {
   let match: RegExpExecArray | null;
   while ((match = startRegex.exec(text)) !== null) {
-    if (isCommentedOut(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index)) continue;
 
     let braceCount = 1;
     let i = match.index + match[0].length;
@@ -177,6 +199,10 @@ export function extractStringsFromBraces(
 }
 
 export function extractAllClasses(text: string): Array<ClassInstance> {
+  if (text.includes('maple-disable-file')) {
+    return [];
+  }
+
   const instances: Array<ClassInstance> = [];
 
   // 1. Standard attributes: class="", className="", CssClass=""
@@ -185,7 +211,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1/gi;
   let match: RegExpExecArray | null;
   while ((match = attrRegex.exec(text)) !== null) {
-    if (isCommentedOut(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index)) continue;
 
     const value = match[2];
     const valueMatchStr = match[1] + value + match[1];
@@ -204,7 +230,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   const exprRegex =
     /(?:\[ngClass\]|:class|\[class\])\s*=\s*(["'])([\s\S]*?)\1/gi;
   while ((match = exprRegex.exec(text)) !== null) {
-    if (isCommentedOut(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index)) continue;
 
     const expr = match[2];
     const exprStart = match.index + match[0].indexOf(expr);
@@ -219,7 +245,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   // 3. Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' }
   const hostRegex = /host\s*:\s*\{([^}]+)\}/g;
   while ((match = hostRegex.exec(text)) !== null) {
-    if (isCommentedOut(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index)) continue;
 
     const hostObj = match[1];
     const hostStart = match.index + match[0].indexOf(hostObj);
@@ -245,7 +271,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   const specificClassRegex =
     /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]+)(?:\]|\=|\s)/g;
   while ((match = specificClassRegex.exec(text)) !== null) {
-    if (isCommentedOut(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index)) continue;
 
     instances.push({
       value: match[1],

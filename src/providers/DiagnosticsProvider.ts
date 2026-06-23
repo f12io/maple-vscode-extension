@@ -12,6 +12,7 @@ import {
   MAPLE_CLASS_REGEX,
 } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
+import { isFileExcluded } from '../helpers/exclude';
 import {
   checkConverted,
   getAliasName,
@@ -25,7 +26,7 @@ export function refreshDiagnostics(
   doc: vscode.TextDocument,
   mapleDiagnostics: vscode.DiagnosticCollection,
 ): void {
-  if (!isExtensionEnabled()) {
+  if (!isExtensionEnabled() || isFileExcluded(doc.uri)) {
     mapleDiagnostics.set(doc.uri, []);
     return;
   }

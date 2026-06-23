@@ -6,6 +6,7 @@ import {
   MAPLE_CLASS_REGEX,
 } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
+import { isFileExcluded } from '../helpers/exclude';
 import { getUtilKey } from '../helpers/get-util-key';
 import {
   checkConverted,
@@ -59,8 +60,8 @@ export class MapleSemanticTokensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.SemanticTokens> {
-    if (!isExtensionEnabled())
-      return new vscode.SemanticTokensBuilder(semanticTokensLegend).build();
+    if (!isExtensionEnabled() || isFileExcluded(document.uri))
+      return new vscode.SemanticTokens(new Uint32Array(0));
 
     const builder = new vscode.SemanticTokensBuilder(semanticTokensLegend);
     const text = document.getText();

@@ -46,8 +46,38 @@ export function isLineDisabled(text: string, index: number): boolean {
   return false;
 }
 
-export function shouldSkipMatch(text: string, index: number): boolean {
-  return isCommentedOut(text, index) || isLineDisabled(text, index);
+export function getDisabledBlocks(text: string): Array<{ start: number; end: number }> {
+  const blocks: Array<{ start: number; end: number }> = [];
+  const disableRegex = /\/\*\s*maple-disable\s*\*\//g;
+  const enableRegex = /\/\*\s*maple-enable\s*\*\//g;
+
+  let disableMatch;
+  while ((disableMatch = disableRegex.exec(text)) !== null) {
+    const start = disableMatch.index;
+    enableRegex.lastIndex = start;
+    const enableMatch = enableRegex.exec(text);
+    const end = enableMatch
+      ? enableMatch.index + enableMatch[0].length
+      : text.length;
+    blocks.push({ start, end });
+    disableRegex.lastIndex = end;
+  }
+
+  return blocks;
+}
+
+export function shouldSkipMatch(
+  text: string,
+  index: number,
+  disabledBlocks: Array<{ start: number; end: number }> = [],
+): boolean {
+  if (isCommentedOut(text, index) || isLineDisabled(text, index)) return true;
+
+  for (const block of disabledBlocks) {
+    if (index >= block.start && index <= block.end) return true;
+  }
+
+  return false;
 }
 
 export function pushInstance(
@@ -152,10 +182,11 @@ export function extractStringsFromBraces(
   openChar: string,
   closeChar: string,
   instances: Array<ClassInstance>,
+  disabledBlocks: Array<{ start: number; end: number }> = [],
 ) {
   let match: RegExpExecArray | null;
   while ((match = startRegex.exec(text)) !== null) {
-    if (shouldSkipMatch(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
     let braceCount = 1;
     let i = match.index + match[0].length;
@@ -203,6 +234,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     return [];
   }
 
+  const disabledBlocks = getDisabledBlocks(text);
   const instances: Array<ClassInstance> = [];
 
   // 1. Standard attributes: class="", className="", CssClass=""
@@ -211,7 +243,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1/gi;
   let match: RegExpExecArray | null;
   while ((match = attrRegex.exec(text)) !== null) {
-    if (shouldSkipMatch(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
     const value = match[2];
     const valueMatchStr = match[1] + value + match[1];
@@ -230,7 +262,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   const exprRegex =
     /(?:\[ngClass\]|:class|\[class\])\s*=\s*(["'])([\s\S]*?)\1/gi;
   while ((match = exprRegex.exec(text)) !== null) {
-    if (shouldSkipMatch(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
     const expr = match[2];
     const exprStart = match.index + match[0].indexOf(expr);
@@ -245,7 +277,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   // 3. Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' }
   const hostRegex = /host\s*:\s*\{([^}]+)\}/g;
   while ((match = hostRegex.exec(text)) !== null) {
-    if (shouldSkipMatch(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
     const hostObj = match[1];
     const hostStart = match.index + match[0].indexOf(hostObj);
@@ -271,7 +303,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   const specificClassRegex =
     /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]+)(?:\]|\=|\s)/g;
   while ((match = specificClassRegex.exec(text)) !== null) {
-    if (shouldSkipMatch(text, match.index)) continue;
+    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
     instances.push({
       value: match[1],
@@ -288,6 +320,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     '{',
     '}',
     instances,
+    disabledBlocks,
   );
 
   // 6. Utility functions: clsx(...), classNames(...), cva(...)
@@ -297,6 +330,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     '(',
     ')',
     instances,
+    disabledBlocks,
   );
 
   // Deduplicate instances by start offset to prevent double highlights/diagnostics

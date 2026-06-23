@@ -26,8 +26,6 @@ export function isFileExcluded(uri: vscode.Uri): boolean {
   if (uri.scheme !== 'file') return false;
 
   const match = getMatcher();
-  // We can pass the full path. Picomatch handles paths nicely.
-  // Using relative path to workspace folder if possible
   const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
   const pathToCheck = workspaceFolder
     ? vscode.workspace.asRelativePath(uri, false)

@@ -32,4 +32,19 @@ describe('Inline Disable Comments', () => {
     expect(classes.length).toBe(1);
     expect(classes[0].value).toBe('text-xl');
   });
+
+  it('should skip blocks if maple-disable is used', () => {
+    const text = `
+      const a = <div class="btn"></div>;
+      /* maple-disable */
+      const b = <div class="bg-red-500"></div>;
+      const c = <span className="text-xl"></span>;
+      /* maple-enable */
+      const d = <span className="flex"></span>;
+    `;
+    const classes = extractAllClasses(text);
+    expect(classes.length).toBe(2);
+    expect(classes[0].value).toBe('btn');
+    expect(classes[1].value).toBe('flex');
+  });
 });

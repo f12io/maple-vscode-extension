@@ -18,6 +18,112 @@ function getTagNameBackwards(text: string, index: number): string | undefined {
   return undefined;
 }
 
+export function isCommentedOut(text: string, index: number): boolean {
+  const lastNewline = text.lastIndexOf('\n', index);
+  const lineToMatch = text.substring(lastNewline + 1, index);
+  if (lineToMatch.includes('//')) return true;
+  if (lineToMatch.includes('/*')) return true;
+  if (lineToMatch.includes('<!--')) return true;
+  if (/^\s*\*/.test(lineToMatch)) return true;
+  return false;
+}
+
+export function pushInstance(
+  instances: Array<ClassInstance>,
+  value: string,
+  start: number,
+  text: string,
+  matchIndex: number,
+) {
+  if (value.trim().length > 0) {
+    instances.push({
+      value,
+      start,
+      end: start + value.length,
+      tagName: getTagNameBackwards(text, matchIndex),
+    });
+  }
+}
+
+export function extractUnquotedObjectKeys(
+  expr: string,
+  exprStart: number,
+  text: string,
+  matchIndex: number,
+  instances: Array<ClassInstance>,
+) {
+  const objectKeyRegex = /(?:[{,])\s*([a-zA-Z0-9\-_]+)\s*:/g;
+  let keyMatch;
+  while ((keyMatch = objectKeyRegex.exec(expr)) !== null) {
+    const value = keyMatch[1];
+    const keyIdx = keyMatch[0].indexOf(value);
+    const start = exprStart + keyMatch.index + keyIdx;
+    pushInstance(instances, value, start, text, matchIndex);
+  }
+}
+
+export function extractFromTemplateLiteral(
+  value: string,
+  offset: number,
+  text: string,
+  matchIndex: number,
+  instances: Array<ClassInstance>,
+) {
+  let currentStr = '';
+  let currentStart = offset;
+  let j = 0;
+  while (j < value.length) {
+    if (value.substring(j, j + 2) === '${') {
+      pushInstance(instances, currentStr, currentStart, text, matchIndex);
+      currentStr = '';
+      j += 2;
+      let innerBraceCount = 1;
+      const innerExprStart = j;
+      while (j < value.length && innerBraceCount > 0) {
+        if (value[j] === '{') innerBraceCount++;
+        else if (value[j] === '}') innerBraceCount--;
+        j++;
+      }
+      const innerExpr = value.substring(innerExprStart, j - 1);
+
+      extractStringLiterals(
+        innerExpr,
+        offset + innerExprStart,
+        text,
+        matchIndex,
+        instances,
+      );
+
+      currentStart = offset + j;
+    } else {
+      currentStr += value[j];
+      j++;
+    }
+  }
+  pushInstance(instances, currentStr, currentStart, text, matchIndex);
+}
+
+export function extractStringLiterals(
+  expr: string,
+  exprStart: number,
+  text: string,
+  matchIndex: number,
+  instances: Array<ClassInstance>,
+) {
+  const stringLiteralRegex = /(["'`])([\s\S]*?)\1/g;
+  let strMatch;
+  while ((strMatch = stringLiteralRegex.exec(expr)) !== null) {
+    const quoteIdx = strMatch[0].indexOf(strMatch[1]);
+    const start = exprStart + strMatch.index + quoteIdx + 1;
+    const value = strMatch[2];
+    if (strMatch[1] === '`') {
+      extractFromTemplateLiteral(value, start, text, matchIndex, instances);
+    } else {
+      pushInstance(instances, value, start, text, matchIndex);
+    }
+  }
+}
+
 export function extractStringsFromBraces(
   text: string,
   startRegex: RegExp,
@@ -27,6 +133,8 @@ export function extractStringsFromBraces(
 ) {
   let match: RegExpExecArray | null;
   while ((match = startRegex.exec(text)) !== null) {
+    if (isCommentedOut(text, match.index)) continue;
+
     let braceCount = 1;
     let i = match.index + match[0].length;
     let inString = false;
@@ -60,82 +168,10 @@ export function extractStringsFromBraces(
       const expr = text.substring(match.index + match[0].length, i - 1);
       const exprStart = match.index + match[0].length;
 
-      const extractFromTemplateLiteral = (value: string, offset: number) => {
-        let currentStr = '';
-        let currentStart = offset;
-        let j = 0;
-        while (j < value.length) {
-          if (value.substring(j, j + 2) === '${') {
-            if (currentStr.trim().length > 0) {
-              instances.push({
-                value: currentStr,
-                start: currentStart,
-                end: currentStart + currentStr.length,
-                tagName: getTagNameBackwards(text, match!.index),
-              });
-            }
-            currentStr = '';
-            j += 2;
-            let innerBraceCount = 1;
-            const innerExprStart = j;
-            while (j < value.length && innerBraceCount > 0) {
-              if (value[j] === '{') innerBraceCount++;
-              else if (value[j] === '}') innerBraceCount--;
-              j++;
-            }
-            const innerExpr = value.substring(innerExprStart, j - 1);
+      extractStringLiterals(expr, exprStart, text, match.index, instances);
 
-            const innerRegex = /(["'`])([\s\S]*?)\1/g;
-            let innerMatch;
-            while ((innerMatch = innerRegex.exec(innerExpr)) !== null) {
-              const innerQuoteIdx = innerMatch[0].indexOf(innerMatch[1]);
-              const innerStart =
-                offset + innerExprStart + innerMatch.index + innerQuoteIdx + 1;
-              const innerValue = innerMatch[2];
-              if (innerMatch[1] === '`') {
-                extractFromTemplateLiteral(innerValue, innerStart);
-              } else if (innerValue.trim().length > 0) {
-                instances.push({
-                  value: innerValue,
-                  start: innerStart,
-                  end: innerStart + innerValue.length,
-                  tagName: getTagNameBackwards(text, match!.index),
-                });
-              }
-            }
-            currentStart = offset + j;
-          } else {
-            currentStr += value[j];
-            j++;
-          }
-        }
-        if (currentStr.trim().length > 0) {
-          instances.push({
-            value: currentStr,
-            start: currentStart,
-            end: currentStart + currentStr.length,
-            tagName: getTagNameBackwards(text, match!.index),
-          });
-        }
-      };
-
-      const stringLiteralRegex = /(["'`])([\s\S]*?)\1/g;
-      let strMatch;
-      while ((strMatch = stringLiteralRegex.exec(expr)) !== null) {
-        const quoteIdx = strMatch[0].indexOf(strMatch[1]);
-        const start = exprStart + strMatch.index + quoteIdx + 1;
-        const value = strMatch[2];
-        if (strMatch[1] === '`') {
-          extractFromTemplateLiteral(value, start);
-        } else if (value.trim().length > 0) {
-          instances.push({
-            value: value,
-            start: start,
-            end: start + value.length,
-            tagName: getTagNameBackwards(text, match.index),
-          });
-        }
-      }
+      // Extract unquoted object keys (e.g., { fx: true } after Prettier removes quotes)
+      extractUnquotedObjectKeys(expr, exprStart, text, match.index, instances);
     }
   }
 }
@@ -149,6 +185,8 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1/gi;
   let match: RegExpExecArray | null;
   while ((match = attrRegex.exec(text)) !== null) {
+    if (isCommentedOut(text, match.index)) continue;
+
     const value = match[2];
     const valueMatchStr = match[1] + value + match[1];
     const start = match.index + match[0].indexOf(valueMatchStr) + 1; // +1 to skip the quote/backtick
@@ -166,27 +204,23 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   const exprRegex =
     /(?:\[ngClass\]|:class|\[class\])\s*=\s*(["'])([\s\S]*?)\1/gi;
   while ((match = exprRegex.exec(text)) !== null) {
+    if (isCommentedOut(text, match.index)) continue;
+
     const expr = match[2];
     const exprStart = match.index + match[0].indexOf(expr);
 
     // Find all string literals inside the expression: '...', "...", `...`
-    const stringLiteralRegex = /(["'`])([\s\S]*?)\1/g;
-    let strMatch;
-    while ((strMatch = stringLiteralRegex.exec(expr)) !== null) {
-      const quoteIdx = strMatch[0].indexOf(strMatch[1]);
-      const start = exprStart + strMatch.index + quoteIdx + 1;
-      instances.push({
-        value: strMatch[2],
-        start: start,
-        end: start + strMatch[2].length,
-        tagName: getTagNameBackwards(text, match.index),
-      });
-    }
+    extractStringLiterals(expr, exprStart, text, match.index, instances);
+
+    // Extract unquoted object keys
+    extractUnquotedObjectKeys(expr, exprStart, text, match.index, instances);
   }
 
   // 3. Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' }
   const hostRegex = /host\s*:\s*\{([^}]+)\}/g;
   while ((match = hostRegex.exec(text)) !== null) {
+    if (isCommentedOut(text, match.index)) continue;
+
     const hostObj = match[1];
     const hostStart = match.index + match[0].indexOf(hostObj);
 
@@ -211,6 +245,8 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   const specificClassRegex =
     /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]+)(?:\]|\=|\s)/g;
   while ((match = specificClassRegex.exec(text)) !== null) {
+    if (isCommentedOut(text, match.index)) continue;
+
     instances.push({
       value: match[1],
       start: match.index + match[0].indexOf(match[1]),

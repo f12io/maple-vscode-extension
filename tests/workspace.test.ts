@@ -32,6 +32,8 @@ describe('Workspace Highlights and Colors', () => {
     'test-react.jsx',
     'test-vue.vue',
     'test-angular.html',
+    'test-angular.ts',
+    'test-class.js',
   ];
 
   for (const fileName of testFiles) {

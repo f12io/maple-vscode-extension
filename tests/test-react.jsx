@@ -1,13 +1,5 @@
-function clsx(...classes) {
-  return classes
-    .filter(Boolean)
-    .map((cls) => cls.trim())
-    .join(' ');
-}
-
-function cva(base, config) {
-  return () => base;
-}
+function clsx() {}
+function cva() {}
 
 const buttonVariants = cva('btn bgc-blue-500', {
   variants: {

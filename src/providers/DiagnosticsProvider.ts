@@ -7,10 +7,8 @@ import {
 } from '@f12io/maple';
 import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
-import {
-  extractAllClasses,
-  MAPLE_CLASS_REGEX,
-} from '../helpers/class-extractor';
+import { extractAllClasses } from '../helpers/class-extractor';
+import { getMapleClassRegex } from '../constants/regex';
 import { isExtensionEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
@@ -43,9 +41,9 @@ export function refreshDiagnostics(
       { range: vscode.Range; isAdded: boolean }
     >();
 
-    MAPLE_CLASS_REGEX.lastIndex = 0;
+    const mapleClassRegex = getMapleClassRegex();
     let wordMatch;
-    while ((wordMatch = MAPLE_CLASS_REGEX.exec(classValue))) {
+    while ((wordMatch = mapleClassRegex.exec(classValue))) {
       let cls = wordMatch[0];
 
       const stripped = stripQuotes(cls);

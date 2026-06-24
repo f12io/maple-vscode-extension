@@ -5,12 +5,33 @@ export interface ClassInstance {
   tagName?: string;
 }
 
+import {
+  START_TAG_NAME_REGEX,
+  START_COMMENT_STAR_REGEX,
+  getDisableRegex,
+  getEnableRegex,
+  getObjectKeyRegex,
+  getStringLiteralRegex,
+  getStandardAttrRegex,
+  getAngularVueExprRegex,
+  getHostRegex,
+  getHostClassRegex,
+  getSpecificClassRegex,
+  getJsxExprStartRegex,
+  getUtilityFuncStartRegex,
+  getOptInStringRegex,
+  getOptInObjectStartRegex,
+  getIsInsideClassAttrRegex,
+  IS_INSIDE_NO_QUOTE_CLASS_REGEX,
+  MAPLE_CLASS_REGEX_NON_GLOBAL,
+} from '../constants/regex';
+
 function getTagNameBackwards(text: string, index: number): string | undefined {
   const prefix = text.substring(0, index);
   const lastOpen = prefix.lastIndexOf('<');
   const lastClose = prefix.lastIndexOf('>');
   if (lastOpen !== -1 && lastOpen > lastClose) {
-    const match = /^\s*([a-zA-Z0-9\-]+)/.exec(text.substring(lastOpen + 1));
+    const match = START_TAG_NAME_REGEX.exec(text.substring(lastOpen + 1));
     if (match) {
       return match[1].toLowerCase();
     }
@@ -23,7 +44,7 @@ export function isCommentedOut(text: string, index: number): boolean {
   const lineToMatch = text.substring(lastNewline + 1, index);
   if (lineToMatch.includes('//')) return true;
   if (lineToMatch.includes('<!--')) return true;
-  if (/^\s*\*/.test(lineToMatch)) return true;
+  if (START_COMMENT_STAR_REGEX.test(lineToMatch)) return true;
 
   const lastSlashStar = lineToMatch.lastIndexOf('/*');
   if (lastSlashStar !== -1) {
@@ -56,8 +77,8 @@ export function isLineDisabled(text: string, index: number): boolean {
 
 export function getDisabledBlocks(text: string): Array<{ start: number; end: number }> {
   const blocks: Array<{ start: number; end: number }> = [];
-  const disableRegex = /\/\*\s*maple-disable\s*\*\//g;
-  const enableRegex = /\/\*\s*maple-enable\s*\*\//g;
+  const disableRegex = getDisableRegex();
+  const enableRegex = getEnableRegex();
 
   let disableMatch;
   while ((disableMatch = disableRegex.exec(text)) !== null) {
@@ -114,7 +135,7 @@ export function extractUnquotedObjectKeys(
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
 ) {
-  const objectKeyRegex = /(?:[{,])\s*([a-zA-Z0-9\-_]+)\s*:/g;
+  const objectKeyRegex = getObjectKeyRegex();
   let keyMatch;
   while ((keyMatch = objectKeyRegex.exec(expr)) !== null) {
     const value = keyMatch[1];
@@ -175,7 +196,7 @@ export function extractStringLiterals(
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
 ) {
-  const stringLiteralRegex = /(["'`])([\s\S]*?)\1/g;
+  const stringLiteralRegex = getStringLiteralRegex();
   let strMatch;
   while ((strMatch = stringLiteralRegex.exec(expr)) !== null) {
     const quoteIdx = strMatch[0].indexOf(strMatch[1]);
@@ -252,8 +273,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
 
   // 1. Standard attributes: class="", className="", CssClass=""
   // Must be preceded by space or start of tag to avoid matching the "class" inside ":class" or "[class]"
-  const attrRegex =
-    /(?:^|[\s<>])(?:class|className|CssClass)\s*=\s*(["'])([\s\S]*?)\1/gi;
+  const attrRegex = getStandardAttrRegex();
   let match: RegExpExecArray | null;
   while ((match = attrRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
@@ -267,8 +287,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   // 2. Angular / Vue expressions: [ngClass]="...", :class="...", [class]="..."
   // This matches the container of the expression
   // We use this for objects, arrays, and ternaries where classes are inside strings: :class="{ 'c-red': isActive }"
-  const exprRegex =
-    /(?:\[ngClass\]|:class|\[class\])\s*=\s*(["'])([\s\S]*?)\1/gi;
+  const exprRegex = getAngularVueExprRegex();
   while ((match = exprRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
@@ -283,7 +302,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   }
 
   // 3. Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' }
-  const hostRegex = /host\s*:\s*\{([^}]+)\}/g;
+  const hostRegex = getHostRegex();
   while ((match = hostRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
@@ -291,8 +310,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     const hostStart = match.index + match[0].indexOf(hostObj);
 
     // Extract 'class': '...'
-    const hostClassRegex =
-      /(?:'class'|"class"|class)\s*:\s*(["'`])([\s\S]*?)\1/g;
+    const hostClassRegex = getHostClassRegex();
     let hcMatch;
     while ((hcMatch = hostClassRegex.exec(hostObj)) !== null) {
       const quoteIdx = hcMatch[0].indexOf(hcMatch[1]);
@@ -303,8 +321,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
 
   // 4. Angular [class.xxx]="..." and Svelte class:xxx="..."
   // specificClassRegex captures the class portion after the dot or colon
-  const specificClassRegex =
-    /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]+)(?:\]|\=|\s)/g;
+  const specificClassRegex = getSpecificClassRegex();
   while ((match = specificClassRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
@@ -315,7 +332,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   // 5. React / Solid JSX expressions: className={...}, class={...}, classList={...}
   extractStringsFromBraces(
     text,
-    /(?:^|[\s<>])(?:class|className|classList)\s*=\s*\{/gi,
+    getJsxExprStartRegex(),
     '{',
     '}',
     instances,
@@ -325,7 +342,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   // 6. Utility functions: clsx(...), classNames(...), cva(...)
   extractStringsFromBraces(
     text,
-    /(?:clsx|classNames|cva)\s*\(/gi,
+    getUtilityFuncStartRegex(),
     '(',
     ')',
     instances,
@@ -333,7 +350,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   );
 
   // 7. Explicit opt-in comments for strings: /\*maple */ '...', /\*maple */ `...`
-  const optInRegex = /\/\*\s*maple\s*\*\/\s*(["'`])([\s\S]*?)\1/g;
+  const optInRegex = getOptInStringRegex();
   while ((match = optInRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
@@ -351,7 +368,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   // 8. Explicit opt-in comments for objects: /\*maple */ { ... }
   extractStringsFromBraces(
     text,
-    /\/\*\s*maple\s*\*\/\s*\{/gi,
+    getOptInObjectStartRegex(),
     '{',
     '}',
     instances,
@@ -388,8 +405,7 @@ export function isInsideClassAttribute(
   // 6: class:xxx="
   // 7: className={`
   // 8: [class]="
-  const attrRegex =
-    /(?:class|className|CssClass|\[ngClass\]|:class|\[class\])\s*=\s*(["'])|host\s*:\s*\{[^}]*(?:'class'|"class"|class)\s*:\s*(["'`])|\[class\.[^\]=]*\]\s*=\s*(["'])|class:[a-zA-Z0-9\-\@\:]+\s*=\s*(["'])|className\s*=\s*\{\s*`([^`]*)`/gi;
+  const attrRegex = getIsInsideClassAttrRegex();
 
   let match;
   let lastMatch = null;
@@ -399,7 +415,7 @@ export function isInsideClassAttribute(
 
   if (!lastMatch) {
     // Check for Angular/Svelte bindings without quotes
-    const noQuoteRegex = /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]*)$/i;
+    const noQuoteRegex = IS_INSIDE_NO_QUOTE_CLASS_REGEX;
     if (noQuoteRegex.test(prefix)) {
       return true;
     }
@@ -490,8 +506,3 @@ export function getExactWordRangeAtPosition(
 
   return { wordRange: finalRange, currentWord: finalWord };
 }
-
-export const MAPLE_CLASS_REGEX =
-  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\\*\'\"]+/g;
-export const MAPLE_CLASS_REGEX_NON_GLOBAL =
-  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\\*\'\"]+/;

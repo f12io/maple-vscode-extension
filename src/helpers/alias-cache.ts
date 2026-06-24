@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import { getAliasRegex } from '../constants/regex';
 
 /**
  * A workspace-wide cache that scans files for custom Maple aliases
@@ -11,9 +12,6 @@ export class AliasCache {
 
   // Event emitter for alias updates
   public static readonly onDidUpdateAliases = new vscode.EventEmitter<void>();
-
-  // Regular expression used to extract aliases from file content
-  private static readonly ALIAS_REGEX = /--alias-([a-zA-Z0-9\-]+)=([^"'\s]+)/g;
 
   public static init(context: vscode.ExtensionContext) {
     // Initial scan
@@ -140,9 +138,9 @@ export class AliasCache {
     content: string,
     map: Map<string, string>,
   ) {
-    this.ALIAS_REGEX.lastIndex = 0;
+    const aliasRegex = getAliasRegex();
     let match;
-    while ((match = this.ALIAS_REGEX.exec(content)) !== null) {
+    while ((match = aliasRegex.exec(content)) !== null) {
       map.set(match[1], match[2]);
     }
   }

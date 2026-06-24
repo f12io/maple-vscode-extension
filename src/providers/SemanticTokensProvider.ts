@@ -1,10 +1,8 @@
 import { BUILTIN_ALIASES, parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
-import {
-  extractAllClasses,
-  MAPLE_CLASS_REGEX,
-} from '../helpers/class-extractor';
+import { getMapleClassRegex } from '../constants/regex';
+import { extractAllClasses } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import { getUtilKey } from '../helpers/get-util-key';
@@ -131,8 +129,9 @@ export class MapleSemanticTokensProvider
 
     for (const instance of matches) {
       const classStr = instance.value;
+      const mapleClassRegex = getMapleClassRegex();
       let match;
-      while ((match = MAPLE_CLASS_REGEX.exec(classStr)) !== null) {
+      while ((match = mapleClassRegex.exec(classStr)) !== null) {
         let className = match[0];
         let currentClassNameOffset = instance.start + match.index;
 

@@ -23,7 +23,7 @@ import {
   DEFAULT_ANGLE_UNIT,
 } from '@f12io/maple';
 import {
-  isInsideClassAttribute,
+  extractAllClasses,
   getExactWordRangeAtPosition,
 } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
@@ -42,8 +42,12 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     const documentText = document.getText();
     const offset = document.offsetAt(position);
 
-    // Use the unified class attribute detection with offset for multiline support
-    if (!isInsideClassAttribute(documentText, offset)) {
+    const instances = extractAllClasses(documentText);
+    const currentInstance = instances.find(
+      (inst) => offset >= inst.start && offset <= inst.end,
+    );
+
+    if (!currentInstance) {
       return undefined;
     }
 

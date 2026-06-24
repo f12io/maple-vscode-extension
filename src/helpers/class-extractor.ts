@@ -98,14 +98,12 @@ export function pushInstance(
 ) {
   if (shouldSkipMatch(text, start, disabledBlocks)) return;
 
-  if (value.trim().length > 0) {
-    instances.push({
-      value,
-      start,
-      end: start + value.length,
-      tagName: getTagNameBackwards(text, matchIndex),
-    });
-  }
+  instances.push({
+    value,
+    start,
+    end: start + value.length,
+    tagName: getTagNameBackwards(text, matchIndex),
+  });
 }
 
 export function extractUnquotedObjectKeys(

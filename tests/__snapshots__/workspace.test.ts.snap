@@ -707,6 +707,42 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
     "warnings": [],
   },
+  {
+    "classValue": "bgc-red;p-2",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red",
+        "type": "maple-value",
+      },
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "2",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
 ]
 `;
 
@@ -819,6 +855,12 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
     ],
+    "warnings": [],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
     "warnings": [],
   },
   {
@@ -1163,6 +1205,13 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
     ],
+    "warnings": [],
+  },
+  {
+    "classValue": "
+        ",
+    "colors": [],
+    "tokens": [],
     "warnings": [],
   },
   {

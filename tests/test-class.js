@@ -21,6 +21,7 @@ export class MyComponent {
     let testClass = /* maple */ {
       host: 'fx', // maple-disable-line
       'fw-bold': true,
+      'bgc-red;p-2': true,
     };
 
     testClass = /* maple */ 'fw-bold c-red';

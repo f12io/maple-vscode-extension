@@ -334,7 +334,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     disabledBlocks,
   );
 
-  // 7. Explicit opt-in comments for strings: /* maple */ '...', /* maple */ `...`
+  // 7. Explicit opt-in comments for strings: /\*maple */ '...', /\*maple */ `...`
   const optInRegex = /\/\*\s*maple\s*\*\/\s*(["'`])([\s\S]*?)\1/g;
   while ((match = optInRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
@@ -350,7 +350,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     }
   }
 
-  // 8. Explicit opt-in comments for objects: /* maple */ { ... }
+  // 8. Explicit opt-in comments for objects: /\*maple */ { ... }
   extractStringsFromBraces(
     text,
     /\/\*\s*maple\s*\*\/\s*\{/gi,
@@ -494,6 +494,6 @@ export function getExactWordRangeAtPosition(
 }
 
 export const MAPLE_CLASS_REGEX =
-  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\*\;\'\"]+/g;
+  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\\*\'\"]+/g;
 export const MAPLE_CLASS_REGEX_NON_GLOBAL =
-  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\*\;\'\"]+/;
+  /[\w\-@:\[\]\#\.\%\|_\/\(\)\,\=\!\^\&\>\<\~\+\\*\'\"]+/;

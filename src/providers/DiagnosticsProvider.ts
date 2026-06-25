@@ -118,8 +118,15 @@ export function refreshDiagnostics(
           }
 
           if (!isAlias) {
-            hasError = true;
-            errorMsg = `Invalid maple class: '${cls}'`;
+            if (
+              doc.languageId === 'razor' &&
+              (cls.startsWith('@') || cls.includes('(') || cls.includes(')'))
+            ) {
+              // Ignore razor variables and expressions
+            } else {
+              hasError = true;
+              errorMsg = `Invalid maple class: '${cls}'`;
+            }
           }
         }
       }

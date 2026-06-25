@@ -26,6 +26,45 @@ import {
   MAPLE_CLASS_REGEX_NON_GLOBAL,
 } from '../constants/regex';
 
+function findClosingQuote(text: string, startIndex: number, quote: string): number {
+  let parenDepth = 0;
+  let braceDepth = 0;
+  let i = startIndex;
+
+  while (i < text.length) {
+    const char = text[i];
+    const prevChar = i > 0 ? text[i - 1] : '';
+
+    if (prevChar === '\\') {
+      i++;
+      continue;
+    }
+
+    if (char === '(' && prevChar === '@') {
+      parenDepth++;
+    } else if (char === '(' && parenDepth > 0) {
+      parenDepth++;
+    } else if (char === ')') {
+      if (parenDepth > 0) parenDepth--;
+    } else if (char === '{') {
+      braceDepth++;
+    } else if (char === '}') {
+      if (braceDepth > 0) braceDepth--;
+    } else if (char === quote) {
+      if (parenDepth === 0 && braceDepth === 0) {
+        return i;
+      }
+    }
+
+    if (i - startIndex > 5000) {
+      return -1; // safety timeout
+    }
+
+    i++;
+  }
+  return -1;
+}
+
 function getTagNameBackwards(text: string, index: number): string | undefined {
   const prefix = text.substring(0, index);
   const lastOpen = prefix.lastIndexOf('<');
@@ -145,7 +184,7 @@ export function extractUnquotedObjectKeys(
   }
 }
 
-export function extractFromTemplateLiteral(
+export function extractFromAttributeValue(
   value: string,
   offset: number,
   text: string,
@@ -161,6 +200,52 @@ export function extractFromTemplateLiteral(
       pushInstance(instances, currentStr, currentStart, text, matchIndex, disabledBlocks);
       currentStr = '';
       j += 2;
+      let innerBraceCount = 1;
+      const innerExprStart = j;
+      while (j < value.length && innerBraceCount > 0) {
+        if (value[j] === '{') innerBraceCount++;
+        else if (value[j] === '}') innerBraceCount--;
+        j++;
+      }
+      const innerExpr = value.substring(innerExprStart, j - 1);
+
+      extractStringLiterals(
+        innerExpr,
+        offset + innerExprStart,
+        text,
+        matchIndex,
+        instances,
+        disabledBlocks,
+      );
+
+      currentStart = offset + j;
+    } else if (value.substring(j, j + 2) === '@(') {
+      pushInstance(instances, currentStr, currentStart, text, matchIndex, disabledBlocks);
+      currentStr = '';
+      j += 2;
+      let innerParenCount = 1;
+      const innerExprStart = j;
+      while (j < value.length && innerParenCount > 0) {
+        if (value[j] === '(') innerParenCount++;
+        else if (value[j] === ')') innerParenCount--;
+        j++;
+      }
+      const innerExpr = value.substring(innerExprStart, j - 1);
+
+      extractStringLiterals(
+        innerExpr,
+        offset + innerExprStart,
+        text,
+        matchIndex,
+        instances,
+        disabledBlocks,
+      );
+
+      currentStart = offset + j;
+    } else if (value[j] === '{') {
+      pushInstance(instances, currentStr, currentStart, text, matchIndex, disabledBlocks);
+      currentStr = '';
+      j += 1;
       let innerBraceCount = 1;
       const innerExprStart = j;
       while (j < value.length && innerBraceCount > 0) {
@@ -203,7 +288,7 @@ export function extractStringLiterals(
     const start = exprStart + strMatch.index + quoteIdx + 1;
     const value = strMatch[2];
     if (strMatch[1] === '`') {
-      extractFromTemplateLiteral(value, start, text, matchIndex, instances, disabledBlocks);
+      extractFromAttributeValue(value, start, text, matchIndex, instances, disabledBlocks);
     } else {
       pushInstance(instances, value, start, text, matchIndex, disabledBlocks);
     }
@@ -278,10 +363,14 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   while ((match = attrRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
-    const value = match[2];
-    const valueMatchStr = match[1] + value + match[1];
-    const start = match.index + match[0].indexOf(valueMatchStr) + 1; // +1 to skip the quote/backtick
-    pushInstance(instances, value, start, text, match.index, disabledBlocks);
+    const quote = match[1];
+    const attrStart = match.index + match[0].length;
+    const closingQuoteIndex = findClosingQuote(text, attrStart, quote);
+    
+    if (closingQuoteIndex !== -1) {
+      const value = text.substring(attrStart, closingQuoteIndex);
+      extractFromAttributeValue(value, attrStart, text, match.index, instances, disabledBlocks);
+    }
   }
 
   // 2. Angular / Vue expressions: [ngClass]="...", :class="...", [class]="..."
@@ -291,14 +380,17 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   while ((match = exprRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
-    const expr = match[2];
-    const exprStart = match.index + match[0].indexOf(expr);
+    const quote = match[1];
+    const exprStart = match.index + match[0].length;
+    const closingQuoteIndex = findClosingQuote(text, exprStart, quote);
 
-    // Find all string literals inside the expression: '...', "...", `...`
-    extractStringLiterals(expr, exprStart, text, match.index, instances, disabledBlocks);
-
-    // Extract unquoted object keys
-    extractUnquotedObjectKeys(expr, exprStart, text, match.index, instances, disabledBlocks);
+    if (closingQuoteIndex !== -1) {
+      const expr = text.substring(exprStart, closingQuoteIndex);
+      // Find all string literals inside the expression: '...', "...", `...`
+      extractStringLiterals(expr, exprStart, text, match.index, instances, disabledBlocks);
+      // Extract unquoted object keys
+      extractUnquotedObjectKeys(expr, exprStart, text, match.index, instances, disabledBlocks);
+    }
   }
 
   // 3. Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' }
@@ -359,7 +451,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     const start = match.index + match[0].indexOf(quote) + 1;
     
     if (quote === '`') {
-      extractFromTemplateLiteral(value, start, text, match.index, instances, disabledBlocks);
+      extractFromAttributeValue(value, start, text, match.index, instances, disabledBlocks);
     } else {
       pushInstance(instances, value, start, text, match.index, disabledBlocks);
     }
@@ -431,8 +523,8 @@ export function isInsideClassAttribute(
     lastMatch.index + lastMatch[0].lastIndexOf(quote) + 1,
   );
 
-  // If the insideString contains the matching quote, it means the attribute was closed before the cursor
-  if (insideString.includes(quote)) {
+  // If the insideString contains the matching quote (properly closed), it means the attribute was closed before the cursor
+  if (findClosingQuote(insideString, 0, quote) !== -1) {
     return false;
   }
 

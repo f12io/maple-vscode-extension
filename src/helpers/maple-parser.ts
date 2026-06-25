@@ -28,7 +28,7 @@ export function stripImportant(word: string): string {
 
 export function getAliasName(word: string): string {
   const stripped = stripImportant(word);
-  return isAliasMarker(stripped) ? stripped.substring(1) : stripped;
+  return stripped.replace(/^@+/, '');
 }
 
 export function stripQuotes(word: string): { word: string; offset: number } {

@@ -746,6 +746,170 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
 ]
 `;
 
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-razor.razor 1`] = `
+[
+  {
+    "classValue": "bgc-green-500 @extraClass",
+    "colors": [
+      {
+        "color": "rgba(0, 128, 0, 1)",
+        "text": "green-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "green-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [
+      "Invalid maple class: '@extraClass'",
+    ],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-white",
+    "colors": [
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-gray-500",
+    "colors": [
+      {
+        "color": "rgba(128, 128, 128, 1)",
+        "text": "gray-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-red-500",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-gray-300",
+    "colors": [
+      {
+        "color": "rgba(177, 177, 177, 1)",
+        "text": "gray-300",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-300",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": " fw-bold",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+]
+`;
+
 exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-react.jsx 1`] = `
 [
   {
@@ -1341,6 +1505,143 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
 ]
 `;
 
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-svelte.svelte 1`] = `
+[
+  {
+    "classValue": "bgc-green-500 p-4",
+    "colors": [
+      {
+        "color": "rgba(0, 128, 0, 1)",
+        "text": "green-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "green-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-white",
+    "colors": [
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-gray-500",
+    "colors": [
+      {
+        "color": "rgba(128, 128, 128, 1)",
+        "text": "gray-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-red-500",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-gray-300",
+    "colors": [
+      {
+        "color": "rgba(177, 177, 177, 1)",
+        "text": "gray-300",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-300",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+]
+`;
+
 exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-vue.vue 1`] = `
 [
   {
@@ -1481,7 +1782,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
 exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-workspace.html 1`] = `
 [
   {
-    "classValue": "--alias-btn=bgc-red-500;p-2 @md:--alias-card=p-{value,4} @dark:--l-shift=-0.7",
+    "classValue": "--alias-btn=bgc-red-500;p-2 @md:--alias-card=p-",
     "colors": [
       {
         "color": "rgba(255, 0, 0, 1)",
@@ -1541,6 +1842,13 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "p-",
         "type": "maple-value",
       },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": " @dark:--l-shift=-0.7",
+    "colors": [],
+    "tokens": [
       {
         "text": "@dark",
         "type": "maple-mediaQuery",

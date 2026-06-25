@@ -58,14 +58,14 @@ const JS_FRAMEWORK_CLASS_ATTRS = `class|className|classList`;
 /** 1. Standard attributes: class="", className="", CssClass="" */
 export const getStandardAttrRegex = () =>
   new RegExp(
-    `(?:^|[\\s<>])(?:${STANDARD_CLASS_ATTRS})\\s*=\\s*(["'])([\\s\\S]*?)\\1`,
+    `(?:^|[\\s<>])(?:${STANDARD_CLASS_ATTRS})\\s*=\\s*(["'])`,
     'gi',
   );
 
 /** 2. Angular / Vue expressions: [ngClass]="...", :class="...", [class]="..." */
 export const getAngularVueExprRegex = () =>
   new RegExp(
-    `(?:${ANGULAR_VUE_CLASS_ATTRS})\\s*=\\s*(["'])([\\s\\S]*?)\\1`,
+    `(?:${ANGULAR_VUE_CLASS_ATTRS})\\s*=\\s*(["'])`,
     'gi',
   );
 

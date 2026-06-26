@@ -25,7 +25,7 @@ export function refreshDiagnostics(
   mapleDiagnostics: vscode.DiagnosticCollection,
 ): void {
   if (
-    !isExtensionEnabled() ||
+    !isExtensionEnabled(doc) ||
     isFileExcluded(doc.uri) ||
     !isFeatureEnabled('diagnostics')
   ) {

@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
 import { AliasCache } from './helpers/alias-cache';
-import { isExtensionEnabled, isFeatureEnabled } from './helpers/config';
+import {
+  isExtensionExplicitlyDisabled,
+  isFeatureEnabled,
+} from './helpers/config';
 import { MapleColorProvider } from './providers/ColorProvider';
 import { MapleCompletionProvider } from './providers/CompletionProvider';
 import { DecorationsManager } from './providers/DecorationsManager';
@@ -52,7 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   function updateColorProvider() {
     const shouldBeEnabled =
-      isExtensionEnabled() && isFeatureEnabled('colorPicker');
+      !isExtensionExplicitlyDisabled() && isFeatureEnabled('colorPicker');
 
     if (shouldBeEnabled && !colorProviderDisposable) {
       colorProviderDisposable = vscode.languages.registerColorProvider(
@@ -87,7 +90,7 @@ export function activate(context: vscode.ExtensionContext) {
   subscribeToDocumentChanges(context, mapleDiagnostics);
   context.subscriptions.push(
     AliasCache.onDidUpdateAliases.event(() => {
-      if (!isExtensionEnabled()) return;
+      if (isExtensionExplicitlyDisabled()) return;
       for (const editor of vscode.window.visibleTextEditors) {
         void import('./providers/DiagnosticsProvider').then(
           ({ refreshDiagnostics }) => {
@@ -106,21 +109,14 @@ export function activate(context: vscode.ExtensionContext) {
       ) {
         updateColorProvider();
 
-        if (!isExtensionEnabled()) {
-          mapleDiagnostics.clear();
-          for (const editor of vscode.window.visibleTextEditors) {
-            decorationsManager.updateDecorations(editor);
-          }
-        } else {
-          // Refresh diagnostics and highlighting for all visible editors
-          for (const editor of vscode.window.visibleTextEditors) {
-            void import('./providers/DiagnosticsProvider').then(
-              ({ refreshDiagnostics }) => {
-                refreshDiagnostics(editor.document, mapleDiagnostics);
-              },
-            );
-            decorationsManager.updateDecorations(editor);
-          }
+        // Refresh diagnostics and highlighting for all visible editors
+        for (const editor of vscode.window.visibleTextEditors) {
+          void import('./providers/DiagnosticsProvider').then(
+            ({ refreshDiagnostics }) => {
+              refreshDiagnostics(editor.document, mapleDiagnostics);
+            },
+          );
+          decorationsManager.updateDecorations(editor);
         }
       }
     }),

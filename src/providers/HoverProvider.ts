@@ -23,7 +23,7 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     token: vscode.CancellationToken,
   ): Promise<vscode.Hover | null> {
     if (
-      !isExtensionEnabled() ||
+      !isExtensionEnabled(document) ||
       isFileExcluded(document.uri) ||
       !isFeatureEnabled('hoverHelp')
     )

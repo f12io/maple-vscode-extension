@@ -24,7 +24,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<Array<vscode.ColorInformation>> {
     if (
-      !isExtensionEnabled() ||
+      !isExtensionEnabled(document) ||
       isFileExcluded(document.uri) ||
       !isFeatureEnabled('colorPicker')
     )

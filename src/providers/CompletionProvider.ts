@@ -40,7 +40,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     Array<vscode.CompletionItem> | vscode.CompletionList
   > {
     if (
-      !isExtensionEnabled() ||
+      !isExtensionEnabled(document) ||
       isFileExcluded(document.uri) ||
       !isFeatureEnabled('autoComplete')
     )

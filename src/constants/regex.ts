@@ -60,6 +60,15 @@ export const getDisableRegex = () => /\/\*\s*maple-disable\s*\*\//g;
 export const getEnableRegex = () => /\/\*\s*maple-enable\s*\*\//g;
 
 // ============================================================================
+// HTML Parsing
+// ============================================================================
+/** Matches the contents of the <head> tag */
+export const getHeadTagRegex = () => /<head[^>]*>([\s\S]*?)<\/head>/i;
+
+/** Matches a script tag importing maple.js or maple.min.js */
+export const getMapleScriptRegex = () => /<script[^>]+src=["'][^"']*maple(\.min)?\.js(["'?])/i;
+
+// ============================================================================
 // General Parsing Utilities
 // ============================================================================
 

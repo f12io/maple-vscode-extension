@@ -34,13 +34,17 @@ export function getAliasName(word: string): string {
 export function stripQuotes(word: string): { word: string; offset: number } {
   let result = word;
   let offset = 0;
-  if (result.startsWith('"') || result.startsWith("'")) {
-    result = result.substring(1);
-    offset = 1;
+
+  if (
+    (result.startsWith('"') && result.endsWith('"')) ||
+    (result.startsWith("'") && result.endsWith("'"))
+  ) {
+    if (result.length >= 2) {
+      result = result.substring(1, result.length - 1);
+      offset = 1;
+    }
   }
-  if (result.endsWith('"') || result.endsWith("'")) {
-    result = result.substring(0, result.length - 1);
-  }
+
   return { word: result, offset };
 }
 

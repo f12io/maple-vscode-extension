@@ -1,7 +1,7 @@
 import { BUILTIN_ALIASES, parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
+import { getAliasRegex, getMapleClassRegex } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
-import { getMapleClassRegex } from '../constants/regex';
 import { extractAllClasses } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
@@ -64,6 +64,15 @@ export class MapleSemanticTokensProvider
     const builder = new vscode.SemanticTokensBuilder(semanticTokensLegend);
     const text = document.getText();
     const matches = extractAllClasses(text);
+
+    // Local alias fallback
+    const localAliases = new Map<string, string>();
+    const aliasRegex = getAliasRegex();
+    let aliasMatch;
+    while ((aliasMatch = aliasRegex.exec(text)) !== null) {
+      localAliases.set(aliasMatch[1], aliasMatch[2]);
+    }
+    const globalAliases = AliasCache.getAliases(document.uri);
 
     const tokens: Array<{
       line: number;
@@ -209,7 +218,7 @@ export class MapleSemanticTokensProvider
 
         if (
           isAliasMarker(rawAliasBase) &&
-          AliasCache.getAliases(document.uri).has(aliasName)
+          (localAliases.has(aliasName) || globalAliases.has(aliasName))
         ) {
           isAlias = true;
           parsedClass.utilKey = rawUtilString;
@@ -404,7 +413,10 @@ export class MapleSemanticTokensProvider
               othersLength > 0 &&
               othersLength !== mediaQuery.length + importantOffset;
 
-            utilKey = `${expectsSeparator ? ':' : ''}${util}`;
+            const isNegative = parsedClass.isUtilNegative ? '-' : '';
+            const fullUtil = isNegative + util;
+
+            utilKey = `${expectsSeparator ? ':' : ''}${fullUtil}`;
             const wordOffset = currentClassNameOffset + othersLength;
 
             if (expectsSeparator) {
@@ -419,7 +431,7 @@ export class MapleSemanticTokensProvider
             }
 
             pushTokensWithUnderscores(
-              util,
+              fullUtil,
               expectsSeparator ? wordOffset + 1 : wordOffset,
               isAlias
                 ? semanticTokenIndexes.mapleAlias

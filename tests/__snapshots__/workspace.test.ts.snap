@@ -2800,7 +2800,40 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "&:before:content='test_abc'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "&",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ":before",
+        "type": "maple-self-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'test",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "abc'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
@@ -6572,15 +6605,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-bdhu",
+        "text": "-bdhue",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-10",
+        "text": "10",
         "type": "maple-value",
       },
     ],
@@ -6591,15 +6624,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-bdhu",
+        "text": "-bdhue",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1.5",
+        "text": "1.5",
         "type": "maple-value",
       },
     ],
@@ -6610,15 +6643,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-bdhu",
+        "text": "-bdhue",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-.5",
+        "text": ".5",
         "type": "maple-value",
       },
     ],
@@ -8647,15 +8680,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-hu",
+        "text": "-hue",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-10",
+        "text": "10",
         "type": "maple-value",
       },
     ],
@@ -8666,15 +8699,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-hu",
+        "text": "-hue",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1.5",
+        "text": "1.5",
         "type": "maple-value",
       },
     ],
@@ -8685,15 +8718,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-hu",
+        "text": "-hue",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-.5",
+        "text": ".5",
         "type": "maple-value",
       },
     ],
@@ -10642,7 +10675,20 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "bgimg-url|'https://example.com/image.jpg'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "bgimg",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "url|'https://example.com/image.jpg'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
@@ -11709,13 +11755,103 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "areas='header_header'_'sidebar_main'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "areas",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'header",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "header'",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "'sidebar",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "main'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
     "classValue": "areas='a_b_c'_'a_c_d'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "areas",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'a",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "b",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "c'",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "'a",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "c",
+        "type": "maple-value",
+      },
+      {
+        "text": "_",
+        "type": "maple-underscore",
+      },
+      {
+        "text": "d'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
@@ -16031,25 +16167,77 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "content-'Time:12:00'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'Time:12:00'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
     "classValue": "content-'Time:12:00'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'Time:12:00'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
     "classValue": "content='Time:12:00'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'Time:12:00'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
     "classValue": "content='Time=12:00'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'Time=12:00'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
@@ -16074,19 +16262,94 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   {
     "classValue": "/.card[data-type='test']:content-'Time:12:00'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "/",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ".card[data-type='test']",
+        "type": "maple-child-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'Time:12:00'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
     "classValue": "/.card[data-type='test']:content='Time:12:00'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "/",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ".card[data-type='test']",
+        "type": "maple-child-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'Time:12:00'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
     "classValue": "/.card[data-type='test:123&abc']:content='Time=12:00'",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "/",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ".card[data-type='test:123&abc']",
+        "type": "maple-child-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "content",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "'Time=12:00'",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
@@ -17686,15 +17949,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-scal",
+        "text": "-scale",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1",
+        "text": "1",
         "type": "maple-value",
       },
     ],
@@ -17705,15 +17968,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-scal",
+        "text": "-scale",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1.5",
+        "text": "1.5",
         "type": "maple-value",
       },
     ],
@@ -17724,15 +17987,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-scal",
+        "text": "-scale",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-.5",
+        "text": ".5",
         "type": "maple-value",
       },
     ],
@@ -17762,15 +18025,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-scal",
+        "text": "-scale",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
       {
@@ -18077,15 +18340,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-ske",
+        "text": "-skew",
         "type": "maple-utility",
       },
       {
-        "text": "w",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-10",
+        "text": "10",
         "type": "maple-value",
       },
     ],
@@ -18096,15 +18359,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-ske",
+        "text": "-skew",
         "type": "maple-utility",
       },
       {
-        "text": "w",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1.5",
+        "text": "1.5",
         "type": "maple-value",
       },
     ],
@@ -18115,15 +18378,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-ske",
+        "text": "-skew",
         "type": "maple-utility",
       },
       {
-        "text": "w",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-.5",
+        "text": ".5",
         "type": "maple-value",
       },
     ],
@@ -18460,15 +18723,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-ro",
+        "text": "-rot",
         "type": "maple-utility",
       },
       {
-        "text": "t",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-10",
+        "text": "10",
         "type": "maple-value",
       },
     ],
@@ -18479,15 +18742,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-ro",
+        "text": "-rot",
         "type": "maple-utility",
       },
       {
-        "text": "t",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1.5",
+        "text": "1.5",
         "type": "maple-value",
       },
     ],
@@ -18498,15 +18761,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-ro",
+        "text": "-rot",
         "type": "maple-utility",
       },
       {
-        "text": "t",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-.5",
+        "text": ".5",
         "type": "maple-value",
       },
     ],
@@ -18536,15 +18799,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-ro",
+        "text": "-rot",
         "type": "maple-utility",
       },
       {
-        "text": "t",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
       {
@@ -18751,15 +19014,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-t",
+        "text": "-tl",
         "type": "maple-utility",
       },
       {
-        "text": "l",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-%",
+        "text": "%",
         "type": "maple-value",
       },
     ],
@@ -18962,15 +19225,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-t",
+        "text": "-tl",
         "type": "maple-utility",
       },
       {
-        "text": "l",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-10",
+        "text": "10",
         "type": "maple-value",
       },
     ],
@@ -18981,15 +19244,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-t",
+        "text": "-tl",
         "type": "maple-utility",
       },
       {
-        "text": "l",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1.5",
+        "text": "1.5",
         "type": "maple-value",
       },
     ],
@@ -19000,15 +19263,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-t",
+        "text": "-tl",
         "type": "maple-utility",
       },
       {
-        "text": "l",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-.5",
+        "text": ".5",
         "type": "maple-value",
       },
     ],
@@ -19038,15 +19301,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-t",
+        "text": "-tl",
         "type": "maple-utility",
       },
       {
-        "text": "l",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
       {
@@ -21927,15 +22190,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4",
+        "text": "4",
         "type": "maple-value",
       },
     ],
@@ -21965,15 +22228,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2xs",
+        "text": "2xs",
         "type": "maple-value",
       },
     ],
@@ -22038,15 +22301,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-margi",
+        "text": "-margin",
         "type": "maple-utility",
       },
       {
-        "text": "n",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4",
+        "text": "4",
         "type": "maple-value",
       },
     ],
@@ -22061,15 +22324,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-important",
       },
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4",
+        "text": "4",
         "type": "maple-value",
       },
     ],
@@ -22080,15 +22343,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4px",
+        "text": "4px",
         "type": "maple-value",
       },
     ],
@@ -22099,15 +22362,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-margi",
+        "text": "-margin",
         "type": "maple-utility",
       },
       {
-        "text": "n",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4px",
+        "text": "4px",
         "type": "maple-value",
       },
     ],
@@ -22122,15 +22385,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-important",
       },
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4px",
+        "text": "4px",
         "type": "maple-value",
       },
     ],
@@ -22145,15 +22408,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-important",
       },
       {
-        "text": "-margi",
+        "text": "-margin",
         "type": "maple-utility",
       },
       {
-        "text": "n",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4px",
+        "text": "4px",
         "type": "maple-value",
       },
     ],
@@ -22164,15 +22427,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-auto",
+        "text": "auto",
         "type": "maple-value",
       },
     ],
@@ -22183,15 +22446,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-lg",
+        "text": "lg",
         "type": "maple-value",
       },
     ],
@@ -22202,15 +22465,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4.5",
+        "text": "4.5",
         "type": "maple-value",
       },
     ],
@@ -22221,15 +22484,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4.25",
+        "text": "4.25",
         "type": "maple-value",
       },
     ],
@@ -22240,15 +22503,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1/2",
+        "text": "1/2",
         "type": "maple-value",
       },
     ],
@@ -22259,15 +22522,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-0",
+        "text": "0",
         "type": "maple-value",
       },
     ],
@@ -22278,15 +22541,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1",
+        "text": "1",
         "type": "maple-value",
       },
     ],
@@ -22297,15 +22560,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-px",
+        "text": "px",
         "type": "maple-value",
       },
     ],
@@ -22316,15 +22579,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-rem",
+        "text": "rem",
         "type": "maple-value",
       },
     ],
@@ -22335,15 +22598,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-em",
+        "text": "em",
         "type": "maple-value",
       },
     ],
@@ -22354,15 +22617,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-%",
+        "text": "%",
         "type": "maple-value",
       },
     ],
@@ -22373,15 +22636,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-margi",
+        "text": "-margin",
         "type": "maple-utility",
       },
       {
-        "text": "n",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-%",
+        "text": "%",
         "type": "maple-value",
       },
     ],
@@ -22392,15 +22655,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-100%",
+        "text": "100%",
         "type": "maple-value",
       },
     ],
@@ -22411,15 +22674,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-margi",
+        "text": "-margin",
         "type": "maple-utility",
       },
       {
-        "text": "n",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-100%",
+        "text": "100%",
         "type": "maple-value",
       },
     ],
@@ -22487,15 +22750,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-vh",
+        "text": "vh",
         "type": "maple-value",
       },
     ],
@@ -22506,15 +22769,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-vw",
+        "text": "vw",
         "type": "maple-value",
       },
     ],
@@ -22525,15 +22788,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-dvh",
+        "text": "dvh",
         "type": "maple-value",
       },
     ],
@@ -22544,15 +22807,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-dvw",
+        "text": "dvw",
         "type": "maple-value",
       },
     ],
@@ -22563,15 +22826,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-svh",
+        "text": "svh",
         "type": "maple-value",
       },
     ],
@@ -22582,15 +22845,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-svw",
+        "text": "svw",
         "type": "maple-value",
       },
     ],
@@ -22601,15 +22864,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-lvh",
+        "text": "lvh",
         "type": "maple-value",
       },
     ],
@@ -22620,15 +22883,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-lvw",
+        "text": "lvw",
         "type": "maple-value",
       },
     ],
@@ -22639,15 +22902,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqw",
+        "text": "cqw",
         "type": "maple-value",
       },
     ],
@@ -22658,15 +22921,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqh",
+        "text": "cqh",
         "type": "maple-value",
       },
     ],
@@ -22677,15 +22940,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqi",
+        "text": "cqi",
         "type": "maple-value",
       },
     ],
@@ -22696,15 +22959,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqb",
+        "text": "cqb",
         "type": "maple-value",
       },
     ],
@@ -22715,15 +22978,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqmin",
+        "text": "cqmin",
         "type": "maple-value",
       },
     ],
@@ -22734,15 +22997,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqmax",
+        "text": "cqmax",
         "type": "maple-value",
       },
     ],
@@ -22753,15 +23016,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-mx",
         "type": "maple-utility",
       },
       {
-        "text": "x",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-3",
+        "text": "3",
         "type": "maple-value",
       },
     ],
@@ -22772,15 +23035,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-my",
         "type": "maple-utility",
       },
       {
-        "text": "y",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22791,15 +23054,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-mr",
         "type": "maple-utility",
       },
       {
-        "text": "r",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22810,15 +23073,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-ml",
         "type": "maple-utility",
       },
       {
-        "text": "l",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22829,15 +23092,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-ms",
         "type": "maple-utility",
       },
       {
-        "text": "s",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22848,15 +23111,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-me",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22867,15 +23130,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-mt",
         "type": "maple-utility",
       },
       {
-        "text": "t",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22886,15 +23149,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-m",
+        "text": "-mb",
         "type": "maple-utility",
       },
       {
-        "text": "b",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22905,15 +23168,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-mb",
+        "text": "-mbs",
         "type": "maple-utility",
       },
       {
-        "text": "s",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22924,15 +23187,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-mb",
+        "text": "-mbe",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-2",
+        "text": "2",
         "type": "maple-value",
       },
     ],
@@ -22943,15 +23206,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1/2",
+        "text": "1/2",
         "type": "maple-value",
       },
       {
@@ -22986,15 +23249,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-[1/2",
+        "text": "[1/2",
         "type": "maple-value",
       },
       {
@@ -23194,15 +23457,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4",
+        "text": "4",
         "type": "maple-value",
       },
     ],
@@ -23236,15 +23499,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-important",
       },
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4",
+        "text": "4",
         "type": "maple-value",
       },
     ],
@@ -23255,15 +23518,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4!",
+        "text": "4!",
         "type": "maple-value",
       },
     ],
@@ -23274,15 +23537,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4px",
+        "text": "4px",
         "type": "maple-value",
       },
     ],
@@ -23297,15 +23560,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-important",
       },
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4px",
+        "text": "4px",
         "type": "maple-value",
       },
     ],
@@ -23316,15 +23579,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-auto",
+        "text": "auto",
         "type": "maple-value",
       },
     ],
@@ -23335,15 +23598,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-fit-content",
+        "text": "fit-content",
         "type": "maple-value",
       },
     ],
@@ -23354,15 +23617,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-lg",
+        "text": "lg",
         "type": "maple-value",
       },
     ],
@@ -23373,15 +23636,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4.5",
+        "text": "4.5",
         "type": "maple-value",
       },
     ],
@@ -23392,15 +23655,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4.25",
+        "text": "4.25",
         "type": "maple-value",
       },
     ],
@@ -23411,15 +23674,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1/2",
+        "text": "1/2",
         "type": "maple-value",
       },
     ],
@@ -23430,15 +23693,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-0",
+        "text": "0",
         "type": "maple-value",
       },
     ],
@@ -23449,15 +23712,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-1",
+        "text": "1",
         "type": "maple-value",
       },
     ],
@@ -23468,15 +23731,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-px",
+        "text": "px",
         "type": "maple-value",
       },
     ],
@@ -23487,15 +23750,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-rem",
+        "text": "rem",
         "type": "maple-value",
       },
     ],
@@ -23506,15 +23769,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-em",
+        "text": "em",
         "type": "maple-value",
       },
     ],
@@ -23525,15 +23788,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-%",
+        "text": "%",
         "type": "maple-value",
       },
     ],
@@ -23544,15 +23807,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-vh",
+        "text": "vh",
         "type": "maple-value",
       },
     ],
@@ -23563,15 +23826,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-vw",
+        "text": "vw",
         "type": "maple-value",
       },
     ],
@@ -23582,15 +23845,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-dvh",
+        "text": "dvh",
         "type": "maple-value",
       },
     ],
@@ -23601,15 +23864,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-dvw",
+        "text": "dvw",
         "type": "maple-value",
       },
     ],
@@ -23620,15 +23883,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-svh",
+        "text": "svh",
         "type": "maple-value",
       },
     ],
@@ -23639,15 +23902,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-svw",
+        "text": "svw",
         "type": "maple-value",
       },
     ],
@@ -23658,15 +23921,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-lvh",
+        "text": "lvh",
         "type": "maple-value",
       },
     ],
@@ -23677,15 +23940,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-lvw",
+        "text": "lvw",
         "type": "maple-value",
       },
     ],
@@ -23696,15 +23959,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqw",
+        "text": "cqw",
         "type": "maple-value",
       },
     ],
@@ -23715,15 +23978,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqh",
+        "text": "cqh",
         "type": "maple-value",
       },
     ],
@@ -23734,15 +23997,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqi",
+        "text": "cqi",
         "type": "maple-value",
       },
     ],
@@ -23753,15 +24016,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqb",
+        "text": "cqb",
         "type": "maple-value",
       },
     ],
@@ -23772,15 +24035,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqmin",
+        "text": "cqmin",
         "type": "maple-value",
       },
     ],
@@ -23791,15 +24054,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-squar",
+        "text": "-square",
         "type": "maple-utility",
       },
       {
-        "text": "e",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-cqmax",
+        "text": "cqmax",
         "type": "maple-value",
       },
     ],
@@ -24085,15 +24348,15 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "colors": [],
     "tokens": [
       {
-        "text": "-",
+        "text": "-m",
         "type": "maple-utility",
       },
       {
-        "text": "m",
+        "text": "-",
         "type": "maple-separator",
       },
       {
-        "text": "-4!",
+        "text": "4!",
         "type": "maple-value",
       },
     ],

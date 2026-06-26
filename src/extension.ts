@@ -3,12 +3,9 @@ import { AliasCache } from './helpers/alias-cache';
 import { isExtensionEnabled } from './helpers/config';
 import { MapleColorProvider } from './providers/ColorProvider';
 import { MapleCompletionProvider } from './providers/CompletionProvider';
+import { DecorationsManager } from './providers/DecorationsManager';
 import { subscribeToDocumentChanges } from './providers/DiagnosticsProvider';
 import { MapleHoverProvider } from './providers/HoverProvider';
-import {
-  MapleSemanticTokensProvider,
-  semanticTokensLegend,
-} from './providers/SemanticTokensProvider';
 
 export function activate(context: vscode.ExtensionContext) {
   console.log(
@@ -56,13 +53,11 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
-  context.subscriptions.push(
-    vscode.languages.registerDocumentSemanticTokensProvider(
-      documentSelector,
-      new MapleSemanticTokensProvider(),
-      semanticTokensLegend,
-    ),
+  const decorationsManager = new DecorationsManager(
+    context,
+    documentSelector as Array<string>,
   );
+  context.subscriptions.push(decorationsManager);
 
   const mapleDiagnostics = vscode.languages.createDiagnosticCollection('maple');
   context.subscriptions.push(mapleDiagnostics);
@@ -76,6 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
             refreshDiagnostics(editor.document, mapleDiagnostics);
           },
         );
+        decorationsManager.updateDecorations(editor);
       }
     }),
   );

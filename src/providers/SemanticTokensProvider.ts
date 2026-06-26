@@ -186,8 +186,10 @@ export class MapleSemanticTokensProvider
           let utilKey = '';
 
           if (parsed.mediaQuery) mediaQuery = `${parsed.mediaQuery}:`;
-          if (parsed.parentSel)
-            parentSel = `^${parsed.parentSel.replace(/ /g, '_')}`;
+          if (parsed.parentSel || parsed.isMultiSelector)
+            parentSel = parsed.parentSel
+              ? `^${parsed.parentSel.replace(/ /g, '_')}`
+              : `^`;
           if (parsed.selfSel) selfSel = `&${parsed.selfSel.replace(/ /g, '_')}`;
           if (parsed.childSel)
             childSel = `/${parsed.childSel.replace(/ /g, '_')}`;
@@ -479,8 +481,10 @@ export class MapleSemanticTokensProvider
             }
           };
 
-          if (parsed.parentSel) {
-            parentSel = `^${parsed.parentSel.replace(/ /g, '_')}`;
+          if (parsed.parentSel || parsed.isMultiSelector) {
+            parentSel = parsed.parentSel
+              ? `^${parsed.parentSel.replace(/ /g, '_')}`
+              : `^`;
             const relativeOffset = srcClass.indexOf(parentSel);
             if (relativeOffset !== -1) {
               const wordOffset = currentOffset + relativeOffset;
@@ -494,11 +498,13 @@ export class MapleSemanticTokensProvider
                 tokenModifiers: 0,
               });
 
-              pushTokensWithUnderscores(
-                parsed.parentSel.replace(/ /g, '_'),
-                wordOffset + 1,
-                semanticTokenIndexes.mapleParentSelector,
-              );
+              if (parsed.parentSel) {
+                pushTokensWithUnderscores(
+                  parsed.parentSel.replace(/ /g, '_'),
+                  wordOffset + 1,
+                  semanticTokenIndexes.mapleParentSelector,
+                );
+              }
             }
           }
 

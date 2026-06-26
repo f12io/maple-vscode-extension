@@ -14255,6 +14255,10 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
+        "text": "^",
+        "type": "maple-selector-operator",
+      },
+      {
         "text": "&",
         "type": "maple-selector-operator",
       },
@@ -14271,19 +14275,19 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-child-selector",
       },
       {
-        "text": "n",
-        "type": "maple-separator",
-      },
-      {
         "text": ":",
-        "type": "maple-utility",
+        "type": "maple-separator",
       },
       {
         "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
         "type": "maple-separator",
       },
       {
-        "text": "=red",
+        "text": "red",
         "type": "maple-value",
       },
     ],
@@ -16460,6 +16464,10 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
     "tokens": [
       {
+        "text": "^",
+        "type": "maple-selector-operator",
+      },
+      {
         "text": "&",
         "type": "maple-selector-operator",
       },
@@ -16476,19 +16484,19 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-child-selector",
       },
       {
-        "text": "n",
-        "type": "maple-separator",
-      },
-      {
         "text": ":",
-        "type": "maple-utility",
+        "type": "maple-separator",
       },
       {
         "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "=",
         "type": "maple-separator",
       },
       {
-        "text": "=red",
+        "text": "red",
         "type": "maple-value",
       },
     ],

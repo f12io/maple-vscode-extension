@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { getAliasRegex } from '../constants/regex';
+import { extractAllClasses } from './class-extractor';
 
 /**
  * A workspace-wide cache that scans files for custom Maple aliases
@@ -138,10 +139,21 @@ export class AliasCache {
     content: string,
     map: Map<string, string>,
   ) {
+    const instances = extractAllClasses(content);
     const aliasRegex = getAliasRegex();
-    let match;
-    while ((match = aliasRegex.exec(content)) !== null) {
-      map.set(match[1], match[2]);
+
+    for (const instance of instances) {
+      if (!instance.tagName || instance.tagName === 'html') {
+        const classStr = instance.value;
+        // Aliases are separated by spaces like any other classes
+        const tokens = classStr.split(/\s+/);
+        for (const token of tokens) {
+          let match;
+          while ((match = aliasRegex.exec(token)) !== null) {
+            map.set(match[1], match[2]);
+          }
+        }
+      }
     }
   }
 }

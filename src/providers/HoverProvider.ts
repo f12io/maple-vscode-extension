@@ -1,8 +1,13 @@
 import { convert, parseClass, StringHelper } from '@f12io/maple';
 import * as prettier from 'prettier';
 import * as vscode from 'vscode';
+import {
+  getParamFallbackRegex,
+  getParamRemoveRegex,
+  getParamSubstituteRegex,
+} from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
-import { getExactWordRangeAtPosition } from '../helpers/class-extractor';
+import { extractAllClasses } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
@@ -19,10 +24,17 @@ export class MapleHoverProvider implements vscode.HoverProvider {
   ): Promise<vscode.Hover | null> {
     if (!isExtensionEnabled() || isFileExcluded(document.uri)) return null;
 
-    const exactRange = getExactWordRangeAtPosition(document, position);
-    if (!exactRange.wordRange) return null;
+    const documentText = document.getText();
+    const offset = document.offsetAt(position);
 
-    const word = exactRange.currentWord;
+    const instances = extractAllClasses(documentText);
+    const currentInstance = instances.find(
+      (inst) => offset >= inst.start && offset <= inst.end,
+    );
+
+    if (!currentInstance) return null;
+
+    const word = currentInstance.value;
 
     // 1. Try to parse the class to separate prefixes from the core utility
     const { activeWord, isMapleIntent, prefixes } = parseMapleToken(word);
@@ -73,16 +85,19 @@ export class MapleHoverProvider implements vscode.HoverProvider {
             // Substitute parameters
             let substitutedUtil = util;
             for (const [key, val] of paramsMap.entries()) {
-              const regex = new RegExp(`\\{${key}(?:,[^}]+)?\\}`, 'g');
-              substitutedUtil = substitutedUtil.replace(regex, val);
+              const regex = getParamSubstituteRegex(key);
+              substitutedUtil = substitutedUtil.replace(regex, () => val);
             }
             // Fallback for missing parameters that have a default value
             substitutedUtil = substitutedUtil.replace(
-              /\{[^{}]*,([^}]*)\}/g,
+              getParamFallbackRegex(),
               '$1',
             );
             // Remove remaining missing parameters
-            substitutedUtil = substitutedUtil.replace(/\{[^}]*\}/g, '');
+            substitutedUtil = substitutedUtil.replace(
+              getParamRemoveRegex(),
+              '',
+            );
 
             const fullUtil = prefix + substitutedUtil;
             expandedUtils.push(fullUtil);

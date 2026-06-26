@@ -32,6 +32,19 @@ export const MAPLE_COMMA_SPLIT_REGEX = /(,)/;
 /** Splits class names by underscore, retaining delimiters. */
 export const MAPLE_UNDERSCORE_SPLIT_REGEX = /(_)/;
 
+/** Matches an alias parameter placeholder for substitution: {key} or {key,fallback} */
+export const getParamSubstituteRegex = (key: string) =>
+  new RegExp(
+    `\\{${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:,[^}]+)?\\}`,
+    'g',
+  );
+
+/** Matches an alias parameter placeholder that has a fallback: {key,fallback} */
+export const getParamFallbackRegex = () => /\{[^{}]*,([^}]*)\}/g;
+
+/** Matches any alias parameter placeholder to remove missing parameters: {key} */
+export const getParamRemoveRegex = () => /\{[^}]*\}/g;
+
 // ============================================================================
 // Alias Extraction
 // ============================================================================

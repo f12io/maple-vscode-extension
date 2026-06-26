@@ -36,6 +36,8 @@ describe('Workspace Highlights and Colors', () => {
     'test-angular.html',
     'test-angular.ts',
     'test-class.js',
+    'test-php.php',
+    'test-twig.twig',
   ];
 
   for (const fileName of testFiles) {

@@ -17,7 +17,9 @@
     "onLanguage:svelte",
     "onLanguage:javascript",
     "onLanguage:typescript",
-    "onLanguage:razor"
+    "onLanguage:razor",
+    "onLanguage:php",
+    "onLanguage:twig"
   ],
   "main": "./out/extension.js",
   "contributes": {

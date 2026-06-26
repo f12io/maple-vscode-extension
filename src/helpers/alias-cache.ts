@@ -20,7 +20,7 @@ export class AliasCache {
 
     // Setup File Watchers for all supported file types
     const watcher = vscode.workspace.createFileSystemWatcher(
-      '**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}',
+      '**/*.{html,tsx,jsx,vue,svelte,ts,js,razor,php,twig}',
     );
 
     context.subscriptions.push(watcher);

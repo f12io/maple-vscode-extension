@@ -34,7 +34,28 @@ export class MapleHoverProvider implements vscode.HoverProvider {
 
     if (!currentInstance) return null;
 
-    const word = currentInstance.value;
+    const words = StringHelper.split(currentInstance.value, ' ');
+    let currentWordStart = currentInstance.start;
+    let word = '';
+
+    for (const w of words) {
+      // Find the actual start index of this word within the attribute string
+      // handling potential multiple spaces
+      const wStart =
+        currentInstance.value.indexOf(
+          w,
+          currentWordStart - currentInstance.start,
+        ) + currentInstance.start;
+      const wEnd = wStart + w.length;
+
+      if (offset >= wStart && offset <= wEnd) {
+        word = w;
+        break;
+      }
+      currentWordStart = wEnd;
+    }
+
+    if (!word) return null;
 
     // 1. Try to parse the class to separate prefixes from the core utility
     const { activeWord, isMapleIntent, prefixes } = parseMapleToken(word);
@@ -55,7 +76,9 @@ export class MapleHoverProvider implements vscode.HoverProvider {
           const utilities = aliasExpansion.split(';');
 
           // Parse parameters
-          const paramsMatch = /\((.*)\)$/.exec(unescapedWord);
+          // Parse parameters. parseMapleToken might append '=' at the end of activeWord, so we strip it.
+          const unescapedWordWithoutEqual = unescapedWord.replace(/=$/, '');
+          const paramsMatch = /\((.*)\)$/.exec(unescapedWordWithoutEqual);
           const paramsMap = new Map<string, string>();
 
           if (paramsMatch) {

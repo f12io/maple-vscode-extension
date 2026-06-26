@@ -112,11 +112,18 @@ export function parseMapleToken(word: string): MapleTokenInfo {
   const isMaplePrefix =
     !!ABBREVIATIONS[activePrefixWithoutImportant] ||
     !!BUILTIN_ALIASES[cleanActiveWordWithoutImportant];
+
+  const hasOperator =
+    word.includes('-') ||
+    word.includes('=') ||
+    word.includes('[');
+
   const isMapleIntent =
     prefixes.length > 0 ||
-    isMaplePrefix ||
+    !!BUILTIN_ALIASES[cleanActiveWordWithoutImportant] ||
     isAliasDefinition(activeWord) ||
-    isAliasMarker(activeWord);
+    isAliasMarker(activeWord) ||
+    (isMaplePrefix && hasOperator);
 
   return {
     activeWord,

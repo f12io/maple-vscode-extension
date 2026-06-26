@@ -1918,7 +1918,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "bgc-primary",
+    "classValue": "bgc-primary bgc",
     "colors": [],
     "tokens": [
       {

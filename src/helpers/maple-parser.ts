@@ -114,9 +114,7 @@ export function parseMapleToken(word: string): MapleTokenInfo {
     !!BUILTIN_ALIASES[cleanActiveWordWithoutImportant];
 
   const hasOperator =
-    word.includes('-') ||
-    word.includes('=') ||
-    word.includes('[');
+    word.includes('-') || word.includes('=') || word.includes('[');
 
   const isMapleIntent =
     prefixes.length > 0 ||

@@ -24,6 +24,8 @@ export function activate(context: vscode.ExtensionContext) {
     'typescript',
     'javascript',
     'razor',
+    'php',
+    'twig',
   ];
 
   context.subscriptions.push(

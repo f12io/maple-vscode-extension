@@ -1,6 +1,6 @@
 <?php
 $isActive = true;
-$extraClass = "p-4";
+$extraClass = /* maple */ "p-4";
 ?>
 
 <div class="bgc-green-500 <?= $extraClass ?>">

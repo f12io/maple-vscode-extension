@@ -749,7 +749,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
 exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-php.php 1`] = `
 [
   {
-    "classValue": "bgc-green-500 <?= $extraClass ?>",
+    "classValue": "bgc-green-500 ",
     "colors": [
       {
         "color": "rgba(0, 128, 0, 1)",
@@ -773,12 +773,44 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "<?= $isActive ? 'c-white' : 'c-gray-500' ?>",
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-white",
     "colors": [
       {
         "color": "rgba(255, 255, 255, 1)",
         "text": "white",
       },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-gray-500",
+    "colors": [
       {
         "color": "rgba(128, 128, 128, 1)",
         "text": "gray-500",
@@ -794,37 +826,30 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "white",
-        "type": "maple-value",
-      },
-      {
-        "text": "c",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
         "text": "gray-500",
         "type": "maple-value",
       },
     ],
-    "warnings": [
-      "Conflicted utility usage: 'color:'",
-      "Conflicted utility usage: 'color:'",
-    ],
+    "warnings": [],
   },
   {
-    "classValue": "<?= $isActive ? 'bgc-red-500' : 'bgc-gray-300' ?> fw-bold",
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-red-500",
     "colors": [
       {
         "color": "rgba(255, 0, 0, 1)",
         "text": "red-500",
-      },
-      {
-        "color": "rgba(177, 177, 177, 1)",
-        "text": "gray-300",
       },
     ],
     "tokens": [
@@ -840,6 +865,18 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "red-500",
         "type": "maple-value",
       },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-gray-300",
+    "colors": [
+      {
+        "color": "rgba(177, 177, 177, 1)",
+        "text": "gray-300",
+      },
+    ],
+    "tokens": [
       {
         "text": "bgc",
         "type": "maple-utility",
@@ -852,6 +889,13 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "gray-300",
         "type": "maple-value",
       },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": " fw-bold",
+    "colors": [],
+    "tokens": [
       {
         "text": "fw",
         "type": "maple-utility",
@@ -865,10 +909,26 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
     ],
-    "warnings": [
-      "Conflicted utility usage: 'background-color:'",
-      "Conflicted utility usage: 'background-color:'",
+    "warnings": [],
+  },
+  {
+    "classValue": "p-4",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
     ],
+    "warnings": [],
   },
 ]
 `;
@@ -1029,6 +1089,25 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
       },
       {
         "text": "bold",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "p-4",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
         "type": "maple-value",
       },
     ],

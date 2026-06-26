@@ -263,6 +263,33 @@ export function extractFromAttributeValue(
       );
 
       currentStart = offset + j;
+    } else if (value.substring(j, j + 2) === '<?') {
+      pushInstance(
+        instances,
+        currentStr,
+        currentStart,
+        text,
+        matchIndex,
+        disabledBlocks,
+      );
+      currentStr = '';
+      
+      const phpEnd = value.indexOf('?>', j + 2);
+      if (phpEnd !== -1) {
+        const innerExpr = value.substring(j + 2, phpEnd);
+        extractStringLiterals(
+          innerExpr,
+          offset + j + 2,
+          text,
+          matchIndex,
+          instances,
+          disabledBlocks,
+        );
+        j = phpEnd + 2;
+      } else {
+        j = value.length;
+      }
+      currentStart = offset + j;
     } else if (value[j] === '{') {
       const mapleInterpolationMatch = MAPLE_INTERPOLATION_REGEX.exec(
         value.substring(j),

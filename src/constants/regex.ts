@@ -20,6 +20,18 @@ export const MAPLE_CLASS_REGEX_NON_GLOBAL = new RegExp(MAPLE_CLASS_PATTERN);
 /** Non-global matcher for a maple interpolation token (e.g. {space,4}). */
 export const MAPLE_INTERPOLATION_REGEX = /^\{[\w\-.,]+\}/;
 
+/** Splits a utility string to extract brace `{...}` and paren `(...)` blocks while keeping them in the resulting array. */
+export const MAPLE_PARAMS_SPLIT_REGEX = /(\{[^}]*\}|\([^)]*\))/;
+
+/** Splits parameter lists inside parens `(...)` by colon or comma, retaining delimiters. */
+export const MAPLE_PARAM_KEY_VALUE_SPLIT_REGEX = /([:,])/;
+
+/** Splits parameter lists inside braces `{...}` by comma, retaining delimiters. */
+export const MAPLE_COMMA_SPLIT_REGEX = /(,)/;
+
+/** Splits class names by underscore, retaining delimiters. */
+export const MAPLE_UNDERSCORE_SPLIT_REGEX = /(_)/;
+
 // ============================================================================
 // Alias Extraction
 // ============================================================================

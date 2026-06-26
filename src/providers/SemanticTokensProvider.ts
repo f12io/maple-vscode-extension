@@ -1,6 +1,13 @@
 import { BUILTIN_ALIASES, parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
-import { getAliasRegex, getMapleClassRegex } from '../constants/regex';
+import {
+  getAliasRegex,
+  getMapleClassRegex,
+  MAPLE_PARAMS_SPLIT_REGEX,
+  MAPLE_PARAM_KEY_VALUE_SPLIT_REGEX,
+  MAPLE_COMMA_SPLIT_REGEX,
+  MAPLE_UNDERSCORE_SPLIT_REGEX,
+} from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
 import { extractAllClasses } from '../helpers/class-extractor';
 import { isExtensionEnabled } from '../helpers/config';
@@ -274,7 +281,7 @@ export class MapleSemanticTokensProvider
             defaultTokenType: number,
           ) => {
             let currentStrOffset = startOffset;
-            const outerParts = str.split(/(\{[^}]*\})/);
+            const outerParts = str.split(MAPLE_PARAMS_SPLIT_REGEX);
 
             for (const outerPart of outerParts) {
               if (outerPart.length === 0) continue;
@@ -290,7 +297,7 @@ export class MapleSemanticTokensProvider
                 });
 
                 const innerStr = outerPart.substring(1, outerPart.length - 1);
-                const innerParts = innerStr.split(/(,)/);
+                const innerParts = innerStr.split(MAPLE_COMMA_SPLIT_REGEX);
                 let innerOffset = currentStrOffset + 1;
 
                 for (const innerPart of innerParts) {
@@ -330,8 +337,62 @@ export class MapleSemanticTokensProvider
                   tokenModifiers: 0,
                 });
                 currentStrOffset += outerPart.length;
+              } else if (outerPart.startsWith('(') && outerPart.endsWith(')')) {
+                const pos1 = document.positionAt(currentStrOffset);
+                tokens.push({
+                  line: pos1.line,
+                  character: pos1.character,
+                  length: 1,
+                  tokenType: semanticTokenIndexes.mapleSeparator,
+                  tokenModifiers: 0,
+                });
+
+                const innerStr = outerPart.substring(1, outerPart.length - 1);
+                const innerParts = innerStr.split(MAPLE_PARAM_KEY_VALUE_SPLIT_REGEX);
+                let innerOffset = currentStrOffset + 1;
+
+                for (let i = 0; i < innerParts.length; i++) {
+                  const innerPart = innerParts[i];
+                  if (innerPart.length === 0) continue;
+                  const posInner = document.positionAt(innerOffset);
+
+                  if (innerPart === ':' || innerPart === ',') {
+                    tokens.push({
+                      line: posInner.line,
+                      character: posInner.character,
+                      length: 1,
+                      tokenType: semanticTokenIndexes.mapleSeparator,
+                      tokenModifiers: 0,
+                    });
+                  } else {
+                    const isKey =
+                      i < innerParts.length - 1 && innerParts[i + 1] === ':';
+                    tokens.push({
+                      line: posInner.line,
+                      character: posInner.character,
+                      length: innerPart.length,
+                      tokenType: isKey
+                        ? semanticTokenIndexes.mapleAliasParamKey
+                        : semanticTokenIndexes.mapleValue,
+                      tokenModifiers: 0,
+                    });
+                  }
+                  innerOffset += innerPart.length;
+                }
+
+                const pos2 = document.positionAt(
+                  currentStrOffset + outerPart.length - 1,
+                );
+                tokens.push({
+                  line: pos2.line,
+                  character: pos2.character,
+                  length: 1,
+                  tokenType: semanticTokenIndexes.mapleSeparator,
+                  tokenModifiers: 0,
+                });
+                currentStrOffset += outerPart.length;
               } else {
-                const parts = outerPart.split(/(_)/);
+                const parts = outerPart.split(MAPLE_UNDERSCORE_SPLIT_REGEX);
                 for (const part of parts) {
                   if (part.length === 0) continue;
                   const pos = document.positionAt(currentStrOffset);

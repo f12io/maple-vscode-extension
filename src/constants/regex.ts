@@ -9,7 +9,7 @@
 // ============================================================================
 // Maple Token Parsing
 // ============================================================================
-export const MAPLE_CLASS_PATTERN = `[\\w\\-@:\\[\\]\\#\\.\\%\\|_\\/\\(\\)\\,\\=\\!\\^\\&\\>\\<\\~\\+\\*\\'\\"]+`;
+export const MAPLE_CLASS_PATTERN = `[\\w\\-@:\\[\\]\\#\\.\\%\\|_\\/\\(\\)\\,\\=\\!\\^\\&\\>\\<\\~\\+\\*\\'\\"\\{\\}]+`;
 
 /** Global matcher for all maple class tokens. */
 export const getMapleClassRegex = () => new RegExp(MAPLE_CLASS_PATTERN, 'g');

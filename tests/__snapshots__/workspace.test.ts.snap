@@ -1832,15 +1832,11 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
       },
       {
         "text": "--alias-card",
-        "type": "maple-utility",
+        "type": "maple-alias",
       },
       {
         "text": "=",
         "type": "maple-separator",
-      },
-      {
-        "text": "p-",
-        "type": "maple-value",
       },
     ],
     "warnings": [],
@@ -24488,14 +24484,22 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
       },
       {
         "text": "--alias-card",
-        "type": "maple-utility",
+        "type": "maple-alias",
       },
       {
         "text": "=",
         "type": "maple-separator",
       },
       {
-        "text": "p-4",
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
         "type": "maple-value",
       },
     ],

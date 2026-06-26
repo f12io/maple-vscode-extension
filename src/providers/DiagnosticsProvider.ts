@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { getMapleClassRegex } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
 import { extractAllClasses } from '../helpers/class-extractor';
-import { isExtensionEnabled } from '../helpers/config';
+import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
   checkConverted,
@@ -24,7 +24,11 @@ export function refreshDiagnostics(
   doc: vscode.TextDocument,
   mapleDiagnostics: vscode.DiagnosticCollection,
 ): void {
-  if (!isExtensionEnabled() || isFileExcluded(doc.uri)) {
+  if (
+    !isExtensionEnabled() ||
+    isFileExcluded(doc.uri) ||
+    !isFeatureEnabled('diagnostics')
+  ) {
     mapleDiagnostics.set(doc.uri, []);
     return;
   }

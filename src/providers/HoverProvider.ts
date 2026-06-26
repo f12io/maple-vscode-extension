@@ -8,7 +8,7 @@ import {
 } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
 import { extractAllClasses } from '../helpers/class-extractor';
-import { isExtensionEnabled } from '../helpers/config';
+import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
   getAliasName,
@@ -22,7 +22,12 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     position: vscode.Position,
     token: vscode.CancellationToken,
   ): Promise<vscode.Hover | null> {
-    if (!isExtensionEnabled() || isFileExcluded(document.uri)) return null;
+    if (
+      !isExtensionEnabled() ||
+      isFileExcluded(document.uri) ||
+      !isFeatureEnabled('hoverHelp')
+    )
+      return null;
 
     const documentText = document.getText();
     const offset = document.offsetAt(position);

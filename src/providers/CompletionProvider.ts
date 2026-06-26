@@ -1,34 +1,34 @@
-import * as vscode from 'vscode';
 import {
-  ABBREVIATIONS,
-  BUILTIN_ALIASES,
-  PSEUDO_CLASSES,
-  POPULAR_ABBREVIATIONS,
-  CSS_OPTIONS,
-  DEFAULT_CSS_VALUES,
-  GRADIENT_DIRECTIONS,
-  PREDEFINED_VARIABLES,
-  MULTI_VALUE_REGEX,
-} from '../mapleEngine/data';
-import {
+  COLOR_MAX_TONE,
+  COLOR_MIN_TONE,
+  DEFAULT_ANGLE_UNIT,
+  DEFAULT_TIME_UNIT,
+  FUNCTION_KEYS,
   OPTIONS,
-  PropertyHelper,
   PROP_TYPE_COLOR,
   PROP_TYPE_SPACE,
-  COLOR_MIN_TONE,
-  COLOR_MAX_TONE,
-  FUNCTION_KEYS,
   PROP_UNIT_MAP,
-  DEFAULT_TIME_UNIT,
-  DEFAULT_ANGLE_UNIT,
+  PropertyHelper,
 } from '@f12io/maple';
+import * as vscode from 'vscode';
+import { AliasCache } from '../helpers/alias-cache';
 import {
   extractAllClasses,
   getExactWordRangeAtPosition,
 } from '../helpers/class-extractor';
-import { isExtensionEnabled } from '../helpers/config';
+import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
-import { AliasCache } from '../helpers/alias-cache';
+import {
+  ABBREVIATIONS,
+  BUILTIN_ALIASES,
+  CSS_OPTIONS,
+  DEFAULT_CSS_VALUES,
+  GRADIENT_DIRECTIONS,
+  MULTI_VALUE_REGEX,
+  POPULAR_ABBREVIATIONS,
+  PREDEFINED_VARIABLES,
+  PSEUDO_CLASSES,
+} from '../mapleEngine/data';
 
 export class MapleCompletionProvider implements vscode.CompletionItemProvider {
   provideCompletionItems(
@@ -36,8 +36,15 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     position: vscode.Position,
     token: vscode.CancellationToken,
     context: vscode.CompletionContext,
-  ): vscode.ProviderResult<Array<vscode.CompletionItem> | vscode.CompletionList> {
-    if (!isExtensionEnabled() || isFileExcluded(document.uri)) return undefined;
+  ): vscode.ProviderResult<
+    Array<vscode.CompletionItem> | vscode.CompletionList
+  > {
+    if (
+      !isExtensionEnabled() ||
+      isFileExcluded(document.uri) ||
+      !isFeatureEnabled('autoComplete')
+    )
+      return undefined;
 
     const documentText = document.getText();
     const offset = document.offsetAt(position);
@@ -59,8 +66,9 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     );
     const lastOpeningTagIndex = textBeforeCursor.lastIndexOf('<');
     if (lastOpeningTagIndex !== -1) {
-      const tagMatch = /^<\s*([a-zA-Z0-9\-]+)/.exec(textBeforeCursor
-        .substring(lastOpeningTagIndex));
+      const tagMatch = /^<\s*([a-zA-Z0-9\-]+)/.exec(
+        textBeforeCursor.substring(lastOpeningTagIndex),
+      );
       if (tagMatch?.[1].toLowerCase() === 'html') {
         isHtmlTag = true;
       }
@@ -91,7 +99,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
       .text.substr(0, position.character);
     if (!wordRange && linePrefix.endsWith(' ')) {
       currentWord = '';
-    } else if (!wordRange && (/["']$/.exec(linePrefix))) {
+    } else if (!wordRange && /["']$/.exec(linePrefix)) {
       currentWord = ''; // right after class="
     }
 

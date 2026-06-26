@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { isFeatureEnabled } from '../helpers/config';
 import { MapleSemanticTokensProvider } from './SemanticTokensProvider';
 
 export class DecorationsManager {
@@ -157,6 +158,13 @@ export class DecorationsManager {
 
     // Check if the document matches our supported languages
     if (!this.documentSelector.includes(document.languageId)) {
+      return;
+    }
+
+    if (!isFeatureEnabled('highlighting')) {
+      for (const decorationType of this.decorationTypes.values()) {
+        editor.setDecorations(decorationType, []);
+      }
       return;
     }
 

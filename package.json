@@ -152,6 +152,31 @@
             "**/.git/**"
           ],
           "description": "Glob patterns for files where Maple CSS extension features should be disabled."
+        },
+        "maple.features.highlighting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable semantic syntax highlighting for Maple CSS."
+        },
+        "maple.features.diagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable diagnostics (linting/errors) for Maple CSS."
+        },
+        "maple.features.autoComplete": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable auto complete for Maple CSS."
+        },
+        "maple.features.colorPicker": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable color picker for Maple CSS colors."
+        },
+        "maple.features.hoverHelp": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable hover help for Maple CSS."
         }
       }
     }

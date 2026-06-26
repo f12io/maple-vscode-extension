@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { AliasCache } from './helpers/alias-cache';
-import { isExtensionEnabled } from './helpers/config';
+import { isExtensionEnabled, isFeatureEnabled } from './helpers/config';
 import { MapleColorProvider } from './providers/ColorProvider';
 import { MapleCompletionProvider } from './providers/CompletionProvider';
 import { DecorationsManager } from './providers/DecorationsManager';
@@ -48,12 +48,33 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
-  context.subscriptions.push(
-    vscode.languages.registerColorProvider(
-      documentSelector,
-      new MapleColorProvider(),
-    ),
-  );
+  let colorProviderDisposable: vscode.Disposable | undefined;
+
+  function updateColorProvider() {
+    const shouldBeEnabled =
+      isExtensionEnabled() && isFeatureEnabled('colorPicker');
+
+    if (shouldBeEnabled && !colorProviderDisposable) {
+      colorProviderDisposable = vscode.languages.registerColorProvider(
+        documentSelector,
+        new MapleColorProvider(),
+      );
+      context.subscriptions.push(colorProviderDisposable);
+    } else if (!shouldBeEnabled && colorProviderDisposable) {
+      colorProviderDisposable.dispose();
+
+      // Remove from context.subscriptions to prevent memory leak
+      const index = context.subscriptions.indexOf(colorProviderDisposable);
+      if (index !== -1) {
+        context.subscriptions.splice(index, 1);
+      }
+
+      colorProviderDisposable = undefined;
+    }
+  }
+
+  // Initial registration
+  updateColorProvider();
 
   const decorationsManager = new DecorationsManager(
     context,
@@ -79,17 +100,26 @@ export function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration('maple.enabled')) {
+      if (
+        e.affectsConfiguration('maple.enabled') ||
+        e.affectsConfiguration('maple.features')
+      ) {
+        updateColorProvider();
+
         if (!isExtensionEnabled()) {
           mapleDiagnostics.clear();
+          for (const editor of vscode.window.visibleTextEditors) {
+            decorationsManager.updateDecorations(editor);
+          }
         } else {
-          // Refresh diagnostics for all visible editors
+          // Refresh diagnostics and highlighting for all visible editors
           for (const editor of vscode.window.visibleTextEditors) {
             void import('./providers/DiagnosticsProvider').then(
               ({ refreshDiagnostics }) => {
                 refreshDiagnostics(editor.document, mapleDiagnostics);
               },
             );
+            decorationsManager.updateDecorations(editor);
           }
         }
       }

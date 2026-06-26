@@ -9,15 +9,13 @@ import {
 } from '@f12io/maple';
 import * as vscode from 'vscode';
 import { getMapleClassRegex } from '../constants/regex';
-import {
-  extractAllClasses,
-} from '../helpers/class-extractor';
+import { extractAllClasses } from '../helpers/class-extractor';
 import {
   cocoWithResolver,
   colorPrefixes,
   findNamedColorAndTone,
 } from '../helpers/color-helpers';
-import { isExtensionEnabled } from '../helpers/config';
+import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 
 export class MapleColorProvider implements vscode.DocumentColorProvider {
@@ -25,7 +23,12 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<Array<vscode.ColorInformation>> {
-    if (!isExtensionEnabled() || isFileExcluded(document.uri)) return [];
+    if (
+      !isExtensionEnabled() ||
+      isFileExcluded(document.uri) ||
+      !isFeatureEnabled('colorPicker')
+    )
+      return [];
 
     const colors: Array<vscode.ColorInformation> = [];
     const text = document.getText();

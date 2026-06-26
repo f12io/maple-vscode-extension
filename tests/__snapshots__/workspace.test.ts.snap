@@ -3132,6 +3132,61 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
+    "classValue": "@md:@card(space:4,color:/.card[data-type='test:123&abc']:content='Time=12:00')",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "@md",
+        "type": "maple-mediaQuery",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "@card",
+        "type": "maple-alias",
+      },
+      {
+        "text": "(",
+        "type": "maple-separator",
+      },
+      {
+        "text": "space",
+        "type": "maple-alias-param-key",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": "color",
+        "type": "maple-alias-param-key",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "/.card[data-type='test:123&abc']:content='Time=12:00'",
+        "type": "maple-value",
+      },
+      {
+        "text": ")",
+        "type": "maple-separator",
+      },
+    ],
+    "warnings": [],
+  },
+  {
     "classValue": "&:hover:@card",
     "colors": [],
     "tokens": [
@@ -11584,15 +11639,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "auto-fit",
-        "type": "maple-value",
-      },
-      {
-        "text": ",",
-        "type": "maple-separator",
-      },
-      {
-        "text": "minmax(300px",
+        "text": "auto-fit,minmax(300px",
         "type": "maple-value",
       },
       {
@@ -12013,15 +12060,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "auto-fit",
-        "type": "maple-value",
-      },
-      {
-        "text": ",",
-        "type": "maple-separator",
-      },
-      {
-        "text": "minmax(300px",
+        "text": "auto-fit,minmax(300px",
         "type": "maple-value",
       },
       {

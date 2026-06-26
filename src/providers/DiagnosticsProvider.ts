@@ -6,9 +6,9 @@ import {
   PROP_TYPE_COLOR,
 } from '@f12io/maple';
 import * as vscode from 'vscode';
+import { getMapleClassRegex } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
 import { extractAllClasses } from '../helpers/class-extractor';
-import { getMapleClassRegex } from '../constants/regex';
 import { isExtensionEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
@@ -101,8 +101,10 @@ export function refreshDiagnostics(
             errorMsg = `Maple aliases can only be defined on the 'html' element. Found on '${instance.tagName}'.`;
           }
         } else if (!converted) {
-          // Check if it's a valid alias before flagging as invalid
-          const rawAliasBase = activeWord
+          // Check if it's a valid alias before flagging as invalid.
+          // Unescape activeWord in case parseClass fell back to propKeyKebab
+          const unescapedWord = activeWord.replace(/\\/g, '');
+          const rawAliasBase = unescapedWord
             .replace(/=$/, '')
             .replace(/\(.*\)$/, '');
           const aliasName = getAliasName(rawAliasBase);

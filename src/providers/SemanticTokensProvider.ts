@@ -1,11 +1,10 @@
-import { BUILTIN_ALIASES, parseClass } from '@f12io/maple';
+import { BUILTIN_ALIASES, parseClass, StringHelper } from '@f12io/maple';
 import * as vscode from 'vscode';
 import {
   getAliasRegex,
   getMapleClassRegex,
-  MAPLE_PARAMS_SPLIT_REGEX,
-  MAPLE_PARAM_KEY_VALUE_SPLIT_REGEX,
   MAPLE_COMMA_SPLIT_REGEX,
+  MAPLE_PARAMS_SPLIT_REGEX,
   MAPLE_UNDERSCORE_SPLIT_REGEX,
 } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
@@ -348,36 +347,74 @@ export class MapleSemanticTokensProvider
                 });
 
                 const innerStr = outerPart.substring(1, outerPart.length - 1);
-                const innerParts = innerStr.split(MAPLE_PARAM_KEY_VALUE_SPLIT_REGEX);
                 let innerOffset = currentStrOffset + 1;
 
-                for (let i = 0; i < innerParts.length; i++) {
-                  const innerPart = innerParts[i];
-                  if (innerPart.length === 0) continue;
-                  const posInner = document.positionAt(innerOffset);
+                const params = StringHelper.split(innerStr, ',');
+                for (let pIdx = 0; pIdx < params.length; pIdx++) {
+                  const paramStr = params[pIdx];
+                  if (paramStr.length === 0) continue;
 
-                  if (innerPart === ':' || innerPart === ',') {
+                  const colonIndex = paramStr.indexOf(':');
+
+                  if (colonIndex !== -1) {
+                    // It has a key
+                    const keyStr = paramStr.substring(0, colonIndex);
+                    if (keyStr.length > 0) {
+                      tokens.push({
+                        line: document.positionAt(innerOffset).line,
+                        character: document.positionAt(innerOffset).character,
+                        length: keyStr.length,
+                        tokenType: semanticTokenIndexes.mapleAliasParamKey,
+                        tokenModifiers: 0,
+                      });
+                    }
+                    innerOffset += keyStr.length;
+
+                    // Push colon
                     tokens.push({
-                      line: posInner.line,
-                      character: posInner.character,
+                      line: document.positionAt(innerOffset).line,
+                      character: document.positionAt(innerOffset).character,
                       length: 1,
                       tokenType: semanticTokenIndexes.mapleSeparator,
                       tokenModifiers: 0,
                     });
+                    innerOffset += 1;
+
+                    // Push value
+                    const valStr = paramStr.substring(colonIndex + 1);
+                    if (valStr.length > 0) {
+                      tokens.push({
+                        line: document.positionAt(innerOffset).line,
+                        character: document.positionAt(innerOffset).character,
+                        length: valStr.length,
+                        tokenType: semanticTokenIndexes.mapleValue,
+                        tokenModifiers: 0,
+                      });
+                      innerOffset += valStr.length;
+                    }
                   } else {
-                    const isKey =
-                      i < innerParts.length - 1 && innerParts[i + 1] === ':';
+                    // No key, just a value
                     tokens.push({
-                      line: posInner.line,
-                      character: posInner.character,
-                      length: innerPart.length,
-                      tokenType: isKey
-                        ? semanticTokenIndexes.mapleAliasParamKey
-                        : semanticTokenIndexes.mapleValue,
+                      line: document.positionAt(innerOffset).line,
+                      character: document.positionAt(innerOffset).character,
+                      length: paramStr.length,
+                      tokenType: semanticTokenIndexes.mapleValue,
                       tokenModifiers: 0,
                     });
+                    innerOffset += paramStr.length;
                   }
-                  innerOffset += innerPart.length;
+
+                  // Push comma if not the last param
+                  if (pIdx < params.length - 1) {
+                    tokens.push({
+                      line: document.positionAt(innerOffset).line,
+                      character: document.positionAt(innerOffset).character,
+                      length: 1,
+                      tokenType: semanticTokenIndexes.mapleSeparator,
+                      tokenModifiers: 0,
+                    });
+                    innerOffset += 1;
+                  }
                 }
 
                 const pos2 = document.positionAt(

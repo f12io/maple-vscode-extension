@@ -3132,7 +3132,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "@md:@card(space:4,color:/.card[data-type='test:123&abc']:content='Time=12:00')",
+    "classValue": "@md:@card(space:4,color:[/.card[data-type='test:123&abc']:content='Time=12:00'])",
     "colors": [],
     "tokens": [
       {
@@ -3176,7 +3176,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "/.card[data-type='test:123&abc']:content='Time=12:00'",
+        "text": "[/.card[data-type='test:123&abc']:content='Time=12:00']",
         "type": "maple-value",
       },
       {

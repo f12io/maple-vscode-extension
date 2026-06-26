@@ -1,7 +1,7 @@
 {
   "name": "maple-vscode-extension",
   "displayName": "Maple CSS",
-  "description": "Auto-suggestions, hover, diagnostics, and color swatches for the Maple CSS engine",
+  "description": "Auto-suggestions, hover help, diagnostics, color swatches and formatter for the Maple CSS engine",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.80.0"
@@ -132,7 +132,21 @@
         }
       }
     ],
-    "commands": [],
+    "commands": [
+      {
+        "command": "maple.formatClasses",
+        "title": "Format Classes",
+        "category": "Maple CSS"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "maple.formatClasses",
+          "when": "config.maple.format.enabled"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "Maple CSS",
@@ -155,7 +169,11 @@
         },
         "maple.features.highlighting": {
           "type": "string",
-          "enum": ["off", "minimal", "on"],
+          "enum": [
+            "off",
+            "minimal",
+            "on"
+          ],
           "default": "on",
           "description": "Configure semantic syntax highlighting for Maple CSS."
         },
@@ -178,6 +196,21 @@
           "type": "boolean",
           "default": true,
           "description": "Enable hover help for Maple CSS."
+        },
+        "maple.format.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the Maple CSS class formatter (provides the 'Maple: Format Classes' command). Note: If you use Prettier and have 'editor.formatOnSave' enabled, manual formatting will be squashed when you save. If you don't use 'editor.formatOnSave', this works perfectly!"
+        },
+        "maple.format.onSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically format Maple classes on save. Requires 'maple.format.enabled' to be true. Note: If you use Prettier and also have 'editor.formatOnSave' enabled, enabling this will cause flickering. If you don't use 'editor.formatOnSave', this feature works perfectly!"
+        },
+        "maple.format.maxClassesPerLine": {
+          "type": "number",
+          "default": 4,
+          "description": "Maximum number of classes to allow on a single line before wrapping. Set to 1 to force each class on its own line."
         }
       }
     }

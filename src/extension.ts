@@ -8,6 +8,7 @@ import { MapleColorProvider } from './providers/ColorProvider';
 import { MapleCompletionProvider } from './providers/CompletionProvider';
 import { DecorationsManager } from './providers/DecorationsManager';
 import { subscribeToDocumentChanges } from './providers/DiagnosticsProvider';
+import { registerFormatterProvider } from './providers/FormatterProvider';
 import { MapleHoverProvider } from './providers/HoverProvider';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -78,6 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Initial registration
   updateColorProvider();
+  registerFormatterProvider(context, documentSelector as Array<string>);
 
   const decorationsManager = new DecorationsManager(
     context,

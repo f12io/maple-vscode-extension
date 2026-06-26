@@ -78,6 +78,17 @@ export const START_TAG_NAME_REGEX = /^\s*([a-zA-Z0-9\-]+)/;
 /** Matches an asterisk after optional whitespace at the start of string */
 export const START_COMMENT_STAR_REGEX = /^\s*\*/;
 
+// ============================================================================
+// Formatter Regexes
+// ============================================================================
+
+/** Matches class="..." and className="..." attributes, avoiding Vue/Svelte bindings like :class */
+export const getClassAttrRegex = () =>
+  /(?<![:\w\-])(?:class|className)\s*=\s*(["'])([\s\S]*?)\1/g;
+
+/** Matches template literals tagged with maple */
+export const getMapleTagRegex = () => /\/\*\s*maple\s*\*\/\s*`([\s\S]*?)`/g;
+
 /** Matches object keys inside an expression that aren't quoted. e.g. { active: true } -> 'active' */
 export const getObjectKeyRegex = () => /(?:[{,])\s*([a-zA-Z0-9\-_]+)\s*:/g;
 

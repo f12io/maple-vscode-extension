@@ -6,27 +6,32 @@ export interface ClassInstance {
 }
 
 import {
-  START_TAG_NAME_REGEX,
-  START_COMMENT_STAR_REGEX,
+  getAngularVueExprRegex,
   getDisableRegex,
   getEnableRegex,
-  getObjectKeyRegex,
-  getStringLiteralRegex,
-  getStandardAttrRegex,
-  getAngularVueExprRegex,
-  getHostRegex,
   getHostClassRegex,
-  getSpecificClassRegex,
-  getJsxExprStartRegex,
-  getUtilityFuncStartRegex,
-  getOptInStringRegex,
-  getOptInObjectStartRegex,
+  getHostRegex,
   getIsInsideClassAttrRegex,
+  getJsxExprStartRegex,
+  getObjectKeyRegex,
+  getOptInObjectStartRegex,
+  getOptInStringRegex,
+  getSpecificClassRegex,
+  getStandardAttrRegex,
+  getStringLiteralRegex,
+  getUtilityFuncStartRegex,
   IS_INSIDE_NO_QUOTE_CLASS_REGEX,
   MAPLE_CLASS_REGEX_NON_GLOBAL,
+  MAPLE_INTERPOLATION_REGEX,
+  START_COMMENT_STAR_REGEX,
+  START_TAG_NAME_REGEX,
 } from '../constants/regex';
 
-function findClosingQuote(text: string, startIndex: number, quote: string): number {
+function findClosingQuote(
+  text: string,
+  startIndex: number,
+  quote: string,
+): number {
   let parenDepth = 0;
   let braceDepth = 0;
   let i = startIndex;
@@ -100,7 +105,7 @@ export function isLineDisabled(text: string, index: number): boolean {
   const lastNewline = text.lastIndexOf('\n', index);
   let nextNewline = text.indexOf('\n', index);
   if (nextNewline === -1) nextNewline = text.length;
-  
+
   const fullLine = text.substring(lastNewline + 1, nextNewline);
 
   if (fullLine.includes('maple-disable-line')) return true;
@@ -114,7 +119,9 @@ export function isLineDisabled(text: string, index: number): boolean {
   return false;
 }
 
-export function getDisabledBlocks(text: string): Array<{ start: number; end: number }> {
+export function getDisabledBlocks(
+  text: string,
+): Array<{ start: number; end: number }> {
   const blocks: Array<{ start: number; end: number }> = [];
   const disableRegex = getDisableRegex();
   const enableRegex = getEnableRegex();
@@ -197,7 +204,14 @@ export function extractFromAttributeValue(
   let j = 0;
   while (j < value.length) {
     if (value.substring(j, j + 2) === '${') {
-      pushInstance(instances, currentStr, currentStart, text, matchIndex, disabledBlocks);
+      pushInstance(
+        instances,
+        currentStr,
+        currentStart,
+        text,
+        matchIndex,
+        disabledBlocks,
+      );
       currentStr = '';
       j += 2;
       let innerBraceCount = 1;
@@ -220,7 +234,14 @@ export function extractFromAttributeValue(
 
       currentStart = offset + j;
     } else if (value.substring(j, j + 2) === '@(') {
-      pushInstance(instances, currentStr, currentStart, text, matchIndex, disabledBlocks);
+      pushInstance(
+        instances,
+        currentStr,
+        currentStart,
+        text,
+        matchIndex,
+        disabledBlocks,
+      );
       currentStr = '';
       j += 2;
       let innerParenCount = 1;
@@ -243,7 +264,23 @@ export function extractFromAttributeValue(
 
       currentStart = offset + j;
     } else if (value[j] === '{') {
-      pushInstance(instances, currentStr, currentStart, text, matchIndex, disabledBlocks);
+      const mapleInterpolationMatch = MAPLE_INTERPOLATION_REGEX.exec(
+        value.substring(j),
+      );
+      if (mapleInterpolationMatch && !value.substring(0, j).endsWith(' ')) {
+        currentStr += mapleInterpolationMatch[0];
+        j += mapleInterpolationMatch[0].length;
+        continue;
+      }
+
+      pushInstance(
+        instances,
+        currentStr,
+        currentStart,
+        text,
+        matchIndex,
+        disabledBlocks,
+      );
       currentStr = '';
       j += 1;
       let innerBraceCount = 1;
@@ -270,7 +307,14 @@ export function extractFromAttributeValue(
       j++;
     }
   }
-  pushInstance(instances, currentStr, currentStart, text, matchIndex, disabledBlocks);
+  pushInstance(
+    instances,
+    currentStr,
+    currentStart,
+    text,
+    matchIndex,
+    disabledBlocks,
+  );
 }
 
 export function extractStringLiterals(
@@ -288,7 +332,14 @@ export function extractStringLiterals(
     const start = exprStart + strMatch.index + quoteIdx + 1;
     const value = strMatch[2];
     if (strMatch[1] === '`') {
-      extractFromAttributeValue(value, start, text, matchIndex, instances, disabledBlocks);
+      extractFromAttributeValue(
+        value,
+        start,
+        text,
+        matchIndex,
+        instances,
+        disabledBlocks,
+      );
     } else {
       pushInstance(instances, value, start, text, matchIndex, disabledBlocks);
     }
@@ -340,10 +391,24 @@ export function extractStringsFromBraces(
       const expr = text.substring(match.index + match[0].length, i - 1);
       const exprStart = match.index + match[0].length;
 
-      extractStringLiterals(expr, exprStart, text, match.index, instances, disabledBlocks);
+      extractStringLiterals(
+        expr,
+        exprStart,
+        text,
+        match.index,
+        instances,
+        disabledBlocks,
+      );
 
       // Extract unquoted object keys (e.g., { fx: true } after Prettier removes quotes)
-      extractUnquotedObjectKeys(expr, exprStart, text, match.index, instances, disabledBlocks);
+      extractUnquotedObjectKeys(
+        expr,
+        exprStart,
+        text,
+        match.index,
+        instances,
+        disabledBlocks,
+      );
     }
   }
 }
@@ -366,10 +431,17 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     const quote = match[1];
     const attrStart = match.index + match[0].length;
     const closingQuoteIndex = findClosingQuote(text, attrStart, quote);
-    
+
     if (closingQuoteIndex !== -1) {
       const value = text.substring(attrStart, closingQuoteIndex);
-      extractFromAttributeValue(value, attrStart, text, match.index, instances, disabledBlocks);
+      extractFromAttributeValue(
+        value,
+        attrStart,
+        text,
+        match.index,
+        instances,
+        disabledBlocks,
+      );
     }
   }
 
@@ -387,9 +459,23 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     if (closingQuoteIndex !== -1) {
       const expr = text.substring(exprStart, closingQuoteIndex);
       // Find all string literals inside the expression: '...', "...", `...`
-      extractStringLiterals(expr, exprStart, text, match.index, instances, disabledBlocks);
+      extractStringLiterals(
+        expr,
+        exprStart,
+        text,
+        match.index,
+        instances,
+        disabledBlocks,
+      );
       // Extract unquoted object keys
-      extractUnquotedObjectKeys(expr, exprStart, text, match.index, instances, disabledBlocks);
+      extractUnquotedObjectKeys(
+        expr,
+        exprStart,
+        text,
+        match.index,
+        instances,
+        disabledBlocks,
+      );
     }
   }
 
@@ -407,7 +493,14 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     while ((hcMatch = hostClassRegex.exec(hostObj)) !== null) {
       const quoteIdx = hcMatch[0].indexOf(hcMatch[1]);
       const start = hostStart + hcMatch.index + quoteIdx + 1;
-      pushInstance(instances, hcMatch[2], start, text, match.index, disabledBlocks);
+      pushInstance(
+        instances,
+        hcMatch[2],
+        start,
+        text,
+        match.index,
+        disabledBlocks,
+      );
     }
   }
 
@@ -449,9 +542,16 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
     const quote = match[1];
     const value = match[2];
     const start = match.index + match[0].indexOf(quote) + 1;
-    
+
     if (quote === '`') {
-      extractFromAttributeValue(value, start, text, match.index, instances, disabledBlocks);
+      extractFromAttributeValue(
+        value,
+        start,
+        text,
+        match.index,
+        instances,
+        disabledBlocks,
+      );
     } else {
       pushInstance(instances, value, start, text, match.index, disabledBlocks);
     }

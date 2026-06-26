@@ -17,6 +17,9 @@ export const getMapleClassRegex = () => new RegExp(MAPLE_CLASS_PATTERN, 'g');
 /** Non-global matcher for a single maple class token. */
 export const MAPLE_CLASS_REGEX_NON_GLOBAL = new RegExp(MAPLE_CLASS_PATTERN);
 
+/** Non-global matcher for a maple interpolation token (e.g. {space,4}). */
+export const MAPLE_INTERPOLATION_REGEX = /^\{[\w\-.,]+\}/;
+
 // ============================================================================
 // Alias Extraction
 // ============================================================================
@@ -57,17 +60,11 @@ const JS_FRAMEWORK_CLASS_ATTRS = `class|className|classList`;
 
 /** 1. Standard attributes: class="", className="", CssClass="" */
 export const getStandardAttrRegex = () =>
-  new RegExp(
-    `(?:^|[\\s<>])(?:${STANDARD_CLASS_ATTRS})\\s*=\\s*(["'])`,
-    'gi',
-  );
+  new RegExp(`(?:^|[\\s<>])(?:${STANDARD_CLASS_ATTRS})\\s*=\\s*(["'])`, 'gi');
 
 /** 2. Angular / Vue expressions: [ngClass]="...", :class="...", [class]="..." */
 export const getAngularVueExprRegex = () =>
-  new RegExp(
-    `(?:${ANGULAR_VUE_CLASS_ATTRS})\\s*=\\s*(["'])`,
-    'gi',
-  );
+  new RegExp(`(?:${ANGULAR_VUE_CLASS_ATTRS})\\s*=\\s*(["'])`, 'gi');
 
 /** 3. Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' } */
 export const getHostRegex = () => /host\s*:\s*\{([^}]+)\}/g;

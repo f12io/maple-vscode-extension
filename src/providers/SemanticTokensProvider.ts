@@ -27,6 +27,7 @@ export const tokenTypes = [
   'maple-alias',
   'maple-variable',
   'maple-important',
+  'maple-alias-param-key',
 ];
 
 export const tokenModifiers: Array<string> = [];
@@ -48,6 +49,7 @@ const semanticTokenIndexes = {
   mapleAlias: 9,
   mapleVariable: 10,
   mapleImportant: 11,
+  mapleAliasParamKey: 12,
 };
 
 export class MapleSemanticTokensProvider
@@ -309,7 +311,7 @@ export class MapleSemanticTokensProvider
                       character: posInner.character,
                       length: innerPart.length,
                       tokenType: isFirst
-                        ? semanticTokenIndexes.mapleVariable
+                        ? semanticTokenIndexes.mapleAliasParamKey
                         : semanticTokenIndexes.mapleValue,
                       tokenModifiers: 0,
                     });

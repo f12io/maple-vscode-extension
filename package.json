@@ -69,6 +69,10 @@
       {
         "id": "maple-important",
         "description": "Important prefix (!)"
+      },
+      {
+        "id": "maple-alias-param-key",
+        "description": "Alias parameter key"
       }
     ],
     "semanticTokenScopes": [
@@ -119,6 +123,9 @@
             "keyword.other.important.css",
             "keyword.other.important",
             "keyword"
+          ],
+          "maple-alias-param-key": [
+            "variable.parameter"
           ]
         }
       }
@@ -135,8 +142,13 @@
         },
         "maple.exclude": {
           "type": "array",
-          "items": { "type": "string" },
-          "default": ["**/node_modules/**", "**/.git/**"],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/node_modules/**",
+            "**/.git/**"
+          ],
           "description": "Glob patterns for files where Maple CSS extension features should be disabled."
         }
       }

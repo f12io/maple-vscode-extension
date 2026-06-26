@@ -101,6 +101,13 @@ export class DecorationsManager {
         color: new vscode.ThemeColor('terminal.ansiBrightRed'),
       }),
     );
+    // 12: maple-alias-param-key
+    this.decorationTypes.set(
+      12,
+      vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor('terminal.ansiBrightYellow'),
+      }),
+    );
 
     // Register event listeners
     let activeEditor = vscode.window.activeTextEditor;

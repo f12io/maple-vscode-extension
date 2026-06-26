@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { isFeatureEnabled } from '../helpers/config';
+import { getHighlightingMode } from '../helpers/config';
 import { MapleSemanticTokensProvider } from './SemanticTokensProvider';
 
 export class DecorationsManager {
@@ -161,7 +161,9 @@ export class DecorationsManager {
       return;
     }
 
-    if (!isFeatureEnabled('highlighting')) {
+    const highlightingMode = getHighlightingMode();
+
+    if (highlightingMode === 'off') {
       for (const decorationType of this.decorationTypes.values()) {
         editor.setDecorations(decorationType, []);
       }
@@ -221,9 +223,28 @@ export class DecorationsManager {
     }
 
     // Apply decorations
-    for (const [tokenType, decorationType] of this.decorationTypes) {
-      const ranges = rangesByType.get(tokenType) || [];
-      editor.setDecorations(decorationType, ranges);
+    if (highlightingMode === 'minimal') {
+      const combinedValueRanges = [
+        ...(rangesByType.get(1) || []), // maple-utility
+        ...(rangesByType.get(2) || []), // maple-value
+        ...(rangesByType.get(9) || []), // maple-alias
+      ];
+
+      for (const [tokenType, decorationType] of this.decorationTypes) {
+        if (tokenType === 2) {
+          editor.setDecorations(decorationType, combinedValueRanges);
+        } else if (tokenType === 1 || tokenType === 9) {
+          editor.setDecorations(decorationType, []);
+        } else {
+          const ranges = rangesByType.get(tokenType) || [];
+          editor.setDecorations(decorationType, ranges);
+        }
+      }
+    } else {
+      for (const [tokenType, decorationType] of this.decorationTypes) {
+        const ranges = rangesByType.get(tokenType) || [];
+        editor.setDecorations(decorationType, ranges);
+      }
     }
   }
 

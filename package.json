@@ -154,9 +154,10 @@
           "description": "Glob patterns for files where Maple CSS extension features should be disabled."
         },
         "maple.features.highlighting": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable semantic syntax highlighting for Maple CSS."
+          "type": "string",
+          "enum": ["off", "minimal", "on"],
+          "default": "on",
+          "description": "Configure semantic syntax highlighting for Maple CSS."
         },
         "maple.features.diagnostics": {
           "type": "boolean",

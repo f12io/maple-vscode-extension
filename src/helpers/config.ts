@@ -8,7 +8,6 @@ export function isExtensionEnabled(): boolean {
 
 export function isFeatureEnabled(
   featureName:
-    | 'highlighting'
     | 'diagnostics'
     | 'autoComplete'
     | 'colorPicker'
@@ -17,4 +16,10 @@ export function isFeatureEnabled(
   return vscode.workspace
     .getConfiguration('maple.features')
     .get<boolean>(featureName, true);
+}
+
+export function getHighlightingMode(): 'off' | 'minimal' | 'on' {
+  return vscode.workspace
+    .getConfiguration('maple.features')
+    .get<'off' | 'minimal' | 'on'>('highlighting', 'on');
 }

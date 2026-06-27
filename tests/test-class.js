@@ -29,8 +29,8 @@ export class MyComponent {
     testClass = /* maple */ 'fw-bold c-red';
     testClass = /* maple */ `
       c-blue
-      p-2 m-${isActive ? '2' : '3'}
-      o-50 fw-normal
+      p-2
+      m-${isActive ? '2' : '3'} o-50 fw-normal
       ${isActive ? 'fs-50' : 'fs-60'}
     `;
 

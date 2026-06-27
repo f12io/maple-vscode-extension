@@ -701,7 +701,8 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": " o-50 fw-normal
+    "classValue": "
+      o-50 fw-normal
       ",
     "colors": [],
     "tokens": [

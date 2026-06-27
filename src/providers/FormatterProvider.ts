@@ -40,8 +40,8 @@ function formatClasses(
 
     const isNewType = lastPropType !== null && lastPropType !== propType;
     const isOverLimit = currentLine.length >= maxClassesPerLine;
-    const isExpression = cls.startsWith('${');
-    const wasExpression = currentLine.some((c) => c.startsWith('${'));
+    const isExpression = cls.includes('${');
+    const wasExpression = currentLine.some((c) => c.includes('${'));
 
     if (
       currentLine.length > 0 &&

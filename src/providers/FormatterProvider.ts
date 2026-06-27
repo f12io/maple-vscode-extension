@@ -38,7 +38,10 @@ function formatClasses(
       propType = -1;
     }
 
-    const isNewType = lastPropType !== null && lastPropType !== propType;
+    const isNewType =
+      classes.length > maxClassesPerLine &&
+      lastPropType !== null &&
+      lastPropType !== propType;
     const isOverLimit = currentLine.length >= maxClassesPerLine;
     const isExpression = cls.includes('${');
     const wasExpression = currentLine.some((c) => c.includes('${'));

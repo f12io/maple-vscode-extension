@@ -1,5 +1,9 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import {
+  getLanguageIdFromExtension,
+  SUPPORTED_FILES_GLOB,
+} from '../constants/languages';
 import { getAliasRegex } from '../constants/regex';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
@@ -19,9 +23,8 @@ export class AliasCache {
     void this.scanAllWorkspaces();
 
     // Setup File Watchers for all supported file types
-    const watcher = vscode.workspace.createFileSystemWatcher(
-      '**/*.{html,tsx,jsx,vue,svelte,ts,js,razor,php,twig}',
-    );
+    const watcher =
+      vscode.workspace.createFileSystemWatcher(SUPPORTED_FILES_GLOB);
 
     context.subscriptions.push(watcher);
 
@@ -80,7 +83,7 @@ export class AliasCache {
     try {
       // Find files but exclude node_modules and .git
       const files = await vscode.workspace.findFiles(
-        '**/*.{html,tsx,jsx,vue,svelte,ts,js,razor}',
+        SUPPORTED_FILES_GLOB,
         '**/{node_modules,.git}/**',
       );
 
@@ -103,13 +106,7 @@ export class AliasCache {
 
       const fileMap = new Map<string, string>();
       const ext = uri.fsPath.split('.').pop()?.toLowerCase();
-      let languageId = 'html';
-      if (ext === 'jsx' || ext === 'tsx') languageId = 'javascriptreact';
-      else if (ext === 'vue') languageId = 'vue';
-      else if (ext === 'svelte') languageId = 'svelte';
-      else if (ext === 'razor') languageId = 'razor';
-      else if (ext === 'php') languageId = 'php';
-      else if (ext === 'twig') languageId = 'twig';
+      const languageId = getLanguageIdFromExtension(ext);
 
       this.parseContentIntoMap(content, fileMap, languageId);
 

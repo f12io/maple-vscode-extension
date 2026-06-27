@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
+import { getLanguageIdFromFileName } from '../src/constants/languages';
 import { MapleColorProvider } from '../src/providers/ColorProvider';
 import { refreshDiagnostics } from '../src/providers/DiagnosticsProvider';
 import {
@@ -75,15 +76,7 @@ describe('Workspace Highlights and Colors', () => {
         );
       };
 
-      let langId = 'html';
-      if (fileName.endsWith('.jsx')) langId = 'javascriptreact';
-      else if (fileName.endsWith('.vue')) langId = 'vue';
-      else if (fileName.endsWith('.svelte')) langId = 'svelte';
-      else if (fileName.endsWith('.razor')) langId = 'razor';
-      else if (fileName.endsWith('.ts')) langId = 'typescript';
-      else if (fileName.endsWith('.js')) langId = 'javascript';
-      else if (fileName.endsWith('.php')) langId = 'php';
-      else if (fileName.endsWith('.twig')) langId = 'twig';
+      const langId = getLanguageIdFromFileName(fileName);
 
       const mockDocument = {
         getText: () => htmlContent,

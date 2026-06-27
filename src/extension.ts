@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { SUPPORTED_LANGUAGES } from './constants/languages';
 import { AliasCache } from './helpers/alias-cache';
 import {
   isExtensionExplicitlyDisabled,
@@ -19,18 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   AliasCache.init(context);
 
-  const documentSelector: vscode.DocumentSelector = [
-    'html',
-    'javascriptreact',
-    'typescriptreact',
-    'vue',
-    'svelte',
-    'typescript',
-    'javascript',
-    'razor',
-    'php',
-    'twig',
-  ];
+  const documentSelector: vscode.DocumentSelector = SUPPORTED_LANGUAGES;
 
   context.subscriptions.push(
     vscode.languages.registerHoverProvider(

@@ -810,9 +810,51 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "",
-    "colors": [],
-    "tokens": [],
+    "classValue": " bgc-red p-2 o-50",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red",
+        "type": "maple-value",
+      },
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "2",
+        "type": "maple-value",
+      },
+      {
+        "text": "o",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "50",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {

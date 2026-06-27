@@ -60,8 +60,16 @@ export function refreshDiagnostics(
         // Check if this class is cut off at the end of the extracted instance by an interpolation
         const wordEndOffset = token.start + wordMatch.index + cls.length;
         if (wordEndOffset === classValue.length) {
-          const nextChars = text.substring(instance.end, instance.end + 2);
-          if (nextChars === '${' || nextChars === '@(' || nextChars === '<?') {
+          const nextSlice = text
+            .substring(instance.end, instance.end + 5)
+            .trim();
+          if (
+            nextSlice.startsWith('${') ||
+            nextSlice.startsWith('@(') ||
+            nextSlice.startsWith('<?') ||
+            nextSlice.startsWith('{') ||
+            /^['"`]\s*[\.\+]/.test(nextSlice) // Matches: ' . or " + etc. (string concatenation)
+          ) {
             continue; // Skip this token, it was cut off by an expression
           }
         }

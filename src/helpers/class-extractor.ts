@@ -292,6 +292,7 @@ export function extractFromAttributeValue(
   matchIndex: number,
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
+  isCSharpInterpolated = false,
 ) {
   let currentStr = '';
   let currentStart = offset;
@@ -308,6 +309,36 @@ export function extractFromAttributeValue(
       );
       currentStr = '';
       j += 2;
+      let innerBraceCount = 1;
+      const innerExprStart = j;
+      while (j < value.length && innerBraceCount > 0) {
+        if (value[j] === '{') innerBraceCount++;
+        else if (value[j] === '}') innerBraceCount--;
+        j++;
+      }
+      const innerExpr = value.substring(innerExprStart, j - 1);
+
+      extractStringLiterals(
+        innerExpr,
+        offset + innerExprStart,
+        text,
+        matchIndex,
+        instances,
+        disabledBlocks,
+      );
+
+      currentStart = offset + j;
+    } else if (isCSharpInterpolated && value[j] === '{') {
+      pushInstance(
+        instances,
+        currentStr,
+        currentStart,
+        text,
+        matchIndex,
+        disabledBlocks,
+      );
+      currentStr = '';
+      j += 1;
       let innerBraceCount = 1;
       const innerExprStart = j;
       while (j < value.length && innerBraceCount > 0) {
@@ -453,9 +484,15 @@ export function extractStringLiterals(
     if (char === '"' || char === "'" || char === '`') {
       const quoteChar = char;
       const start = exprStart + j + 1;
+      let isCSharpInterpolated = false;
+      if (j > 0 && expr[j - 1] === '$') {
+        isCSharpInterpolated = true;
+      }
       let isEscaped = false;
       let braceDepth = 0;
       let matchEnd = -1;
+      let inInnerString = false;
+      let innerQuoteChar: string | null = null;
       j++;
 
       while (j < expr.length) {
@@ -471,19 +508,35 @@ export function extractStringLiterals(
           continue;
         }
 
-        if (quoteChar === '`') {
+        if (quoteChar === '`' || isCSharpInterpolated) {
           if (braceDepth === 0) {
-            if (c === '$' && expr[j + 1] === '{') {
+            if (quoteChar === '`' && c === '$' && expr[j + 1] === '{') {
               braceDepth++;
               j += 2;
               continue;
-            } else if (c === '`') {
+            } else if (isCSharpInterpolated && c === '{') {
+              braceDepth++;
+              j++;
+              continue;
+            } else if (c === quoteChar) {
               matchEnd = j;
               break;
             }
           } else {
-            if (c === '{') braceDepth++;
-            else if (c === '}') braceDepth--;
+            if (inInnerString) {
+              if (c === innerQuoteChar) {
+                inInnerString = false;
+              }
+            } else {
+              if (c === '"' || c === "'" || c === '`') {
+                inInnerString = true;
+                innerQuoteChar = c;
+              } else if (c === '{') {
+                braceDepth++;
+              } else if (c === '}') {
+                braceDepth--;
+              }
+            }
           }
         } else {
           if (c === quoteChar) {
@@ -496,7 +549,7 @@ export function extractStringLiterals(
 
       if (matchEnd !== -1) {
         const valueStr = expr.substring(start - exprStart, matchEnd);
-        if (quoteChar === '`') {
+        if (quoteChar === '`' || isCSharpInterpolated) {
           extractFromAttributeValue(
             valueStr,
             start,
@@ -504,6 +557,7 @@ export function extractStringLiterals(
             matchIndex,
             instances,
             disabledBlocks,
+            isCSharpInterpolated,
           );
         } else {
           pushInstance(

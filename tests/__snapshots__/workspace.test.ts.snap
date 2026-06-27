@@ -1366,9 +1366,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
     ],
-    "warnings": [
-      "Invalid maple class: '@extraClass'",
-    ],
+    "warnings": [],
   },
   {
     "classValue": "",

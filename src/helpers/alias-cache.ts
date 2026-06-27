@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { getAliasRegex } from '../constants/regex';
-import { extractAllClasses } from './class-extractor';
+import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 /**
  * A workspace-wide cache that scans files for custom Maple aliases
@@ -102,7 +102,16 @@ export class AliasCache {
       const content = await fs.promises.readFile(uri.fsPath, 'utf-8');
 
       const fileMap = new Map<string, string>();
-      this.parseContentIntoMap(content, fileMap);
+      const ext = uri.fsPath.split('.').pop()?.toLowerCase();
+      let languageId = 'html';
+      if (ext === 'jsx' || ext === 'tsx') languageId = 'javascriptreact';
+      else if (ext === 'vue') languageId = 'vue';
+      else if (ext === 'svelte') languageId = 'svelte';
+      else if (ext === 'razor') languageId = 'razor';
+      else if (ext === 'php') languageId = 'php';
+      else if (ext === 'twig') languageId = 'twig';
+
+      this.parseContentIntoMap(content, fileMap, languageId);
 
       const folderKey = folder.uri.toString();
       if (!this.cache.has(folderKey)) {
@@ -138,8 +147,11 @@ export class AliasCache {
   private static parseContentIntoMap(
     content: string,
     map: Map<string, string>,
+    languageId: string,
   ) {
-    const instances = extractAllClasses(content);
+    const service = LanguageServiceRegistry.getService(languageId);
+    if (!service) return;
+    const instances = service.extractClasses(content);
     const aliasRegex = getAliasRegex();
 
     for (const instance of instances) {

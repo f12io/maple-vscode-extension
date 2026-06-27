@@ -8,7 +8,6 @@ import {
   MAPLE_UNDERSCORE_SPLIT_REGEX,
 } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
-import { extractAllClasses } from '../helpers/class-extractor';
 import { getHighlightingMode, isExtensionEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import { getUtilKey } from '../helpers/get-util-key';
@@ -19,6 +18,7 @@ import {
   isVariable,
   stripQuotes,
 } from '../helpers/maple-parser';
+import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 export const tokenTypes = [
   'maple-mediaQuery',
@@ -74,7 +74,12 @@ export class MapleSemanticTokensProvider
 
     const builder = new vscode.SemanticTokensBuilder(semanticTokensLegend);
     const text = document.getText();
-    const matches = extractAllClasses(text);
+    const languageService = LanguageServiceRegistry.getService(
+      document.languageId,
+    );
+    if (!languageService) return new vscode.SemanticTokens(new Uint32Array(0));
+
+    const matches = languageService.extractClasses(text);
 
     // Local alias fallback
     const localAliases = new Map<string, string>();

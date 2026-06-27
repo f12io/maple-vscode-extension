@@ -6,8 +6,7 @@ import {
   getMapleTagRegex,
 } from '../constants/regex';
 import { isExtensionExplicitlyDisabled } from '../helpers/config';
-
-import { tokenizeClassesWithIndices } from '../helpers/class-tokenizer';
+import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 function getIndentFromIndex(text: string, index: number): string {
   const lineStart = text.lastIndexOf('\n', index) + 1;
@@ -20,8 +19,13 @@ function formatClasses(
   classStr: string,
   baseIndent: string,
   maxClassesPerLine: number,
+  languageId: string,
 ): string {
-  const classes = tokenizeClassesWithIndices(classStr).map((t) => t.value);
+  const service = LanguageServiceRegistry.getService(languageId);
+  if (!service) return classStr;
+  const classes = service
+    .tokenizeClassesWithIndices(classStr)
+    .map((t) => t.value);
   if (classes.length === 0) return '';
   if (classes.length <= 1 && maxClassesPerLine >= 1) return classes[0];
 
@@ -96,7 +100,12 @@ function applyFormatting(
     const innerEnd = innerStart + innerString.length;
 
     const baseIndent = getIndentFromIndex(text, match.index);
-    const formatted = formatClasses(innerString, baseIndent, maxClassesPerLine);
+    const formatted = formatClasses(
+      innerString,
+      baseIndent,
+      maxClassesPerLine,
+      document.languageId,
+    );
 
     if (formatted !== innerString) {
       const range = new vscode.Range(
@@ -115,7 +124,12 @@ function applyFormatting(
     const innerEnd = innerStart + innerString.length;
 
     const baseIndent = getIndentFromIndex(text, match.index);
-    const formatted = formatClasses(innerString, baseIndent, maxClassesPerLine);
+    const formatted = formatClasses(
+      innerString,
+      baseIndent,
+      maxClassesPerLine,
+      document.languageId,
+    );
 
     if (formatted !== innerString) {
       const range = new vscode.Range(

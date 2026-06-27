@@ -12,10 +12,6 @@ import {
 } from '@f12io/maple';
 import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
-import {
-  extractAllClasses,
-  getExactWordRangeAtPosition,
-} from '../helpers/class-extractor';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
@@ -29,6 +25,8 @@ import {
   PREDEFINED_VARIABLES,
   PSEUDO_CLASSES,
 } from '../mapleEngine/data';
+import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
+import { getExactWordRangeAtPosition } from '../services/languages/extractor-utils';
 
 export class MapleCompletionProvider implements vscode.CompletionItemProvider {
   provideCompletionItems(
@@ -49,7 +47,11 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     const documentText = document.getText();
     const offset = document.offsetAt(position);
 
-    const instances = extractAllClasses(documentText);
+    const languageService = LanguageServiceRegistry.getService(
+      document.languageId,
+    );
+    if (!languageService) return undefined;
+    const instances = languageService.extractClasses(documentText);
     const currentInstance = instances.find(
       (inst) => offset >= inst.start && offset <= inst.end,
     );

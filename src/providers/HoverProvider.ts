@@ -7,7 +7,6 @@ import {
   getParamSubstituteRegex,
 } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
-import { extractAllClasses } from '../helpers/class-extractor';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
@@ -15,6 +14,7 @@ import {
   isAliasMarker,
   parseMapleToken,
 } from '../helpers/maple-parser';
+import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 export class MapleHoverProvider implements vscode.HoverProvider {
   async provideHover(
@@ -32,7 +32,11 @@ export class MapleHoverProvider implements vscode.HoverProvider {
     const documentText = document.getText();
     const offset = document.offsetAt(position);
 
-    const instances = extractAllClasses(documentText);
+    const languageService = LanguageServiceRegistry.getService(
+      document.languageId,
+    );
+    if (!languageService) return null;
+    const instances = languageService.extractClasses(documentText);
     const currentInstance = instances.find(
       (inst) => offset >= inst.start && offset <= inst.end,
     );

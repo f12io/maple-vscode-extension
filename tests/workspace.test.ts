@@ -2,13 +2,13 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
-import { extractAllClasses } from '../src/helpers/class-extractor';
 import { MapleColorProvider } from '../src/providers/ColorProvider';
 import { refreshDiagnostics } from '../src/providers/DiagnosticsProvider';
 import {
   MapleSemanticTokensProvider,
   tokenTypes,
 } from '../src/providers/SemanticTokensProvider';
+import { LanguageServiceRegistry } from '../src/services/LanguageServiceRegistry';
 
 vi.mock('../src/helpers/config', () => ({
   isExtensionEnabled: () => true,
@@ -75,10 +75,21 @@ describe('Workspace Highlights and Colors', () => {
         );
       };
 
+      let langId = 'html';
+      if (fileName.endsWith('.jsx')) langId = 'javascriptreact';
+      else if (fileName.endsWith('.vue')) langId = 'vue';
+      else if (fileName.endsWith('.svelte')) langId = 'svelte';
+      else if (fileName.endsWith('.razor')) langId = 'razor';
+      else if (fileName.endsWith('.ts')) langId = 'typescript';
+      else if (fileName.endsWith('.js')) langId = 'javascript';
+      else if (fileName.endsWith('.php')) langId = 'php';
+      else if (fileName.endsWith('.twig')) langId = 'twig';
+
       const mockDocument = {
         getText: () => htmlContent,
         positionAt,
         uri: { fsPath: `/test/${fileName}` },
+        languageId: langId,
       } as unknown as vscode.TextDocument;
 
       // Mock vscode API needed for diagnostics
@@ -171,7 +182,10 @@ describe('Workspace Highlights and Colors', () => {
         };
       });
 
-      const classInstances = extractAllClasses(htmlContent);
+      const classInstances =
+        LanguageServiceRegistry.getService(langId)?.extractClasses(
+          htmlContent,
+        ) || [];
 
       const snapshotData: Array<any> = [];
 

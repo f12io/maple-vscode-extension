@@ -1,5 +1,6 @@
 {
   "maple.enabled": true,
+  "maple.format.enabled": true,
   "maple.exclude": [
     "**/node_modules/**",
     "**/*.test.ts"

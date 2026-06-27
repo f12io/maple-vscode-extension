@@ -31,6 +31,7 @@ describe('MapleCompletionProvider', () => {
       getWordRangeAtPosition: () => new vscode.Range(0, 12, 0, 16),
       lineAt: () => ({ text: '<div class="bgc-"></div>' }),
       uri: { fsPath: '/test/file.html' },
+      languageId: 'html',
     } as unknown as vscode.TextDocument;
 
     const position = new vscode.Position(0, 16);
@@ -65,6 +66,7 @@ describe('MapleCompletionProvider', () => {
       getWordRangeAtPosition: () => new vscode.Range(0, 11, 0, 15),
       lineAt: () => ({ text: '<div>hello bgc-</div>' }),
       uri: { fsPath: '/test/file.html' },
+      languageId: 'html',
     } as unknown as vscode.TextDocument;
 
     const position = new vscode.Position(0, 15);

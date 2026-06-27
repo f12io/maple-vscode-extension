@@ -9,7 +9,6 @@ import {
 } from '@f12io/maple';
 import * as vscode from 'vscode';
 import { getMapleClassRegex } from '../constants/regex';
-import { extractAllClasses } from '../helpers/class-extractor';
 import {
   cocoWithResolver,
   colorPrefixes,
@@ -17,6 +16,7 @@ import {
 } from '../helpers/color-helpers';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
+import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 export class MapleColorProvider implements vscode.DocumentColorProvider {
   public provideDocumentColors(
@@ -32,7 +32,11 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
 
     const colors: Array<vscode.ColorInformation> = [];
     const text = document.getText();
-    const classInstances = extractAllClasses(text);
+    const languageService = LanguageServiceRegistry.getService(
+      document.languageId,
+    );
+    if (!languageService) return [];
+    const classInstances = languageService.extractClasses(text);
 
     for (const instance of classInstances) {
       const classValue = instance.value;

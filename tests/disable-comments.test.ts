@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractAllClasses } from '../src/helpers/class-extractor';
+import { LanguageServiceRegistry } from '../src/services/LanguageServiceRegistry';
 
 describe('Inline Disable Comments', () => {
   it('should skip entire file if maple-disable-file is present', () => {
@@ -8,7 +8,8 @@ describe('Inline Disable Comments', () => {
       const x = <div class="bg-red-500"></div>;
       const y = <span className="text-xl"></span>;
     `;
-    const classes = extractAllClasses(text);
+    const classes =
+      LanguageServiceRegistry.getService('html')!.extractClasses(text);
     expect(classes.length).toBe(0);
   });
 
@@ -17,7 +18,8 @@ describe('Inline Disable Comments', () => {
       const x = <div class="bg-red-500"></div>; // maple-disable-line
       const y = <span className="text-xl"></span>;
     `;
-    const classes = extractAllClasses(text);
+    const classes =
+      LanguageServiceRegistry.getService('html')!.extractClasses(text);
     expect(classes.length).toBe(1);
     expect(classes[0].value).toBe('text-xl');
   });
@@ -28,7 +30,8 @@ describe('Inline Disable Comments', () => {
       const x = <div class="bg-red-500"></div>;
       const y = <span className="text-xl"></span>;
     `;
-    const classes = extractAllClasses(text);
+    const classes =
+      LanguageServiceRegistry.getService('html')!.extractClasses(text);
     expect(classes.length).toBe(1);
     expect(classes[0].value).toBe('text-xl');
   });
@@ -42,7 +45,8 @@ describe('Inline Disable Comments', () => {
       /* maple-enable */
       const d = <span className="flex"></span>;
     `;
-    const classes = extractAllClasses(text);
+    const classes =
+      LanguageServiceRegistry.getService('html')!.extractClasses(text);
     expect(classes.length).toBe(2);
     expect(classes[0].value).toBe('btn');
     expect(classes[1].value).toBe('flex');

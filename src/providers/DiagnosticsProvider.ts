@@ -8,7 +8,6 @@ import {
 import * as vscode from 'vscode';
 import { getMapleClassRegex } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
-import { extractAllClasses } from '../helpers/class-extractor';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import {
@@ -19,8 +18,7 @@ import {
   parseMapleToken,
   stripQuotes,
 } from '../helpers/maple-parser';
-
-import { tokenizeClassesWithIndices } from '../helpers/class-tokenizer';
+import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 export function refreshDiagnostics(
   doc: vscode.TextDocument,
@@ -38,7 +36,13 @@ export function refreshDiagnostics(
   const diagnostics: Array<vscode.Diagnostic> = [];
   const text = doc.getText();
 
-  const classInstances = extractAllClasses(text);
+  const languageService = LanguageServiceRegistry.getService(doc.languageId);
+  if (!languageService) {
+    mapleDiagnostics.set(doc.uri, []);
+    return;
+  }
+
+  const classInstances = languageService.extractClasses(text);
 
   for (const instance of classInstances) {
     const classValue = instance.value;
@@ -47,7 +51,7 @@ export function refreshDiagnostics(
       { range: vscode.Range; isAdded: boolean }
     >();
 
-    const tokens = tokenizeClassesWithIndices(classValue);
+    const tokens = languageService.tokenizeClassesWithIndices(classValue);
 
     for (const token of tokens) {
       if (token.value.includes('${')) continue;

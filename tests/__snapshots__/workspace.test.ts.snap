@@ -773,6 +773,87 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
+      ",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "fs-50 m-",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fs",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "50",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "2",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "3",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "fs-60 m-",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fs",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "60",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "2",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "3",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "
     ",
     "colors": [],
     "tokens": [],

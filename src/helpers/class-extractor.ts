@@ -15,10 +15,8 @@ import {
   getJsxExprStartRegex,
   getObjectKeyRegex,
   getOptInObjectStartRegex,
-  getOptInStringRegex,
   getSpecificClassRegex,
   getStandardAttrRegex,
-  getStringLiteralRegex,
   getUtilityFuncStartRegex,
   IS_INSIDE_NO_QUOTE_CLASS_REGEX,
   MAPLE_CLASS_REGEX_NON_GLOBAL,
@@ -191,6 +189,102 @@ export function extractUnquotedObjectKeys(
   }
 }
 
+export function extractOptInStrings(
+  text: string,
+  instances: Array<ClassInstance>,
+  disabledBlocks: Array<{ start: number; end: number }> = [],
+) {
+  const optInRegex = /\/\*\s*maple\s*\*\/\s*(["'`])/g;
+  let match;
+  while ((match = optInRegex.exec(text)) !== null) {
+    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
+
+    const quoteChar = match[1];
+    let j = match.index + match[0].length;
+    let braceDepth = 0;
+    let inString = false;
+    let innerQuoteChar = null;
+    let isEscaped = false;
+
+    const contentStart = j;
+    let matchEnd = -1;
+
+    while (j < text.length) {
+      const char = text[j];
+
+      if (isEscaped) {
+        isEscaped = false;
+        j++;
+        continue;
+      }
+
+      if (char === '\\') {
+        isEscaped = true;
+        j++;
+        continue;
+      }
+
+      if (quoteChar === '`') {
+        if (braceDepth === 0) {
+          if (char === '$' && text[j + 1] === '{') {
+            braceDepth++;
+            j += 2;
+            continue;
+          } else if (char === '`') {
+            matchEnd = j;
+            break;
+          }
+        } else {
+          if (inString) {
+            if (char === innerQuoteChar) {
+              inString = false;
+            }
+          } else {
+            if (char === '`' || char === '"' || char === "'") {
+              inString = true;
+              innerQuoteChar = char;
+            } else if (char === '{') {
+              braceDepth++;
+            } else if (char === '}') {
+              braceDepth--;
+            }
+          }
+        }
+      } else {
+        if (char === quoteChar) {
+          matchEnd = j;
+          break;
+        }
+      }
+      j++;
+    }
+
+    if (matchEnd !== -1) {
+      const value = text.substring(contentStart, matchEnd);
+      if (quoteChar === '`') {
+        extractFromAttributeValue(
+          value,
+          contentStart,
+          text,
+          match.index,
+          instances,
+          disabledBlocks,
+        );
+      } else {
+        pushInstance(
+          instances,
+          value,
+          contentStart,
+          text,
+          match.index,
+          disabledBlocks,
+        );
+      }
+      optInRegex.lastIndex = matchEnd + 1;
+    }
+  }
+}
+
 export function extractFromAttributeValue(
   value: string,
   offset: number,
@@ -273,7 +367,7 @@ export function extractFromAttributeValue(
         disabledBlocks,
       );
       currentStr = '';
-      
+
       const phpEnd = value.indexOf('?>', j + 2);
       if (phpEnd !== -1) {
         const innerExpr = value.substring(j + 2, phpEnd);
@@ -352,24 +446,78 @@ export function extractStringLiterals(
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
 ) {
-  const stringLiteralRegex = getStringLiteralRegex();
-  let strMatch;
-  while ((strMatch = stringLiteralRegex.exec(expr)) !== null) {
-    const quoteIdx = strMatch[0].indexOf(strMatch[1]);
-    const start = exprStart + strMatch.index + quoteIdx + 1;
-    const value = strMatch[2];
-    if (strMatch[1] === '`') {
-      extractFromAttributeValue(
-        value,
-        start,
-        text,
-        matchIndex,
-        instances,
-        disabledBlocks,
-      );
-    } else {
-      pushInstance(instances, value, start, text, matchIndex, disabledBlocks);
+  let j = 0;
+
+  while (j < expr.length) {
+    const char = expr[j];
+    if (char === '"' || char === "'" || char === '`') {
+      const quoteChar = char;
+      const start = exprStart + j + 1;
+      let isEscaped = false;
+      let braceDepth = 0;
+      let matchEnd = -1;
+      j++;
+
+      while (j < expr.length) {
+        const c = expr[j];
+        if (isEscaped) {
+          isEscaped = false;
+          j++;
+          continue;
+        }
+        if (c === '\\') {
+          isEscaped = true;
+          j++;
+          continue;
+        }
+
+        if (quoteChar === '`') {
+          if (braceDepth === 0) {
+            if (c === '$' && expr[j + 1] === '{') {
+              braceDepth++;
+              j += 2;
+              continue;
+            } else if (c === '`') {
+              matchEnd = j;
+              break;
+            }
+          } else {
+            if (c === '{') braceDepth++;
+            else if (c === '}') braceDepth--;
+          }
+        } else {
+          if (c === quoteChar) {
+            matchEnd = j;
+            break;
+          }
+        }
+        j++;
+      }
+
+      if (matchEnd !== -1) {
+        const valueStr = expr.substring(start - exprStart, matchEnd);
+        if (quoteChar === '`') {
+          extractFromAttributeValue(
+            valueStr,
+            start,
+            text,
+            matchIndex,
+            instances,
+            disabledBlocks,
+          );
+        } else {
+          pushInstance(
+            instances,
+            valueStr,
+            start,
+            text,
+            matchIndex,
+            disabledBlocks,
+          );
+        }
+      }
     }
+    j++;
   }
 }
 
@@ -562,27 +710,7 @@ export function extractAllClasses(text: string): Array<ClassInstance> {
   );
 
   // 7. Explicit opt-in comments for strings: /\*maple */ '...', /\*maple */ `...`
-  const optInRegex = getOptInStringRegex();
-  while ((match = optInRegex.exec(text)) !== null) {
-    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
-
-    const quote = match[1];
-    const value = match[2];
-    const start = match.index + match[0].indexOf(quote) + 1;
-
-    if (quote === '`') {
-      extractFromAttributeValue(
-        value,
-        start,
-        text,
-        match.index,
-        instances,
-        disabledBlocks,
-      );
-    } else {
-      pushInstance(instances, value, start, text, match.index, disabledBlocks);
-    }
-  }
+  extractOptInStrings(text, instances, disabledBlocks);
 
   // 8. Explicit opt-in comments for objects: /\*maple */ { ... }
   extractStringsFromBraces(

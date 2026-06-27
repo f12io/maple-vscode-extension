@@ -33,6 +33,7 @@ export class MyComponent {
       m-${isActive ? '2' : '3'}
       o-50 fw-normal
       ${isActive ? 'fs-50' : 'fs-60'}
+      ${isActive ? `fs-50 m-${isActive ? '2' : '3'}` : `fs-60 m-${isActive ? '2' : '3'}`}
     `;
 
     return testClass;

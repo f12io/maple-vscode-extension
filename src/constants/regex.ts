@@ -95,6 +95,9 @@ export const getObjectKeyRegex = () => /(?:[{,])\s*([a-zA-Z0-9\-_]+)\s*:/g;
 /** Matches string literals in single quotes, double quotes, or backticks */
 export const getStringLiteralRegex = () => /(["'`])([\s\S]*?)\1/g;
 
+/** Matches whitespace at the start of a string for indentation */
+export const getIndentWhitespaceRegex = () => /^\s*/;
+
 // ============================================================================
 // Attribute & Expression Matchers (Class Extraction)
 // ============================================================================

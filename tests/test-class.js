@@ -18,6 +18,8 @@ export class MyComponent {
       fx: true,
     });
 
+    const isActive = true;
+
     let testClass = /* maple */ {
       host: 'fx', // maple-disable-line
       'fw-bold': true,
@@ -26,8 +28,10 @@ export class MyComponent {
 
     testClass = /* maple */ 'fw-bold c-red';
     testClass = /* maple */ `
-      fw-normal
       c-blue
+      p-2 m-${isActive ? '2' : '3'}
+      o-50 fw-normal
+      ${isActive ? 'fs-50' : 'fs-60'}
     `;
 
     return testClass;

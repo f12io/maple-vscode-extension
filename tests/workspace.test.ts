@@ -12,6 +12,12 @@ import {
 
 vi.mock('../src/helpers/config', () => ({
   isExtensionEnabled: () => true,
+  isFeatureEnabled: () => true,
+  getHighlightingMode: () => 'on',
+}));
+
+vi.mock('../src/helpers/exclude', () => ({
+  isFileExcluded: () => false,
 }));
 
 vi.mock('../src/helpers/alias-cache', () => {

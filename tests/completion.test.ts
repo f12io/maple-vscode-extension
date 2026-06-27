@@ -5,6 +5,11 @@ import { MapleCompletionProvider } from '../src/providers/CompletionProvider';
 // Mock Config to pretend extension is enabled
 vi.mock('../src/helpers/config', () => ({
   isExtensionEnabled: () => true,
+  isFeatureEnabled: () => true,
+}));
+
+vi.mock('../src/helpers/exclude', () => ({
+  isFileExcluded: () => false,
 }));
 
 describe('MapleCompletionProvider', () => {

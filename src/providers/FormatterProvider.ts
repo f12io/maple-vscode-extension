@@ -1,12 +1,18 @@
 import { parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
-import { getClassAttrRegex, getMapleTagRegex } from '../constants/regex';
+import {
+  getClassAttrRegex,
+  getIndentWhitespaceRegex,
+  getMapleTagRegex,
+} from '../constants/regex';
 import { isExtensionExplicitlyDisabled } from '../helpers/config';
+
+import { tokenizeClassesWithIndices } from '../helpers/class-tokenizer';
 
 function getIndentFromIndex(text: string, index: number): string {
   const lineStart = text.lastIndexOf('\n', index) + 1;
   const lineText = text.substring(lineStart, index);
-  const match = /^\s*/.exec(lineText);
+  const match = getIndentWhitespaceRegex().exec(lineText);
   return match ? match[0] : '';
 }
 
@@ -15,7 +21,7 @@ function formatClasses(
   baseIndent: string,
   maxClassesPerLine: number,
 ): string {
-  const classes = classStr.split(/\s+/).filter(Boolean);
+  const classes = tokenizeClassesWithIndices(classStr).map((t) => t.value);
   if (classes.length === 0) return '';
   if (classes.length <= 1 && maxClassesPerLine >= 1) return classes[0];
 
@@ -34,8 +40,13 @@ function formatClasses(
 
     const isNewType = lastPropType !== null && lastPropType !== propType;
     const isOverLimit = currentLine.length >= maxClassesPerLine;
+    const isExpression = cls.startsWith('${');
+    const wasExpression = currentLine.some((c) => c.startsWith('${'));
 
-    if (currentLine.length > 0 && (isNewType || isOverLimit)) {
+    if (
+      currentLine.length > 0 &&
+      (isNewType || isOverLimit || isExpression || wasExpression)
+    ) {
       lines.push(currentLine);
       currentLine = [];
     }
@@ -96,6 +107,7 @@ function applyFormatting(
   while ((match = mapleTagRegex.exec(text)) !== null) {
     const fullMatch = match[0];
     const innerString = match[1];
+
     const innerStart = match.index + fullMatch.indexOf('`') + 1;
     const innerEnd = innerStart + innerString.length;
 

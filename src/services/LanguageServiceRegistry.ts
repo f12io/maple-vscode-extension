@@ -6,6 +6,7 @@ import { PhpLanguageService } from './languages/PhpLanguageService';
 import { RazorLanguageService } from './languages/RazorLanguageService';
 import { ReactLanguageService } from './languages/ReactLanguageService';
 import { SvelteLanguageService } from './languages/SvelteLanguageService';
+import { TwigLanguageService } from './languages/TwigLanguageService';
 import { VueLanguageService } from './languages/VueLanguageService';
 
 class CompositeLanguageService implements ILanguageService {
@@ -63,6 +64,7 @@ export class LanguageServiceRegistry {
     this.register(new SvelteLanguageService());
     this.register(new VueLanguageService());
     this.register(new AngularLanguageService());
+    this.register(new TwigLanguageService());
   }
 
   private static register(service: ILanguageService) {

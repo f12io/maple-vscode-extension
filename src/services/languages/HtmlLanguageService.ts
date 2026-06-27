@@ -3,7 +3,7 @@ import { BaseLanguageService, InterpolationMatch } from './BaseLanguageService';
 import { parseBalancedCharacters } from './extractor-utils';
 
 export class HtmlLanguageService extends BaseLanguageService {
-  languageIds = ['html', 'twig'];
+  languageIds = ['html'];
 
   protected extractFrameworkSpecificClasses(
     text: string,

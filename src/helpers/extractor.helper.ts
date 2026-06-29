@@ -3,9 +3,9 @@ import { ClassInstance } from '../services/LanguageService';
 import {
   DISABLE_REGEX,
   ENABLE_REGEX,
+  MAPLE_CLASS_REGEX_NON_GLOBAL,
   OBJECT_KEY_REGEX,
   OPT_IN_STRING_REGEX,
-  MAPLE_CLASS_REGEX_NON_GLOBAL,
   START_COMMENT_STAR_REGEX,
   START_TAG_NAME_REGEX,
   TOKEN_SPLIT_REGEX,
@@ -66,7 +66,7 @@ export function getTagNameBackwards(
   const lastOpen = prefix.lastIndexOf('<');
   const lastClose = prefix.lastIndexOf('>');
   if (lastOpen !== -1 && lastOpen > lastClose) {
-    const match = START_TAG_NAME_REGEX.exec(text.substring(lastOpen + 1));
+    const match = text.substring(lastOpen + 1).match(START_TAG_NAME_REGEX);
     if (match) {
       return match[1].toLowerCase();
     }
@@ -114,19 +114,20 @@ export function getDisabledBlocks(
   text: string,
 ): Array<{ start: number; end: number }> {
   const blocks: Array<{ start: number; end: number }> = [];
-  const disableRegex = new RegExp(DISABLE_REGEX.source, DISABLE_REGEX.flags);
-  const enableRegex = new RegExp(ENABLE_REGEX.source, ENABLE_REGEX.flags);
+  const disableMatches = [...text.matchAll(DISABLE_REGEX)];
+  const enableMatches = [...text.matchAll(ENABLE_REGEX)];
 
-  let disableMatch;
-  while ((disableMatch = disableRegex.exec(text)) !== null) {
+  let currentEnd = 0;
+  for (const disableMatch of disableMatches) {
     const start = disableMatch.index;
-    enableRegex.lastIndex = start;
-    const enableMatch = enableRegex.exec(text);
+    if (start < currentEnd) continue;
+
+    const enableMatch = enableMatches.find((m) => m.index > start);
     const end = enableMatch
       ? enableMatch.index + enableMatch[0].length
       : text.length;
     blocks.push({ start, end });
-    disableRegex.lastIndex = end;
+    currentEnd = end;
   }
 
   return blocks;
@@ -191,9 +192,9 @@ export function extractOptInStrings(
     matchIndex: number,
   ) => void,
 ) {
-  const optInRegex = new RegExp(OPT_IN_STRING_REGEX.source, OPT_IN_STRING_REGEX.flags);
-  let match;
-  while ((match = optInRegex.exec(text)) !== null) {
+  let currentEnd = 0;
+  for (const match of text.matchAll(OPT_IN_STRING_REGEX)) {
+    if (match.index < currentEnd) continue;
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
     const quoteChar = match[1];
@@ -272,7 +273,7 @@ export function extractOptInStrings(
           disabledBlocks,
         );
       }
-      optInRegex.lastIndex = matchEnd + 1;
+      currentEnd = matchEnd + 1;
     }
   }
 }

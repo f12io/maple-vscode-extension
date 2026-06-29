@@ -9,6 +9,7 @@ export interface Token {
   value: string;
   start: number;
   end: number;
+  hasInterpolation?: boolean;
 }
 
 export interface ILanguageService {

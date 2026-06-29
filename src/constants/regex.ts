@@ -1,9 +1,5 @@
 /**
  * Centralized Regular Expressions
- *
- * Global (/g) regexes are exported as constants.
- * When using global regexes for multiple matches, make sure to use `String.prototype.matchAll()`
- * instead of `RegExp.prototype.exec()` to avoid state (`lastIndex`) persistence issues.
  */
 
 // ============================================================================
@@ -50,7 +46,10 @@ export const PARAM_REMOVE_REGEX = /\{[^}]*\}/g;
 // ============================================================================
 export const ALIAS_PREFIX = `--alias-`;
 /** Matches: --alias-name=value */
-export const ALIAS_REGEX = new RegExp(`${ALIAS_PREFIX}([a-zA-Z0-9\\-]+)=([^"'\\s]+)`, 'g');
+export const ALIAS_REGEX = new RegExp(
+  `${ALIAS_PREFIX}([a-zA-Z0-9\\-]+)=([^"'\\s]+)`,
+  'g',
+);
 
 // ============================================================================
 // Disable / Enable Comments
@@ -65,7 +64,8 @@ export const ENABLE_REGEX = /\/\*\s*maple-enable\s*\*\//g;
 export const HEAD_TAG_REGEX = /<head[^>]*>([\s\S]*?)<\/head>/i;
 
 /** Matches a script tag importing maple.js or maple.min.js */
-export const MAPLE_SCRIPT_REGEX = /<script[^>]+src=["'][^"']*maple(\.min)?\.js(["'?])/i;
+export const MAPLE_SCRIPT_REGEX =
+  /<script[^>]+src=["'][^"']*maple(\.min)?\.js(["'?])/i;
 
 // ============================================================================
 // General Parsing Utilities
@@ -85,7 +85,8 @@ export const TOKEN_SPLIT_REGEX = /(["'`\s])/;
 // ============================================================================
 
 /** Matches class="..." and className="..." attributes, avoiding Vue/Svelte bindings like :class */
-export const CLASS_ATTR_REGEX = /(?<![:\w\-])(?:class|className)\s*=\s*(["'])([\s\S]*?)\1/g;
+export const CLASS_ATTR_REGEX =
+  /(?<![:\w\-])(?:class|className)\s*=\s*(["'])([\s\S]*?)\1/g;
 
 /** Matches template literals tagged with maple */
 export const MAPLE_TAG_REGEX = /\/\*\s*maple\s*\*\/\s*`([\s\S]*?)`/g;
@@ -108,20 +109,31 @@ const ANGULAR_VUE_CLASS_ATTRS = `\\[ngClass\\]|:class|\\[class\\]`;
 const JS_FRAMEWORK_CLASS_ATTRS = `class|className|classList`;
 
 /** 1. Standard attributes: class="", className="", CssClass="" */
-export const STANDARD_ATTR_REGEX = new RegExp(`(?:^|[\\s<>])(?:${STANDARD_CLASS_ATTRS})\\s*=\\s*(["'])`, 'gi');
+export const STANDARD_ATTR_REGEX = new RegExp(
+  `(?:^|[\\s<>])(?:${STANDARD_CLASS_ATTRS})\\s*=\\s*(["'])`,
+  'gi',
+);
 
 /** 2. Angular / Vue expressions: [ngClass]="...", :class="...", [class]="..." */
-export const ANGULAR_VUE_EXPR_REGEX = new RegExp(`(?:${ANGULAR_VUE_CLASS_ATTRS})\\s*=\\s*(["'])`, 'gi');
+export const ANGULAR_VUE_EXPR_REGEX = new RegExp(
+  `(?:${ANGULAR_VUE_CLASS_ATTRS})\\s*=\\s*(["'])`,
+  'gi',
+);
 
 /** 3. Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' } */
 export const HOST_REGEX = /host\s*:\s*\{([^}]+)\}/g;
-export const HOST_CLASS_REGEX = /(?:'class'|"class"|class)\s*:\s*(["'`])([\s\S]*?)\1/g;
+export const HOST_CLASS_REGEX =
+  /(?:'class'|"class"|class)\s*:\s*(["'`])([\s\S]*?)\1/g;
 
 /** 4. Angular [class.xxx]="..." and Svelte class:xxx="..." */
-export const SPECIFIC_CLASS_REGEX = /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]+)(?:\]|\=|\s)/g;
+export const SPECIFIC_CLASS_REGEX =
+  /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]+)(?:\]|\=|\s)/g;
 
 /** 5. React / Solid JSX expressions starting with an open brace */
-export const JSX_EXPR_START_REGEX = new RegExp(`(?:^|[\\s<>])(?:${JS_FRAMEWORK_CLASS_ATTRS})\\s*=\\s*\\{`, 'gi');
+export const JSX_EXPR_START_REGEX = new RegExp(
+  `(?:^|[\\s<>])(?:${JS_FRAMEWORK_CLASS_ATTRS})\\s*=\\s*\\{`,
+  'gi',
+);
 
 /** 6. Utility functions: clsx(...), classNames(...), cva(...) */
 export const UTILITY_FUNC_START_REGEX = /(?:clsx|classNames|cva)\s*\(/gi;

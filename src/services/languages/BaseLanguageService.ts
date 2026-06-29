@@ -136,9 +136,9 @@ export abstract class BaseLanguageService implements ILanguageService {
       }
 
       if (value[j] === '{') {
-        const mapleInterpolationMatch = MAPLE_INTERPOLATION_REGEX.exec(
-          value.substring(j),
-        );
+        const mapleInterpolationMatch = value
+          .substring(j)
+          .match(MAPLE_INTERPOLATION_REGEX);
         if (mapleInterpolationMatch && !value.substring(0, j).endsWith(' ')) {
           currentStr += mapleInterpolationMatch[0];
           j += mapleInterpolationMatch[0].length;
@@ -173,6 +173,7 @@ export abstract class BaseLanguageService implements ILanguageService {
     const tokens: Array<Token> = [];
     let currentToken = '';
     let tokenStart = -1;
+    let tokenHasInterpolation = false;
 
     for (let i = 0; i < str.length; i++) {
       const char = str[i];
@@ -182,14 +183,21 @@ export abstract class BaseLanguageService implements ILanguageService {
         if (tokenStart === -1) tokenStart = i;
         currentToken += str.substring(i, interp.endIndex);
         i = interp.endIndex - 1;
+        tokenHasInterpolation = true;
         continue;
       }
 
       if (char.trim() === '') {
         if (currentToken) {
-          tokens.push({ value: currentToken, start: tokenStart, end: i });
+          tokens.push({
+            value: currentToken,
+            start: tokenStart,
+            end: i,
+            hasInterpolation: tokenHasInterpolation,
+          });
           currentToken = '';
           tokenStart = -1;
+          tokenHasInterpolation = false;
         }
         continue;
       }
@@ -201,7 +209,12 @@ export abstract class BaseLanguageService implements ILanguageService {
     }
 
     if (currentToken) {
-      tokens.push({ value: currentToken, start: tokenStart, end: str.length });
+      tokens.push({
+        value: currentToken,
+        start: tokenStart,
+        end: str.length,
+        hasInterpolation: tokenHasInterpolation,
+      });
     }
 
     return tokens;

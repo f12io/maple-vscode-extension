@@ -2,9 +2,9 @@ import { convert, parseClass, StringHelper } from '@f12io/maple';
 import * as prettier from 'prettier';
 import * as vscode from 'vscode';
 import {
+  getParamSubstituteRegex,
   PARAM_FALLBACK_REGEX,
   PARAM_REMOVE_REGEX,
-  getParamSubstituteRegex,
 } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
@@ -84,7 +84,6 @@ export class MapleHoverProvider implements vscode.HoverProvider {
           const aliasExpansion = customAliases.get(aliasName)!;
           const utilities = aliasExpansion.split(';');
 
-          // Parse parameters
           // Parse parameters. parseMapleToken might append '=' at the end of activeWord, so we strip it.
           const unescapedWordWithoutEqual = unescapedWord.replace(/=$/, '');
           const paramsMatch = /\((.*)\)$/.exec(unescapedWordWithoutEqual);
@@ -126,10 +125,7 @@ export class MapleHoverProvider implements vscode.HoverProvider {
               '$1',
             );
             // Remove remaining missing parameters
-            substitutedUtil = substitutedUtil.replace(
-              PARAM_REMOVE_REGEX,
-              '',
-            );
+            substitutedUtil = substitutedUtil.replace(PARAM_REMOVE_REGEX, '');
 
             const fullUtil = prefix + substitutedUtil;
             expandedUtils.push(fullUtil);

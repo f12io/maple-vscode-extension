@@ -11,7 +11,7 @@ import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 function getIndentFromIndex(text: string, index: number): string {
   const lineStart = text.lastIndexOf('\n', index) + 1;
   const lineText = text.substring(lineStart, index);
-  const match = INDENT_WHITESPACE_REGEX.exec(lineText);
+  const match = lineText.match(INDENT_WHITESPACE_REGEX);
   return match ? match[0] : '';
 }
 
@@ -23,17 +23,17 @@ function formatClasses(
 ): string {
   const service = LanguageServiceRegistry.getService(languageId);
   if (!service) return classStr;
-  const classes = service
-    .tokenizeClassesWithIndices(classStr)
-    .map((t) => t.value);
-  if (classes.length === 0) return '';
-  if (classes.length <= 1 && maxClassesPerLine >= 1) return classes[0];
+  const tokens = service.tokenizeClassesWithIndices(classStr);
+  if (tokens.length === 0) return '';
+  if (tokens.length <= 1 && maxClassesPerLine >= 1) return tokens[0].value;
 
   const lines: Array<Array<string>> = [];
   let currentLine: Array<string> = [];
+  let currentLineHasExpression = false;
   let lastPropType: number | null = null;
 
-  for (const cls of classes) {
+  for (const token of tokens) {
+    const cls = token.value;
     let propType = -1;
     try {
       const parsed = parseClass(cls);
@@ -43,22 +43,25 @@ function formatClasses(
     }
 
     const isNewType =
-      classes.length > maxClassesPerLine &&
+      tokens.length > maxClassesPerLine &&
       lastPropType !== null &&
       lastPropType !== propType;
     const isOverLimit = currentLine.length >= maxClassesPerLine;
-    const isExpression = cls.includes('${');
-    const wasExpression = currentLine.some((c) => c.includes('${'));
+    const isExpression = token.hasInterpolation;
 
     if (
       currentLine.length > 0 &&
-      (isNewType || isOverLimit || isExpression || wasExpression)
+      (isNewType || isOverLimit || isExpression || currentLineHasExpression)
     ) {
       lines.push(currentLine);
       currentLine = [];
+      currentLineHasExpression = false;
     }
 
     currentLine.push(cls);
+    if (isExpression) {
+      currentLineHasExpression = true;
+    }
     lastPropType = propType;
   }
 

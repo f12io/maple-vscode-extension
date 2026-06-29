@@ -33,7 +33,7 @@ export function isExtensionEnabled(document?: vscode.TextDocument): boolean {
   if (document?.languageId === 'html') {
     const text = document.getText();
     if (text.includes('maple.js') || text.includes('maple.min.js')) {
-      const headMatch = HEAD_TAG_REGEX.exec(text);
+      const headMatch = text.match(HEAD_TAG_REGEX);
       if (headMatch) {
         const headContent = headMatch[1];
         if (MAPLE_SCRIPT_REGEX.test(headContent)) {

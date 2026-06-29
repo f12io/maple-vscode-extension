@@ -222,7 +222,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
 function isValidColorTone(colorStr: string): boolean {
   if (colorStr.startsWith('[') && colorStr.endsWith(']')) return true;
 
-  const colorMatch = REGEX_COLOR_TOKEN.exec(colorStr);
+  const colorMatch = colorStr.match(REGEX_COLOR_TOKEN);
   if (colorMatch) {
     const colorName = colorMatch[1];
     const tonePart = colorMatch[2];

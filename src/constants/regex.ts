@@ -156,7 +156,7 @@ const QUOTED_VAL = `\\s*=\\s*(["'])`;
 const HOST_CLASS_VAL = `host\\s*:\\s*\\{[^}]*(?:'class'|"class"|class)\\s*:\\s*(["'\`])`;
 const ANGULAR_SPECIFIC_CLASS_VAL = `\\[class\\.[^\\]=]*\\]\\s*=\\s*(["'])`;
 const SVELTE_SPECIFIC_CLASS_VAL = `class:[a-zA-Z0-9\\-\\@\\:]+\\s*=\\s*(["'])`;
-const REACT_TEMPLATE_LITERAL_VAL = `className\\s*=\\s*\\{\\s*\`([^\`]*)\``;
+const REACT_TEMPLATE_LITERAL_VAL = `className\\s*=\\s*\\{\\s*(\`)`;
 
 export const IS_INSIDE_CLASS_ATTR_REGEX = new RegExp(
   `${ANY_STANDARD_OR_VUE_ATTR}${QUOTED_VAL}|` +

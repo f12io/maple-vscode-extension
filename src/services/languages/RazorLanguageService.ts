@@ -4,7 +4,7 @@ import { InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class RazorLanguageService extends HtmlLanguageService {
-  languageIds = ['razor'];
+  languageIds = ['razor', 'aspnetcorerazor'];
 
   protected extractFrameworkSpecificClasses(
     text: string,

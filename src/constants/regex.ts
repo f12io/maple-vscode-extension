@@ -84,9 +84,7 @@ export const TOKEN_SPLIT_REGEX = /(["'`\s])/;
 // Formatter Regexes
 // ============================================================================
 
-/** Matches class="..." and className="..." attributes, avoiding Vue/Svelte bindings like :class */
-export const CLASS_ATTR_REGEX =
-  /(?<![:\w\-])(?:class|className)\s*=\s*(["'])([\s\S]*?)\1/g;
+
 
 /** Matches template literals tagged with maple */
 export const MAPLE_TAG_REGEX = /\/\*\s*maple\s*\*\/\s*`([\s\S]*?)`/g;

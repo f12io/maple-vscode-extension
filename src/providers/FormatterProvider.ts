@@ -1,11 +1,12 @@
 import { parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
 import {
-  CLASS_ATTR_REGEX,
   INDENT_WHITESPACE_REGEX,
   MAPLE_TAG_REGEX,
+  STANDARD_ATTR_REGEX,
 } from '../constants/regex';
 import { isExtensionExplicitlyDisabled } from '../helpers/config';
+import { findClosingQuote } from '../helpers/extractor.helper';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 function getIndentFromIndex(text: string, index: number): string {
@@ -90,27 +91,30 @@ function applyFormatting(
   const edits: Array<vscode.TextEdit> = [];
   const text = document.getText();
 
-  for (const match of text.matchAll(CLASS_ATTR_REGEX)) {
+  for (const match of text.matchAll(STANDARD_ATTR_REGEX)) {
     const fullMatch = match[0];
     const quote = match[1];
-    const innerString = match[2];
-    const innerStart = match.index + fullMatch.indexOf(quote) + 1;
-    const innerEnd = innerStart + innerString.length;
+    const attrStart = match.index + fullMatch.indexOf(quote) + 1;
+    const closingQuoteIndex = findClosingQuote(text, attrStart, quote);
 
+    if (closingQuoteIndex === -1) continue;
+
+    const innerString = text.substring(attrStart, closingQuoteIndex);
     const baseIndent = getIndentFromIndex(text, match.index);
-    const formatted = formatClasses(
+
+    const formattedStr = formatClasses(
       innerString,
       baseIndent,
       maxClassesPerLine,
       document.languageId,
     );
 
-    if (formatted !== innerString) {
+    if (formattedStr !== innerString) {
       const range = new vscode.Range(
-        document.positionAt(innerStart),
-        document.positionAt(innerEnd),
+        document.positionAt(attrStart),
+        document.positionAt(closingQuoteIndex),
       );
-      edits.push(vscode.TextEdit.replace(range, formatted));
+      edits.push(vscode.TextEdit.replace(range, formattedStr));
     }
   }
 

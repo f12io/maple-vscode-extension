@@ -1,6 +1,6 @@
+import { parseBalancedCharacters } from '../../helpers/extractor.helper';
 import { ClassInstance } from '../LanguageService';
 import { BaseLanguageService, InterpolationMatch } from './BaseLanguageService';
-import { parseBalancedCharacters } from './extractor-utils';
 
 export class HtmlLanguageService extends BaseLanguageService {
   languageIds = ['html'];

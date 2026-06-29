@@ -1,12 +1,12 @@
 import { getAngularVueExprRegex } from '../../constants/regex';
-import { ClassInstance } from '../LanguageService';
-import { HtmlLanguageService } from './HtmlLanguageService';
 import {
   extractStringLiterals,
   extractUnquotedObjectKeys,
   findClosingQuote,
   shouldSkipMatch,
-} from './extractor-utils';
+} from '../../helpers/extractor.helper';
+import { ClassInstance } from '../LanguageService';
+import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class VueLanguageService extends HtmlLanguageService {
   languageIds = ['vue'];

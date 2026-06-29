@@ -13,7 +13,7 @@ import {
   cocoWithResolver,
   colorPrefixes,
   findNamedColorAndTone,
-} from '../helpers/color-helpers';
+} from '../helpers/color.helper';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';

@@ -1,6 +1,6 @@
+import { parseBalancedCharacters } from '../../helpers/extractor.helper';
 import { ClassInstance } from '../LanguageService';
 import { InterpolationMatch } from './BaseLanguageService';
-import { parseBalancedCharacters } from './extractor-utils';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class RazorLanguageService extends HtmlLanguageService {

@@ -1,7 +1,7 @@
 import { getJsxExprStartRegex } from '../../constants/regex';
+import { extractStringsFromBraces } from '../../helpers/extractor.helper';
 import { ClassInstance } from '../LanguageService';
 import { JavascriptLanguageService } from './JavascriptLanguageService';
-import { extractStringsFromBraces } from './extractor-utils';
 
 export class ReactLanguageService extends JavascriptLanguageService {
   languageIds = ['javascriptreact', 'typescriptreact'];

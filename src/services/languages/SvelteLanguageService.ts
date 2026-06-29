@@ -3,14 +3,14 @@ import {
   getSpecificClassRegex,
   getUtilityFuncStartRegex,
 } from '../../constants/regex';
-import { ClassInstance } from '../LanguageService';
-import { InterpolationMatch } from './BaseLanguageService';
 import {
   extractStringsFromBraces,
   parseBalancedCharacters,
   pushInstance,
   shouldSkipMatch,
-} from './extractor-utils';
+} from '../../helpers/extractor.helper';
+import { ClassInstance } from '../LanguageService';
+import { InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class SvelteLanguageService extends HtmlLanguageService {

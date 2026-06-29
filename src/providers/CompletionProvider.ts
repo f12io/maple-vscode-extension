@@ -14,6 +14,7 @@ import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
+import { getExactWordRangeAtPosition } from '../helpers/extractor.helper';
 import {
   ABBREVIATIONS,
   BUILTIN_ALIASES,
@@ -26,7 +27,6 @@ import {
   PSEUDO_CLASSES,
 } from '../mapleEngine/data';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
-import { getExactWordRangeAtPosition } from '../services/languages/extractor-utils';
 
 export class MapleCompletionProvider implements vscode.CompletionItemProvider {
   provideCompletionItems(

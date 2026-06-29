@@ -4,14 +4,14 @@ import {
   getHostRegex,
   getSpecificClassRegex,
 } from '../../constants/regex';
-import { ClassInstance } from '../LanguageService';
-import { BaseLanguageService } from './BaseLanguageService';
 import {
   extractStringLiterals,
   findClosingQuote,
   pushInstance,
   shouldSkipMatch,
-} from './extractor-utils';
+} from '../../helpers/extractor.helper';
+import { ClassInstance } from '../LanguageService';
+import { BaseLanguageService } from './BaseLanguageService';
 
 export class AngularLanguageService extends BaseLanguageService {
   languageIds = ['html', 'typescript'];

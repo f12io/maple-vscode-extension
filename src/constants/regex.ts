@@ -78,6 +78,9 @@ export const START_TAG_NAME_REGEX = /^\s*([a-zA-Z0-9\-]+)/;
 /** Matches an asterisk after optional whitespace at the start of string */
 export const START_COMMENT_STAR_REGEX = /^\s*\*/;
 
+/** Splits a string by quotes and whitespace for word tokenization */
+export const TOKEN_SPLIT_REGEX = /(["'`\s])/;
+
 // ============================================================================
 // Formatter Regexes
 // ============================================================================

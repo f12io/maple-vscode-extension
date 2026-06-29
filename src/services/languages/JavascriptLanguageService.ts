@@ -1,10 +1,10 @@
 import { getUtilityFuncStartRegex } from '../../constants/regex';
-import { ClassInstance } from '../LanguageService';
-import { BaseLanguageService, InterpolationMatch } from './BaseLanguageService';
 import {
   extractStringsFromBraces,
   parseBalancedCharacters,
-} from './extractor-utils';
+} from '../../helpers/extractor.helper';
+import { ClassInstance } from '../LanguageService';
+import { BaseLanguageService, InterpolationMatch } from './BaseLanguageService';
 
 export class JavascriptLanguageService extends BaseLanguageService {
   languageIds = ['javascript', 'typescript'];

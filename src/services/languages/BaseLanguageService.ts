@@ -5,7 +5,6 @@ import {
   IS_INSIDE_NO_QUOTE_CLASS_REGEX,
   MAPLE_INTERPOLATION_REGEX,
 } from '../../constants/regex';
-import { ClassInstance, ILanguageService, Token } from '../LanguageService';
 import {
   extractOptInStrings,
   extractStringLiterals,
@@ -14,7 +13,8 @@ import {
   getDisabledBlocks,
   pushInstance,
   shouldSkipMatch,
-} from './extractor-utils';
+} from '../../helpers/extractor.helper';
+import { ClassInstance, ILanguageService, Token } from '../LanguageService';
 
 export interface InterpolationMatch {
   innerExprStart: number;

@@ -1,4 +1,4 @@
-import { ClassInstance } from '../LanguageService';
+import { ClassInstance } from '../services/LanguageService';
 
 import {
   getDisableRegex,
@@ -7,7 +7,12 @@ import {
   MAPLE_CLASS_REGEX_NON_GLOBAL,
   START_COMMENT_STAR_REGEX,
   START_TAG_NAME_REGEX,
-} from '../../constants/regex';
+  TOKEN_SPLIT_REGEX,
+} from '../constants/regex';
+
+export function isQuote(char: string): boolean {
+  return char === '"' || char === "'" || char === '`';
+}
 
 export function findClosingQuote(
   text: string,
@@ -233,7 +238,7 @@ export function extractOptInStrings(
               inString = false;
             }
           } else {
-            if (char === '`' || char === '"' || char === "'") {
+            if (isQuote(char)) {
               inString = true;
               innerQuoteChar = char;
             } else if (char === '{') {
@@ -309,7 +314,7 @@ export function extractStringLiterals(
 
   while (j < expr.length) {
     const char = expr[j];
-    if (char === '"' || char === "'" || char === '`') {
+    if (isQuote(char)) {
       const quoteChar = char;
       const start = exprStart + j + 1;
       let isCSharpInterpolated = false;
@@ -356,7 +361,7 @@ export function extractStringLiterals(
                 inInnerString = false;
               }
             } else {
-              if (c === '"' || c === "'" || c === '`') {
+              if (isQuote(c)) {
                 inInnerString = true;
                 innerQuoteChar = c;
               } else if (c === '{') {
@@ -439,7 +444,7 @@ export function extractStringsFromBraces(
           inString = false;
         }
       } else {
-        if (char === '"' || char === "'" || char === '`') {
+        if (isQuote(char)) {
           inString = true;
           quoteChar = char;
         } else if (char === openChar) {
@@ -478,13 +483,10 @@ export function extractStringsFromBraces(
   }
 }
 
-// Removed monolithic extraction and cursor detection logic
 export function getExactWordRangeAtPosition(
-  document: any, // using any here to avoid importing vscode in pure helper if needed, or we can use vscode types if we import it. Wait, class-extractor is currently independent of vscode?
+  document: any,
   position: any,
 ): { wordRange: any | undefined; currentWord: string } {
-  // We'll import vscode inside or just use duck typing since it's passed in.
-  // Actually, we'll just implement it safely.
   const wordRange = document.getWordRangeAtPosition(
     position,
     MAPLE_CLASS_REGEX_NON_GLOBAL,
@@ -496,7 +498,7 @@ export function getExactWordRangeAtPosition(
   }
 
   const cursorOffsetInWord = position.character - wordRange.start.character;
-  const tokens = currentWord.split(/(["'\s])/);
+  const tokens = currentWord.split(TOKEN_SPLIT_REGEX);
   let currentOffset = 0;
 
   let finalRange = wordRange;
@@ -507,7 +509,7 @@ export function getExactWordRangeAtPosition(
     const end = currentOffset + token.length;
 
     if (cursorOffsetInWord > start && cursorOffsetInWord <= end) {
-      if (token !== '"' && token !== "'" && token.trim() !== '') {
+      if (!isQuote(token) && token.trim() !== '') {
         finalWord = token;
         finalRange = wordRange.with(
           wordRange.start.translate(0, start),
@@ -519,7 +521,7 @@ export function getExactWordRangeAtPosition(
       }
       break;
     } else if (cursorOffsetInWord === 0 && start === 0) {
-      if (token !== '"' && token !== "'" && token.trim() !== '') {
+      if (!isQuote(token) && token.trim() !== '') {
         finalWord = token;
         finalRange = wordRange.with(
           wordRange.start.translate(0, start),

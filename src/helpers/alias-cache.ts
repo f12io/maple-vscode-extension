@@ -4,7 +4,7 @@ import {
   getLanguageIdFromExtension,
   SUPPORTED_FILES_GLOB,
 } from '../constants/languages';
-import { getAliasRegex } from '../constants/regex';
+import { ALIAS_REGEX } from '../constants/regex';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 /**
@@ -149,16 +149,13 @@ export class AliasCache {
     const service = LanguageServiceRegistry.getService(languageId);
     if (!service) return;
     const instances = service.extractClasses(content);
-    const aliasRegex = getAliasRegex();
-
     for (const instance of instances) {
       if (!instance.tagName || instance.tagName === 'html') {
         const classStr = instance.value;
         // Aliases are separated by spaces like any other classes
         const tokens = classStr.split(/\s+/);
         for (const token of tokens) {
-          let match;
-          while ((match = aliasRegex.exec(token)) !== null) {
+          for (const match of token.matchAll(ALIAS_REGEX)) {
             map.set(match[1], match[2]);
           }
         }

@@ -8,7 +8,7 @@ import {
   StringHelper,
 } from '@f12io/maple';
 import * as vscode from 'vscode';
-import { getMapleClassRegex } from '../constants/regex';
+import { MAPLE_CLASS_REGEX } from '../constants/regex';
 import {
   cocoWithResolver,
   colorPrefixes,
@@ -41,9 +41,7 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     for (const instance of classInstances) {
       const classValue = instance.value;
       // find all words in classValue
-      const mapleClassRegex = getMapleClassRegex();
-      let wordMatch;
-      while ((wordMatch = mapleClassRegex.exec(classValue))) {
+      for (const wordMatch of classValue.matchAll(MAPLE_CLASS_REGEX)) {
         let word = wordMatch[0];
         let wordOffset = instance.start + wordMatch.index;
 

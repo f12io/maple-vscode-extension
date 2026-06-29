@@ -1,4 +1,4 @@
-import { getUtilityFuncStartRegex } from '../../constants/regex';
+import { UTILITY_FUNC_START_REGEX } from '../../constants/regex';
 import {
   extractStringsFromBraces,
   parseBalancedCharacters,
@@ -18,7 +18,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
     // Utility functions: clsx(...), classNames(...), cva(...)
     extractStringsFromBraces(
       text,
-      getUtilityFuncStartRegex(),
+      UTILITY_FUNC_START_REGEX,
       '(',
       ')',
       instances,

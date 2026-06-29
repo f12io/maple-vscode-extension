@@ -1,7 +1,7 @@
 import {
-  getIsInsideClassAttrRegex,
-  getOptInObjectStartRegex,
-  getStandardAttrRegex,
+  IS_INSIDE_CLASS_ATTR_REGEX,
+  OPT_IN_OBJECT_START_REGEX,
+  STANDARD_ATTR_REGEX,
   IS_INSIDE_NO_QUOTE_CLASS_REGEX,
   MAPLE_INTERPOLATION_REGEX,
 } from '../../constants/regex';
@@ -56,9 +56,7 @@ export abstract class BaseLanguageService implements ILanguageService {
     instances: Array<ClassInstance>,
     disabledBlocks: Array<{ start: number; end: number }>,
   ) {
-    const attrRegex = getStandardAttrRegex();
-    let match: RegExpExecArray | null;
-    while ((match = attrRegex.exec(text)) !== null) {
+    for (const match of text.matchAll(STANDARD_ATTR_REGEX)) {
       if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
       const fullMatch = match[0];
       const quote = match[1];
@@ -226,7 +224,7 @@ export abstract class BaseLanguageService implements ILanguageService {
     );
     extractStringsFromBraces(
       text,
-      getOptInObjectStartRegex(),
+      OPT_IN_OBJECT_START_REGEX,
       '{',
       '}',
       instances,
@@ -253,11 +251,8 @@ export abstract class BaseLanguageService implements ILanguageService {
     // Look backward up to 2000 characters to find the last attribute start
     const prefix = documentText.substring(Math.max(0, offset - 2000), offset);
 
-    const attrRegex = getIsInsideClassAttrRegex();
-
-    let match;
     let lastMatch = null;
-    while ((match = attrRegex.exec(prefix)) !== null) {
+    for (const match of prefix.matchAll(IS_INSIDE_CLASS_ATTR_REGEX)) {
       lastMatch = match;
     }
 

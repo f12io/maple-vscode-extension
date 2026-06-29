@@ -1,4 +1,4 @@
-import { getAngularVueExprRegex } from '../../constants/regex';
+import { ANGULAR_VUE_EXPR_REGEX } from '../../constants/regex';
 import {
   extractStringLiterals,
   extractUnquotedObjectKeys,
@@ -18,9 +18,7 @@ export class VueLanguageService extends HtmlLanguageService {
   ): void {
     super.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
     // Vue expressions: :class="..."
-    const exprRegex = getAngularVueExprRegex();
-    let match;
-    while ((match = exprRegex.exec(text)) !== null) {
+    for (const match of text.matchAll(ANGULAR_VUE_EXPR_REGEX)) {
       if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
       const quote = match[1];

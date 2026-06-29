@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getHeadTagRegex, getMapleScriptRegex } from '../constants/regex';
+import { HEAD_TAG_REGEX, MAPLE_SCRIPT_REGEX } from '../constants/regex';
 
 export function isExtensionExplicitlyDisabled(): boolean {
   const config = vscode.workspace.getConfiguration('maple');
@@ -33,10 +33,10 @@ export function isExtensionEnabled(document?: vscode.TextDocument): boolean {
   if (document?.languageId === 'html') {
     const text = document.getText();
     if (text.includes('maple.js') || text.includes('maple.min.js')) {
-      const headMatch = getHeadTagRegex().exec(text);
+      const headMatch = HEAD_TAG_REGEX.exec(text);
       if (headMatch) {
         const headContent = headMatch[1];
-        if (getMapleScriptRegex().test(headContent)) {
+        if (MAPLE_SCRIPT_REGEX.test(headContent)) {
           return true;
         }
       }

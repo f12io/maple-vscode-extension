@@ -1,9 +1,9 @@
 import { parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
 import {
-  getClassAttrRegex,
-  getIndentWhitespaceRegex,
-  getMapleTagRegex,
+  CLASS_ATTR_REGEX,
+  INDENT_WHITESPACE_REGEX,
+  MAPLE_TAG_REGEX,
 } from '../constants/regex';
 import { isExtensionExplicitlyDisabled } from '../helpers/config';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
@@ -11,7 +11,7 @@ import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 function getIndentFromIndex(text: string, index: number): string {
   const lineStart = text.lastIndexOf('\n', index) + 1;
   const lineText = text.substring(lineStart, index);
-  const match = getIndentWhitespaceRegex().exec(lineText);
+  const match = INDENT_WHITESPACE_REGEX.exec(lineText);
   return match ? match[0] : '';
 }
 
@@ -87,12 +87,7 @@ function applyFormatting(
   const edits: Array<vscode.TextEdit> = [];
   const text = document.getText();
 
-  const classAttrRegex = getClassAttrRegex();
-  const mapleTagRegex = getMapleTagRegex();
-
-  let match;
-
-  while ((match = classAttrRegex.exec(text)) !== null) {
+  for (const match of text.matchAll(CLASS_ATTR_REGEX)) {
     const fullMatch = match[0];
     const quote = match[1];
     const innerString = match[2];
@@ -116,7 +111,7 @@ function applyFormatting(
     }
   }
 
-  while ((match = mapleTagRegex.exec(text)) !== null) {
+  for (const match of text.matchAll(MAPLE_TAG_REGEX)) {
     const fullMatch = match[0];
     const innerString = match[1];
 

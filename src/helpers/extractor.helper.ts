@@ -1,9 +1,10 @@
 import { ClassInstance } from '../services/LanguageService';
 
 import {
-  getDisableRegex,
-  getEnableRegex,
-  getObjectKeyRegex,
+  DISABLE_REGEX,
+  ENABLE_REGEX,
+  OBJECT_KEY_REGEX,
+  OPT_IN_STRING_REGEX,
   MAPLE_CLASS_REGEX_NON_GLOBAL,
   START_COMMENT_STAR_REGEX,
   START_TAG_NAME_REGEX,
@@ -113,8 +114,8 @@ export function getDisabledBlocks(
   text: string,
 ): Array<{ start: number; end: number }> {
   const blocks: Array<{ start: number; end: number }> = [];
-  const disableRegex = getDisableRegex();
-  const enableRegex = getEnableRegex();
+  const disableRegex = new RegExp(DISABLE_REGEX.source, DISABLE_REGEX.flags);
+  const enableRegex = new RegExp(ENABLE_REGEX.source, ENABLE_REGEX.flags);
 
   let disableMatch;
   while ((disableMatch = disableRegex.exec(text)) !== null) {
@@ -171,9 +172,7 @@ export function extractUnquotedObjectKeys(
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
 ) {
-  const objectKeyRegex = getObjectKeyRegex();
-  let keyMatch;
-  while ((keyMatch = objectKeyRegex.exec(expr)) !== null) {
+  for (const keyMatch of expr.matchAll(OBJECT_KEY_REGEX)) {
     const value = keyMatch[1];
     const keyIdx = keyMatch[0].indexOf(value);
     const start = exprStart + keyMatch.index + keyIdx;
@@ -192,7 +191,7 @@ export function extractOptInStrings(
     matchIndex: number,
   ) => void,
 ) {
-  const optInRegex = /\/\*\s*maple\s*\*\/\s*(["'`])/g;
+  const optInRegex = new RegExp(OPT_IN_STRING_REGEX.source, OPT_IN_STRING_REGEX.flags);
   let match;
   while ((match = optInRegex.exec(text)) !== null) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
@@ -423,8 +422,7 @@ export function extractStringsFromBraces(
     isCSharpInterpolated: boolean,
   ) => void,
 ) {
-  let match: RegExpExecArray | null;
-  while ((match = startRegex.exec(text)) !== null) {
+  for (const match of text.matchAll(startRegex)) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
     let braceCount = 1;

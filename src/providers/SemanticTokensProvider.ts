@@ -1,8 +1,8 @@
 import { BUILTIN_ALIASES, parseClass, StringHelper } from '@f12io/maple';
 import * as vscode from 'vscode';
 import {
-  getAliasRegex,
-  getMapleClassRegex,
+  ALIAS_REGEX,
+  MAPLE_CLASS_REGEX,
   MAPLE_COMMA_SPLIT_REGEX,
   MAPLE_PARAMS_SPLIT_REGEX,
   MAPLE_UNDERSCORE_SPLIT_REGEX,
@@ -83,9 +83,7 @@ export class MapleSemanticTokensProvider
 
     // Local alias fallback
     const localAliases = new Map<string, string>();
-    const aliasRegex = getAliasRegex();
-    let aliasMatch;
-    while ((aliasMatch = aliasRegex.exec(text)) !== null) {
+    for (const aliasMatch of text.matchAll(ALIAS_REGEX)) {
       localAliases.set(aliasMatch[1], aliasMatch[2]);
     }
     const globalAliases = AliasCache.getAliases(document.uri);
@@ -154,9 +152,7 @@ export class MapleSemanticTokensProvider
 
     for (const instance of matches) {
       const classStr = instance.value;
-      const mapleClassRegex = getMapleClassRegex();
-      let match;
-      while ((match = mapleClassRegex.exec(classStr)) !== null) {
+      for (const match of classStr.matchAll(MAPLE_CLASS_REGEX)) {
         let className = match[0];
         let currentClassNameOffset = instance.start + match.index;
 

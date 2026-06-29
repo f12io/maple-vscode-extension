@@ -1,8 +1,8 @@
 import {
-  getAngularVueExprRegex,
-  getHostClassRegex,
-  getHostRegex,
-  getSpecificClassRegex,
+  ANGULAR_VUE_EXPR_REGEX,
+  HOST_CLASS_REGEX,
+  HOST_REGEX,
+  SPECIFIC_CLASS_REGEX,
 } from '../../constants/regex';
 import {
   extractStringLiterals,
@@ -21,10 +21,7 @@ export class AngularLanguageService extends BaseLanguageService {
     instances: Array<ClassInstance>,
     disabledBlocks: Array<{ start: number; end: number }>,
   ): void {
-    // Angular expressions: [ngClass]="...", [class]="..."
-    const exprRegex = getAngularVueExprRegex();
-    let match;
-    while ((match = exprRegex.exec(text)) !== null) {
+    for (const match of text.matchAll(ANGULAR_VUE_EXPR_REGEX)) {
       if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
       const quote = match[1];
@@ -53,17 +50,13 @@ export class AngularLanguageService extends BaseLanguageService {
       }
     }
 
-    // Angular Host Bindings: host: { 'class': '...', '[class.xxx]': 'true' }
-    const hostRegex = getHostRegex();
-    while ((match = hostRegex.exec(text)) !== null) {
+    for (const match of text.matchAll(HOST_REGEX)) {
       if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
       const hostObj = match[1];
       const hostStart = match.index + match[0].indexOf(hostObj);
 
-      const hostClassRegex = getHostClassRegex();
-      let hcMatch;
-      while ((hcMatch = hostClassRegex.exec(hostObj)) !== null) {
+      for (const hcMatch of hostObj.matchAll(HOST_CLASS_REGEX)) {
         const quoteIdx = hcMatch[0].indexOf(hcMatch[1]);
         const start = hostStart + hcMatch.index + quoteIdx + 1;
         this.extractAttributeClasses(
@@ -77,9 +70,7 @@ export class AngularLanguageService extends BaseLanguageService {
       }
     }
 
-    // Angular [class.xxx]="..."
-    const specificClassRegex = getSpecificClassRegex();
-    while ((match = specificClassRegex.exec(text)) !== null) {
+    for (const match of text.matchAll(SPECIFIC_CLASS_REGEX)) {
       if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
       const start = match.index + match[0].indexOf(match[1]);

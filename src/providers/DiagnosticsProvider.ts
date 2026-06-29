@@ -6,7 +6,7 @@ import {
   PROP_TYPE_COLOR,
 } from '@f12io/maple';
 import * as vscode from 'vscode';
-import { getMapleClassRegex } from '../constants/regex';
+import { MAPLE_CLASS_REGEX } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
@@ -56,9 +56,7 @@ export function refreshDiagnostics(
     for (const token of tokens) {
       if (token.value.includes('${')) continue;
 
-      const mapleClassRegex = getMapleClassRegex();
-      let wordMatch;
-      while ((wordMatch = mapleClassRegex.exec(token.value))) {
+      for (const wordMatch of token.value.matchAll(MAPLE_CLASS_REGEX)) {
         let cls = wordMatch[0];
 
         // Check if this class is cut off at the end of the extracted instance by an interpolation

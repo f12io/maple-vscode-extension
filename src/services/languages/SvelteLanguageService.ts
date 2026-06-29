@@ -1,7 +1,7 @@
 import {
-  getJsxExprStartRegex,
-  getSpecificClassRegex,
-  getUtilityFuncStartRegex,
+  JSX_EXPR_START_REGEX,
+  SPECIFIC_CLASS_REGEX,
+  UTILITY_FUNC_START_REGEX,
 } from '../../constants/regex';
 import {
   extractStringsFromBraces,
@@ -23,9 +23,7 @@ export class SvelteLanguageService extends HtmlLanguageService {
   ): void {
     super.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
     // Svelte class directives: class:name="..."
-    const specificClassRegex = getSpecificClassRegex();
-    let match;
-    while ((match = specificClassRegex.exec(text)) !== null) {
+    for (const match of text.matchAll(SPECIFIC_CLASS_REGEX)) {
       if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
 
       const start = match.index + match[0].indexOf(match[1]);
@@ -42,7 +40,7 @@ export class SvelteLanguageService extends HtmlLanguageService {
     // Svelte class expressions: class={...}
     extractStringsFromBraces(
       text,
-      getJsxExprStartRegex(),
+      JSX_EXPR_START_REGEX,
       '{',
       '}',
       instances,
@@ -52,7 +50,7 @@ export class SvelteLanguageService extends HtmlLanguageService {
     // Utility functions: clsx(...), classNames(...), cva(...)
     extractStringsFromBraces(
       text,
-      getUtilityFuncStartRegex(),
+      UTILITY_FUNC_START_REGEX,
       '(',
       ')',
       instances,

@@ -2,8 +2,8 @@ import { convert, parseClass, StringHelper } from '@f12io/maple';
 import * as prettier from 'prettier';
 import * as vscode from 'vscode';
 import {
-  getParamFallbackRegex,
-  getParamRemoveRegex,
+  PARAM_FALLBACK_REGEX,
+  PARAM_REMOVE_REGEX,
   getParamSubstituteRegex,
 } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
@@ -122,12 +122,12 @@ export class MapleHoverProvider implements vscode.HoverProvider {
             }
             // Fallback for missing parameters that have a default value
             substitutedUtil = substitutedUtil.replace(
-              getParamFallbackRegex(),
+              PARAM_FALLBACK_REGEX,
               '$1',
             );
             // Remove remaining missing parameters
             substitutedUtil = substitutedUtil.replace(
-              getParamRemoveRegex(),
+              PARAM_REMOVE_REGEX,
               '',
             );
 

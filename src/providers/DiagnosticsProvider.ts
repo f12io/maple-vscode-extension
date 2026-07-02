@@ -154,7 +154,8 @@ export function refreshDiagnostics(
 
             if (!isAlias) {
               if (
-                doc.languageId === 'razor' &&
+                (doc.languageId === 'razor' ||
+                  doc.languageId === 'aspnetcorerazor') &&
                 (cls.startsWith('@') || cls.includes('(') || cls.includes(')'))
               ) {
                 // Ignore razor variables and expressions

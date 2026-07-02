@@ -72,7 +72,7 @@ The extension provides features for the following file types (when enabled):
 - React (`.jsx`, `.tsx`)
 - Vue (`.vue`)
 - Svelte (`.svelte`)
-- Razor (`.razor`)
+- Razor (`.razor`, `.cshtml`)
 - PHP (`.php`)
 - Twig (`.twig`)
 - JavaScript/TypeScript (Template literals tagged with `/* maple */`)

@@ -1415,7 +1415,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
 ]
 `;
 
-exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-razor.razor 1`] = `
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-razor.cshtml 1`] = `
 [
   {
     "classValue": "

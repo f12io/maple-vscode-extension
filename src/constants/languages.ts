@@ -7,7 +7,7 @@ export const LANGUAGE_DEFINITIONS = [
   { id: 'typescript', extensions: ['ts'] },
   { id: 'javascript', extensions: ['js'] },
   { id: 'razor', extensions: ['razor'] },
-  { id: 'aspnetcorerazor', extensions: ['razor'] },
+  { id: 'aspnetcorerazor', extensions: ['cshtml'] },
   { id: 'php', extensions: ['php'] },
   { id: 'twig', extensions: ['twig'] },
 ];

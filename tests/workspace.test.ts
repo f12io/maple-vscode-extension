@@ -39,7 +39,7 @@ describe('Workspace Highlights and Colors', () => {
     'test-react.jsx',
     'test-vue.vue',
     'test-svelte.svelte',
-    'test-razor.razor',
+    'test-razor.cshtml',
     'test-angular.html',
     'test-angular.ts',
     'test-class.js',

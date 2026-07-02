@@ -144,12 +144,14 @@ export class RazorLanguageService extends HtmlLanguageService {
       maxClasses: number,
     ) => string,
   ): string | undefined {
-    // Only handle @(...) expressions
-    if (!cls.startsWith('@(') || !cls.endsWith(')')) {
-      return undefined;
-    }
+    const startIndex = cls.indexOf('@(');
+    if (startIndex === -1) return undefined;
+    const end = parseBalancedCharacters(cls, startIndex + 2, '(', ')');
+    if (end === -1) return undefined;
 
-    const innerExpr = cls.slice(2, -1);
+    const prefix = cls.substring(0, startIndex);
+    const suffix = cls.substring(end);
+    const innerExpr = cls.substring(startIndex + 2, end - 1);
     const ternary = this.parseTernaryArms(innerExpr);
     if (!ternary) return undefined;
 
@@ -176,13 +178,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       maxClassesPerLine,
     );
 
-    // Only expand if at least one arm was formatted to multi-line
-    if (
-      !formattedConsequent.includes('\n') &&
-      !formattedAlternate.includes('\n')
-    ) {
-      return undefined;
-    }
+    // Always return the reconstructed ternary to enforce consistent spacing (e.g., spaces around `?` and `:`)
 
     // Determine string prefix: use $@" for interpolated strings
     const consequentIsInterpolated =
@@ -194,6 +190,7 @@ export class RazorLanguageService extends HtmlLanguageService {
     const alternatePrefix = alternateIsInterpolated ? '$@' : '';
 
     return (
+      prefix +
       '@(' +
       ternary.condition +
       ' ? ' +
@@ -204,7 +201,8 @@ export class RazorLanguageService extends HtmlLanguageService {
       alternatePrefix +
       '"' +
       formattedAlternate +
-      '")'
+      '")' +
+      suffix
     );
   }
 

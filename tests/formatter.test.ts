@@ -60,7 +60,7 @@ describe('FormatterProvider.formatClasses', () => {
     const expected = `
     c-blue
     p-2
-    m-@(isActive ?"2" : "3")
+    m-@(isActive ? "2" : "3")
     o-50 fw-normal
     @(isActive ? "fs-50" : "fs-60")
     @(isActive ? $@"

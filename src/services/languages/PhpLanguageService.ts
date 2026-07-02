@@ -59,14 +59,21 @@ export class PhpLanguageService extends HtmlLanguageService {
       maxClasses: number,
     ) => string,
   ): string | undefined {
-    // Only handle <?...?> blocks
-    if (!cls.startsWith('<?') || !cls.endsWith('?>')) {
+    const startIndex = cls.indexOf('<?');
+    if (startIndex === -1) {
+      return undefined;
+    }
+    const end = cls.indexOf('?>', startIndex + 2);
+    if (end === -1) {
       return undefined;
     }
 
+    const prefix = cls.substring(0, startIndex);
+    const suffix = cls.substring(end + 2);
+
     // Strip open tag: <?= or <?php or <?
     let openTag = '<?';
-    let innerExpr = cls.slice(2, -2);
+    let innerExpr = cls.substring(startIndex + 2, end);
     if (innerExpr.startsWith('=')) {
       openTag = '<?=';
       innerExpr = innerExpr.slice(1);
@@ -98,15 +105,10 @@ export class PhpLanguageService extends HtmlLanguageService {
       return undefined;
     }
 
-    // Only expand if at least one arm was formatted to multi-line
-    if (
-      !formattedConsequent.includes('\n') &&
-      !formattedAlternate.includes('\n')
-    ) {
-      return undefined;
-    }
+    // Always return the reconstructed ternary to enforce consistent spacing
 
     return (
+      prefix +
       openTag +
       ' ' +
       ternary.condition +
@@ -114,7 +116,8 @@ export class PhpLanguageService extends HtmlLanguageService {
       formattedConsequent +
       ' : ' +
       formattedAlternate +
-      ' ?>'
+      ' ?>' +
+      suffix
     );
   }
 

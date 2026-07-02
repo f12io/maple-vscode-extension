@@ -95,8 +95,17 @@ export class JavascriptLanguageService extends BaseLanguageService {
       maxClasses: number,
     ) => string,
   ): string {
-    // Only handle ${...} expressions
-    if (!cls.startsWith('${') || !cls.endsWith('}')) {
+    const startIndex = cls.indexOf('${');
+    if (startIndex === -1) {
+      return super.formatInterpolation(
+        cls,
+        baseIndent,
+        maxClassesPerLine,
+        formatClassesFn,
+      );
+    }
+    const end = parseBalancedCharacters(cls, startIndex + 2, '{', '}');
+    if (end === -1) {
       return super.formatInterpolation(
         cls,
         baseIndent,
@@ -105,7 +114,9 @@ export class JavascriptLanguageService extends BaseLanguageService {
       );
     }
 
-    const innerExpr = cls.slice(2, -1);
+    const prefix = cls.substring(0, startIndex);
+    const suffix = cls.substring(end);
+    const innerExpr = cls.substring(startIndex + 2, end - 1);
     const ternary = this.parseTernaryArms(innerExpr);
     if (!ternary) {
       return super.formatInterpolation(
@@ -149,27 +160,18 @@ export class JavascriptLanguageService extends BaseLanguageService {
       maxClassesPerLine,
     );
 
-    // Only expand if at least one arm was formatted to multi-line
-    if (
-      !formattedConsequent.includes('\n') &&
-      !formattedAlternate.includes('\n')
-    ) {
-      return super.formatInterpolation(
-        cls,
-        baseIndent,
-        maxClassesPerLine,
-        formatClassesFn,
-      );
-    }
+    // Always return the reconstructed ternary to enforce consistent spacing
 
     return (
+      prefix +
       '${' +
       ternary.condition +
       ' ? `' +
       formattedConsequent +
       '` : `' +
       formattedAlternate +
-      '`}'
+      '`}' +
+      suffix
     );
   }
 }

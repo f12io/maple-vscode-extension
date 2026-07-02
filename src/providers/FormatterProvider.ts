@@ -29,7 +29,13 @@ export function formatClasses(
   if (!service) return classStr;
   const tokens = service.tokenizeClassesWithIndices(classStr);
   if (tokens.length === 0) return '';
-  if (tokens.length <= 1 && maxClassesPerLine >= 1) return tokens[0].value;
+  if (tokens.length <= 1 && maxClassesPerLine >= 1) {
+    if (tokens.length === 1 && tokens[0].hasInterpolation) {
+      // Do not return early, allow interpolation formatting
+    } else {
+      return tokens.length === 1 ? tokens[0].value : '';
+    }
+  }
 
   const lines: Array<Array<string>> = [];
   let currentLine: Array<string> = [];

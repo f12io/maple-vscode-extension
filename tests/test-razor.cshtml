@@ -7,11 +7,11 @@
   bgc-green-500
   @extraClass
 ">
-  <span class="@(isActive ?"c-white" : "c-gray-500")">
+  <span class="@(isActive ? "c-white" : "c-gray-500")">
     Razor Example
   </span>
   <button class="
-    @(isActive ?"bgc-red-500" : "bgc-gray-300")
+    @(isActive ? "bgc-red-500" : "bgc-gray-300")
     fw-bold
   ">
     Click Me
@@ -21,7 +21,7 @@
 <div class="
   c-blue
   p-2
-  m-@(isActive ?"2" : "3")
+  m-@(isActive ? "2" : "3")
   o-50 fw-normal
   @(isActive ? "fs-50" : "fs-60")
   @(isActive ? $@"

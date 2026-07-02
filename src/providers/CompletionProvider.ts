@@ -47,9 +47,8 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
     const documentText = document.getText();
     const offset = document.offsetAt(position);
 
-    const languageService = LanguageServiceRegistry.getService(
-      document.languageId,
-    );
+    const languageService =
+      LanguageServiceRegistry.getServiceForDocument(document);
     if (!languageService) return undefined;
     const instances = languageService.extractClasses(documentText);
     const currentInstance = instances.find(

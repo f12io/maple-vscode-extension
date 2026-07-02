@@ -36,7 +36,7 @@ export function refreshDiagnostics(
   const diagnostics: Array<vscode.Diagnostic> = [];
   const text = doc.getText();
 
-  const languageService = LanguageServiceRegistry.getService(doc.languageId);
+  const languageService = LanguageServiceRegistry.getServiceForDocument(doc);
   if (!languageService) {
     mapleDiagnostics.set(doc.uri, []);
     return;

@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+import { getLanguageIdFromFileName } from '../constants/languages';
 import { ClassInstance, ILanguageService } from './LanguageService';
 import { AngularLanguageService } from './languages/AngularLanguageService';
 import { HtmlLanguageService } from './languages/HtmlLanguageService';
@@ -98,6 +100,22 @@ export class LanguageServiceRegistry {
     const services = this.services.get(languageId);
     if (!services || services.length === 0) return undefined;
     return new CompositeLanguageService(languageId, services);
+  }
+
+  public static getServiceForDocument(
+    doc: vscode.TextDocument,
+  ): ILanguageService | undefined {
+    let languageId = doc.languageId;
+
+    if (languageId === 'html') {
+      const fileName = doc.fileName || doc.uri?.fsPath || '';
+      const extLanguageId = getLanguageIdFromFileName(fileName);
+      if (extLanguageId && extLanguageId !== 'html' && this.isSupported(extLanguageId)) {
+        languageId = extLanguageId;
+      }
+    }
+
+    return this.getService(languageId);
   }
 
   public static isSupported(languageId: string): boolean {

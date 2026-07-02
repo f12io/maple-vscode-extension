@@ -32,9 +32,8 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
 
     const colors: Array<vscode.ColorInformation> = [];
     const text = document.getText();
-    const languageService = LanguageServiceRegistry.getService(
-      document.languageId,
-    );
+    const languageService =
+      LanguageServiceRegistry.getServiceForDocument(document);
     if (!languageService) return [];
     const classInstances = languageService.extractClasses(text);
 

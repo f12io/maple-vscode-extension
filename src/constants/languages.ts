@@ -31,7 +31,8 @@ export const getLanguageIdFromExtension = (ext?: string): string => {
   return language ? language.id : 'html';
 };
 
-export const getLanguageIdFromFileName = (fileName: string): string => {
+export const getLanguageIdFromFileName = (fileName?: string): string => {
+  if (!fileName) return 'html';
   const ext = fileName.split('.').pop();
   return getLanguageIdFromExtension(ext);
 };

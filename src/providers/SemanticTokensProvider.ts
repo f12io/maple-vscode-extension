@@ -74,9 +74,8 @@ export class MapleSemanticTokensProvider
 
     const builder = new vscode.SemanticTokensBuilder(semanticTokensLegend);
     const text = document.getText();
-    const languageService = LanguageServiceRegistry.getService(
-      document.languageId,
-    );
+    const languageService =
+      LanguageServiceRegistry.getServiceForDocument(document);
     if (!languageService) return new vscode.SemanticTokens(new Uint32Array(0));
 
     const matches = languageService.extractClasses(text);

@@ -21,8 +21,11 @@ export function formatClasses(
   baseIndent: string,
   maxClassesPerLine: number,
   languageId: string,
+  document?: vscode.TextDocument,
 ): string {
-  const service = LanguageServiceRegistry.getService(languageId);
+  const service = document
+    ? LanguageServiceRegistry.getServiceForDocument(document)
+    : LanguageServiceRegistry.getService(languageId);
   if (!service) return classStr;
   const tokens = service.tokenizeClassesWithIndices(classStr);
   if (tokens.length === 0) return '';
@@ -116,6 +119,7 @@ function applyFormatting(
       baseIndent,
       maxClassesPerLine,
       document.languageId,
+      document,
     );
 
     if (formattedStr !== innerString) {
@@ -144,6 +148,7 @@ function applyFormatting(
       baseIndent,
       maxClassesPerLine,
       document.languageId,
+      document,
     );
 
     if (formatted !== innerString) {

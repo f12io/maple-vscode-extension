@@ -50,6 +50,24 @@ class CompositeLanguageService implements ILanguageService {
       str,
     );
   }
+
+  formatInterpolation(
+    cls: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string {
+    return this.services[this.services.length - 1].formatInterpolation(
+      cls,
+      baseIndent,
+      maxClassesPerLine,
+      formatClassesFn,
+    );
+  }
 }
 
 export class LanguageServiceRegistry {

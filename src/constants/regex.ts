@@ -86,8 +86,8 @@ export const TOKEN_SPLIT_REGEX = /(["'`\s])/;
 
 
 
-/** Matches template literals tagged with maple */
-export const MAPLE_TAG_REGEX = /\/\*\s*maple\s*\*\/\s*`([\s\S]*?)`/g;
+/** Matches the start of a string literal tagged with maple and captures its quote */
+export const MAPLE_TAG_START_REGEX = /\/\*\s*maple\s*\*\/\s*(["'`])/g;
 
 /** Matches object keys inside an expression that aren't quoted. e.g. { active: true } -> 'active' */
 export const OBJECT_KEY_REGEX = /(?:[{,])\s*([a-zA-Z0-9\-_]+)\s*:/g;

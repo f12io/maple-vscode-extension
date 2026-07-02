@@ -294,4 +294,145 @@ export abstract class BaseLanguageService implements ILanguageService {
 
     return true;
   }
+
+  public formatInterpolation(
+    cls: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string {
+    const replacements: Array<{
+      start: number;
+      end: number;
+      replacement: string;
+    }> = [];
+
+    extractStringLiterals(
+      cls,
+      0,
+      cls,
+      0,
+      [],
+      [],
+      (value, offset, _text, _matchIndex, isCSharpInterpolated) => {
+        const innerIndent = baseIndent + '  ';
+        const formatted = formatClassesFn(
+          value,
+          innerIndent,
+          maxClassesPerLine,
+        );
+
+        if (formatted !== value) {
+          replacements.push({
+            start: offset,
+            end: offset + value.length,
+            replacement: formatted,
+          });
+        }
+      },
+    );
+
+    if (replacements.length === 0) return cls;
+
+    // Apply bottom-up (right-to-left) to not mess up offsets
+    replacements.sort((a, b) => b.start - a.start);
+
+    let newCls = cls;
+    for (const r of replacements) {
+      const before = newCls.substring(0, r.start);
+      const after = newCls.substring(r.end);
+      newCls = before + r.replacement + after;
+    }
+
+    return newCls;
+  }
+
+  protected parseTernaryArms(
+    expr: string,
+  ):
+    | { condition: string; consequent: string; alternate: string }
+    | undefined {
+    let i = 0;
+    let questionIndex = -1;
+    let ternaryDepth = 0;
+
+    while (i < expr.length) {
+      // Skip strings (language-specific via virtual method)
+      const stringEnd = this.skipStringAt(expr, i);
+      if (stringEnd > i) {
+        i = stringEnd;
+        continue;
+      }
+
+      const ch = expr[i];
+
+      // Skip balanced parens, braces, brackets
+      if (ch === '(' || ch === '[' || ch === '{') {
+        i = this.skipBalanced(expr, i);
+        continue;
+      }
+
+      // Match ternary ? (but not ?. or ??)
+      if (ch === '?' && expr[i + 1] !== '.' && expr[i + 1] !== '?') {
+        if (questionIndex === -1) {
+          questionIndex = i;
+        } else {
+          ternaryDepth++;
+        }
+      } else if (ch === ':' && questionIndex !== -1) {
+        if (ternaryDepth === 0) {
+          return {
+            condition: expr.substring(0, questionIndex).trim(),
+            consequent: expr.substring(questionIndex + 1, i).trim(),
+            alternate: expr.substring(i + 1).trim(),
+          };
+        } else {
+          ternaryDepth--;
+        }
+      }
+
+      i++;
+    }
+
+    return undefined;
+  }
+
+  protected skipStringAt(expr: string, index: number): number {
+    const ch = expr[index];
+    if (ch === "'" || ch === '"') {
+      let j = index + 1;
+      while (j < expr.length) {
+        if (expr[j] === '\\') {
+          j += 2;
+          continue;
+        }
+        if (expr[j] === ch) return j + 1;
+        j++;
+      }
+      return expr.length;
+    }
+    return index;
+  }
+
+  private skipBalanced(expr: string, startIndex: number): number {
+    const open = expr[startIndex];
+    const close = open === '(' ? ')' : open === '[' ? ']' : '}';
+    let depth = 1;
+    let j = startIndex + 1;
+    while (j < expr.length && depth > 0) {
+      const se = this.skipStringAt(expr, j);
+      if (se > j) {
+        j = se;
+        continue;
+      }
+      if (expr[j] === open) depth++;
+      else if (expr[j] === close) depth--;
+      if (depth > 0) j++;
+    }
+    return j < expr.length ? j + 1 : expr.length;
+  }
 }

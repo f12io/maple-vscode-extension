@@ -54,7 +54,7 @@ export function refreshDiagnostics(
     const tokens = languageService.tokenizeClassesWithIndices(classValue);
 
     for (const token of tokens) {
-      if (token.value.includes('${')) continue;
+      if (token.value.includes('${') || token.hasInterpolation) continue;
 
       for (const wordMatch of token.value.matchAll(MAPLE_CLASS_REGEX)) {
         let cls = wordMatch[0];

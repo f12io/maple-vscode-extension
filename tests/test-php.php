@@ -1,5 +1,5 @@
 <?php
-$isActive = true;
+$isActive = TRUE;
 $extraClass = /* maple */ "p-4";
 ?>
 
@@ -8,13 +8,13 @@ $extraClass = /* maple */ "p-4";
   <?= $extraClass ?>
 ">
   <span class="<?= $isActive ? 'c-white' : 'c-gray-500' ?>">
-      PHP Example
+    PHP Example
   </span>
   <button class="
     <?= $isActive ? 'bgc-red-500' : 'bgc-gray-300' ?>
     fw-bold
   ">
-      Click Me
+    Click Me
   </button>
 </div>
 
@@ -24,7 +24,16 @@ $extraClass = /* maple */ "p-4";
   m-<?= $isActive ? '2' : '3' ?>
   o-50 fw-normal
   <?= $isActive ? 'fs-50' : 'fs-60' ?>
-  <?= $isActive ? 'fs-50 m-' . ($isActive ? '2' : '3') : 'fs-60 m-' . ($isActive ? '2' : '3') ?>
+  <?= $isActive ? '
+    fs-50
+    m-' . ($isActive ? '2' : '3') . '
+    bgc-red
+    p-2
+    o-50
+  ' : '
+    fs-60
+    m-' . ($isActive ? '2' : '3') ?>
 ">
   Nested PHP Expression Example
 </div>
+

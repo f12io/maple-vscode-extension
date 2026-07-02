@@ -2,7 +2,7 @@ import { parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
 import {
   INDENT_WHITESPACE_REGEX,
-  MAPLE_TAG_REGEX,
+  MAPLE_TAG_START_REGEX,
   STANDARD_ATTR_REGEX,
 } from '../constants/regex';
 import { isExtensionExplicitlyDisabled } from '../helpers/config';
@@ -16,7 +16,7 @@ function getIndentFromIndex(text: string, index: number): string {
   return match ? match[0] : '';
 }
 
-function formatClasses(
+export function formatClasses(
   classStr: string,
   baseIndent: string,
   maxClassesPerLine: number,
@@ -59,9 +59,18 @@ function formatClasses(
       currentLineHasExpression = false;
     }
 
-    currentLine.push(cls);
     if (isExpression) {
+      const formattedCls = service.formatInterpolation(
+        cls,
+        baseIndent,
+        maxClassesPerLine,
+        (value, indent, maxClasses) =>
+          formatClasses(value, indent, maxClasses, languageId),
+      );
+      currentLine.push(formattedCls);
       currentLineHasExpression = true;
+    } else {
+      currentLine.push(cls);
     }
     lastPropType = propType;
   }
@@ -118,12 +127,16 @@ function applyFormatting(
     }
   }
 
-  for (const match of text.matchAll(MAPLE_TAG_REGEX)) {
+  for (const match of text.matchAll(MAPLE_TAG_START_REGEX)) {
     const fullMatch = match[0];
-    const innerString = match[1];
+    const quote = match[1];
 
-    const innerStart = match.index + fullMatch.indexOf('`') + 1;
-    const innerEnd = innerStart + innerString.length;
+    const innerStart = match.index + fullMatch.length;
+    const innerEnd = findClosingQuote(text, innerStart, quote);
+
+    if (innerEnd === -1) continue;
+
+    const innerString = text.substring(innerStart, innerEnd);
 
     const baseIndent = getIndentFromIndex(text, match.index);
     const formatted = formatClasses(

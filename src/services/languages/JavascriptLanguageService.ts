@@ -52,4 +52,125 @@ export class JavascriptLanguageService extends BaseLanguageService {
     }
     return super.parseInterpolation(value, index);
   }
+
+  protected skipStringAt(expr: string, index: number): number {
+    if (expr[index] === '`') {
+      let j = index + 1;
+      while (j < expr.length) {
+        if (expr[j] === '\\') {
+          j += 2;
+          continue;
+        }
+        if (expr[j] === '$' && expr[j + 1] === '{') {
+          j += 2;
+          let braceDepth = 1;
+          while (j < expr.length && braceDepth > 0) {
+            const se = this.skipStringAt(expr, j);
+            if (se > j) {
+              j = se;
+              continue;
+            }
+            if (expr[j] === '{') braceDepth++;
+            else if (expr[j] === '}') braceDepth--;
+            if (braceDepth > 0) j++;
+          }
+          if (j < expr.length) j++; // skip closing }
+          continue;
+        }
+        if (expr[j] === '`') return j + 1;
+        j++;
+      }
+      return expr.length;
+    }
+    return super.skipStringAt(expr, index);
+  }
+
+  public formatInterpolation(
+    cls: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string {
+    // Only handle ${...} expressions
+    if (!cls.startsWith('${') || !cls.endsWith('}')) {
+      return super.formatInterpolation(
+        cls,
+        baseIndent,
+        maxClassesPerLine,
+        formatClassesFn,
+      );
+    }
+
+    const innerExpr = cls.slice(2, -1);
+    const ternary = this.parseTernaryArms(innerExpr);
+    if (!ternary) {
+      return super.formatInterpolation(
+        cls,
+        baseIndent,
+        maxClassesPerLine,
+        formatClassesFn,
+      );
+    }
+
+    // Check if arms are template literals
+    const consequentStr = ternary.consequent.trim();
+    const alternateStr = ternary.alternate.trim();
+
+    if (
+      !consequentStr.startsWith('`') ||
+      !consequentStr.endsWith('`') ||
+      !alternateStr.startsWith('`') ||
+      !alternateStr.endsWith('`')
+    ) {
+      return super.formatInterpolation(
+        cls,
+        baseIndent,
+        maxClassesPerLine,
+        formatClassesFn,
+      );
+    }
+
+    const consequentContent = consequentStr.slice(1, -1);
+    const alternateContent = alternateStr.slice(1, -1);
+    const exprIndent = baseIndent + '  ';
+
+    const formattedConsequent = formatClassesFn(
+      consequentContent,
+      exprIndent,
+      maxClassesPerLine,
+    );
+    const formattedAlternate = formatClassesFn(
+      alternateContent,
+      exprIndent,
+      maxClassesPerLine,
+    );
+
+    // Only expand if at least one arm was formatted to multi-line
+    if (
+      !formattedConsequent.includes('\n') &&
+      !formattedAlternate.includes('\n')
+    ) {
+      return super.formatInterpolation(
+        cls,
+        baseIndent,
+        maxClassesPerLine,
+        formatClassesFn,
+      );
+    }
+
+    return (
+      '${' +
+      ternary.condition +
+      ' ? `' +
+      formattedConsequent +
+      '` : `' +
+      formattedAlternate +
+      '`}'
+    );
+  }
 }
+

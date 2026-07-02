@@ -17,4 +17,14 @@ export interface ILanguageService {
   extractClasses(text: string): Array<ClassInstance>;
   isInsideClassAttribute(text: string, offset: number): boolean;
   tokenizeClassesWithIndices(str: string): Array<Token>;
+  formatInterpolation(
+    cls: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string;
 }

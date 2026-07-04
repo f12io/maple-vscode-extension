@@ -1,37 +1,25 @@
 import { JSX_EXPR_START_REGEX } from '../../constants/regex';
-import { extractStringsFromBraces } from '../../helpers/extractor.helper';
-import { ClassInstance } from '../LanguageService';
+import { MapleRegion } from '../LanguageService';
 import { JavascriptLanguageService } from './JavascriptLanguageService';
 
 export class ReactLanguageService extends JavascriptLanguageService {
   languageIds = ['javascriptreact', 'typescriptreact'];
 
-  protected extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void {
+  public collectRegions(text: string): Array<MapleRegion> {
+    const regions = super.collectRegions(text);
     // React / Solid JSX expressions: className={...}, class={...}, classList={...}
-    extractStringsFromBraces(
-      this,
-      text,
-      JSX_EXPR_START_REGEX,
-      '{',
-      '}',
-      instances,
-      disabledBlocks,
-      (val, off, txt, idx, literal) =>
-        this.extractAttributeClasses(
-          val,
-          off,
-          txt,
-          idx,
-          instances,
-          disabledBlocks,
-          literal?.rawDelimiter,
-        ),
-    );
-
-    super.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
+    for (const match of text.matchAll(JSX_EXPR_START_REGEX)) {
+      const openBrace = match.index + match[0].length - 1;
+      const end = this.parseBalancedExpression(text, openBrace);
+      if (end === -1) continue;
+      regions.push({
+        start: openBrace + 1,
+        end: end - 1,
+        kind: 'expression',
+        anchor: match.index,
+        includeObjectKeys: true,
+      });
+    }
+    return regions;
   }
 }

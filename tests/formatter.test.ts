@@ -214,6 +214,94 @@ describe('applyFormatting for /* maple */ opt-in strings', () => {
     expect(result).toContain('fs-60');
   });
 
+  it('formats string arguments of clsx/classNames/cva calls', () => {
+    const doc = makeDocument(
+      'javascript',
+      "const c = clsx('c-blue p-2 m-2 o-50 fw-normal fs-50', cond && 'p-1');",
+    );
+    const edits = applyFormatting(doc, maxClassesPerLine);
+
+    expect(edits).toHaveLength(1);
+    expect(edits[0].newText.startsWith('`')).toBe(true);
+    expect(edits[0].newText).toContain('\n');
+    expect(edits[0].newText).toContain('c-blue');
+  });
+
+  it('formats template literals inside JSX className expressions', () => {
+    const doc = makeDocument(
+      'javascriptreact',
+      '<div className={`c-blue p-2 m-2 o-50 fw-normal fs-50`}>',
+    );
+    const edits = applyFormatting(doc, maxClassesPerLine);
+
+    expect(edits).toHaveLength(1);
+    expect(edits[0].newText.startsWith('`')).toBe(true);
+    expect(edits[0].newText).toContain('\n');
+  });
+
+  it('formats ternaries inside JSX className expressions structurally', () => {
+    const doc = makeDocument(
+      'javascriptreact',
+      '<div className={cond ? `c-blue p-2 m-2 o-50 fw-normal fs-50` : `fs-60 m-1`}>',
+    );
+    const edits = applyFormatting(doc, maxClassesPerLine);
+
+    expect(edits).toHaveLength(1);
+    expect(edits[0].newText).toContain(' ? `');
+    expect(edits[0].newText).toContain('` : `');
+    expect(edits[0].newText).toContain('\n');
+  });
+
+  it('formats svelte class expressions, upgrading quotes when wrapping', () => {
+    const doc = makeDocument(
+      'svelte',
+      "<div class={cond ? 'c-blue p-2 m-2 o-50 fw-normal fs-50' : 'fs-60'}>",
+    );
+    const edits = applyFormatting(doc, maxClassesPerLine);
+
+    expect(edits).toHaveLength(1);
+    expect(edits[0].newText.startsWith('`')).toBe(true);
+    expect(edits[0].newText).toContain('\n');
+  });
+
+  it('does not produce overlapping edits when clsx is also opted in', () => {
+    const doc = makeDocument(
+      'javascript',
+      "const c = /* maple */ clsx('c-blue p-2 m-2 o-50 fw-normal fs-50');",
+    );
+    const edits = applyFormatting(doc, maxClassesPerLine);
+
+    // The opt-in region and the clsx region cover the same literal; it must
+    // be edited exactly once
+    expect(edits).toHaveLength(1);
+    expect(edits[0].newText).toContain('c-blue');
+  });
+
+  it('normalizes vue :class literals on a single line only', () => {
+    const doc = makeDocument(
+      'vue',
+      `<div :class="cond ? 'c-blue    p-2' : 'm-1'">`,
+    );
+    const edits = applyFormatting(doc, maxClassesPerLine);
+
+    // Whitespace normalization applies, but no multi-line rewrite: JS strings
+    // inside an HTML attribute cannot span lines
+    expect(edits).toHaveLength(1);
+    expect(edits[0].newText).toBe("'c-blue p-2'");
+  });
+
+  it('never wraps angular template expression literals across lines', () => {
+    const doc = makeDocument(
+      'html',
+      `<div [ngClass]="cond ? 'c-blue p-2 m-2 o-50 fw-normal fs-50' : 'm-1'">`,
+    );
+    const edits = applyFormatting(doc, maxClassesPerLine);
+
+    // The literal exceeds maxClassesPerLine but Angular expressions cannot
+    // hold multi-line strings, so it must be left untouched
+    expect(edits).toHaveLength(0);
+  });
+
   it('leaves short opt-in strings unchanged', () => {
     const doc = makeDocument(
       'javascript',

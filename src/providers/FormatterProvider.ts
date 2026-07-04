@@ -1,11 +1,7 @@
 import { parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
-import {
-  INDENT_WHITESPACE_REGEX,
-  STANDARD_ATTR_REGEX,
-} from '../constants/regex';
+import { INDENT_WHITESPACE_REGEX } from '../constants/regex';
 import { isExtensionExplicitlyDisabled } from '../helpers/config';
-import { findClosingQuote, findOptInRegions } from '../helpers/extractor.helper';
 import { safeRun } from '../helpers/logger';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
@@ -120,101 +116,113 @@ function doApplyFormatting(
   const edits: Array<vscode.TextEdit> = [];
   const text = document.getText();
 
-  for (const match of text.matchAll(STANDARD_ATTR_REGEX)) {
-    const fullMatch = match[0];
-    const quote = match[1];
-    const attrStart = match.index + fullMatch.indexOf(quote) + 1;
-    const closingQuoteIndex = findClosingQuote(text, attrStart, quote);
-
-    if (closingQuoteIndex === -1) continue;
-
-    const innerString = text.substring(attrStart, closingQuoteIndex);
-    const baseIndent = getIndentFromIndex(text, match.index);
-
-    const formattedStr = formatClasses(
-      innerString,
-      baseIndent,
-      maxClassesPerLine,
-      document.languageId,
-      document,
-    );
-
-    if (formattedStr !== innerString) {
-      const range = new vscode.Range(
-        document.positionAt(attrStart),
-        document.positionAt(closingQuoteIndex),
-      );
-      edits.push(vscode.TextEdit.replace(range, formattedStr));
-    }
-  }
-
-  // Opted-in expressions: /* maple */ <expression with string literals>
   const service = LanguageServiceRegistry.getServiceForDocument(document);
-  if (service) {
-    const formatClassesFn = (value: string, indent: string, max: number) =>
-      formatClasses(value, indent, max, document.languageId, document);
+  if (!service) return edits;
 
-    for (const region of findOptInRegions(service, text)) {
-      const baseIndent = getIndentFromIndex(text, region.matchIndex);
+  const formatClassesFn = (value: string, indent: string, max: number) =>
+    formatClasses(value, indent, max, document.languageId, document);
 
-      // Structured expressions (ternaries, concatenations) get the same
-      // treatment as interpolations inside class attributes.
-      const regionText = text
-        .substring(region.regionStart, region.regionEnd)
-        .trimEnd();
-      const structured = service.formatExpression(
-        regionText,
+  // The same regions extraction consumes; when regions overlap (e.g.
+  // /* maple */ clsx(...), or clsx inside a className expression) the
+  // outermost one formats everything inside it.
+  const regions = service.collectRegions(text);
+  regions.sort((a, b) => a.start - b.start || b.end - a.end);
+  let lastKeptEnd = -1;
+
+  for (const region of regions) {
+    if (region.start < lastKeptEnd) continue;
+    lastKeptEnd = region.end;
+
+    const allowMultiline = region.allowMultilineLiterals !== false;
+    const baseIndent = getIndentFromIndex(text, region.anchor);
+
+    if (region.kind === 'class-text') {
+      const innerString = text.substring(region.start, region.end);
+      const formatted = formatClassesFn(
+        innerString,
         baseIndent,
         maxClassesPerLine,
-        formatClassesFn,
       );
-      if (structured !== undefined) {
-        if (structured !== regionText) {
-          const range = new vscode.Range(
-            document.positionAt(region.regionStart),
-            document.positionAt(region.regionStart + regionText.length),
-          );
-          edits.push(vscode.TextEdit.replace(range, structured));
-        }
+      if (formatted === innerString) continue;
+      if (formatted.includes('\n') && !allowMultiline) continue;
+
+      const range = new vscode.Range(
+        document.positionAt(region.start),
+        document.positionAt(region.end),
+      );
+      edits.push(vscode.TextEdit.replace(range, formatted));
+      continue;
+    }
+
+    // Expression regions: structured expressions (ternaries, concatenations)
+    // get the same treatment as interpolations inside class attributes.
+    const regionText = text.substring(region.start, region.end).trim();
+    const regionTextStart =
+      region.start + text.substring(region.start, region.end).indexOf(regionText);
+    const structured = service.formatExpression(
+      regionText,
+      baseIndent,
+      maxClassesPerLine,
+      formatClassesFn,
+    );
+    if (structured !== undefined) {
+      if (
+        structured !== regionText &&
+        (allowMultiline || !structured.includes('\n'))
+      ) {
+        const range = new vscode.Range(
+          document.positionAt(regionTextStart),
+          document.positionAt(regionTextStart + regionText.length),
+        );
+        edits.push(vscode.TextEdit.replace(range, structured));
+      }
+      continue;
+    }
+
+    // Otherwise format each string literal on its own.
+    let i = region.start;
+    while (i < region.end) {
+      const literal = service.matchStringLiteral(text, i);
+      if (!literal) {
+        i++;
         continue;
       }
+      i = literal.endIndex;
 
-      // Otherwise format each string literal on its own.
-      for (const literal of region.literals) {
-        const innerString = text.substring(
-          literal.contentStart,
-          literal.contentEnd,
-        );
+      const innerString = text.substring(
+        literal.contentStart,
+        literal.contentEnd,
+      );
 
-        const formatted = formatClassesFn(
+      const formatted = formatClassesFn(
+        innerString,
+        baseIndent,
+        maxClassesPerLine,
+      );
+      if (formatted === innerString) continue;
+
+      // Keep the original delimiters for single-line results; multi-line
+      // results need delimiters that legally contain newlines (or none
+      // exist and the string is left untouched).
+      let open = literal.rawDelimiter;
+      let close =
+        literal.rawDelimiter === '`' ? '`' : literal.rawDelimiter.slice(-1);
+      if (formatted.includes('\n')) {
+        if (!allowMultiline) continue;
+        const delimiters = service.getMultilineStringDelimiters(
+          literal.rawDelimiter,
           innerString,
-          baseIndent,
-          maxClassesPerLine,
         );
-        if (formatted === innerString) continue;
-
-        // Keep the original delimiters for single-line results; multi-line
-        // results need delimiters that legally contain newlines (or none
-        // exist and the string is left untouched).
-        let open = literal.rawDelimiter;
-        let close =
-          literal.rawDelimiter === '`' ? '`' : literal.rawDelimiter.slice(-1);
-        if (formatted.includes('\n')) {
-          const delimiters = service.getMultilineStringDelimiters(
-            literal.rawDelimiter,
-            innerString,
-          );
-          if (!delimiters) continue;
-          open = delimiters.open;
-          close = delimiters.close;
-        }
-
-        const range = new vscode.Range(
-          document.positionAt(literal.start),
-          document.positionAt(literal.endIndex),
-        );
-        edits.push(vscode.TextEdit.replace(range, open + formatted + close));
+        if (!delimiters) continue;
+        open = delimiters.open;
+        close = delimiters.close;
       }
+
+      const range = new vscode.Range(
+        document.positionAt(literal.start),
+        document.positionAt(literal.endIndex),
+      );
+      edits.push(vscode.TextEdit.replace(range, open + formatted + close));
     }
   }
 

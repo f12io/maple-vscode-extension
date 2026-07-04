@@ -1,4 +1,3 @@
-import { ClassInstance } from '../LanguageService';
 import {
   BaseLanguageService,
   InterpolationContext,
@@ -7,14 +6,6 @@ import {
 
 export class HtmlLanguageService extends BaseLanguageService {
   languageIds = ['html'];
-
-  protected extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void {
-    // Angular logic moved to AngularLanguageService
-  }
 
   protected parseInterpolation(
     value: string,

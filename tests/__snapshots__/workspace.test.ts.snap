@@ -159,6 +159,30 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
+    "classValue": "bgc-purple-500",
+    "colors": [
+      {
+        "color": "rgba(128, 0, 128, 1)",
+        "text": "purple-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "purple-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
     "classValue": "bgc-green-500",
     "colors": [
       {
@@ -278,30 +302,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
     "warnings": [],
   },
-  {
-    "classValue": "bgc-purple-500",
-    "colors": [
-      {
-        "color": "rgba(128, 0, 128, 1)",
-        "text": "purple-500",
-      },
-    ],
-    "tokens": [
-      {
-        "text": "bgc",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "purple-500",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
 ]
 `;
 
@@ -360,6 +360,25 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
+    "classValue": "fw-bold",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
     "classValue": "o-50",
     "colors": [],
     "tokens": [
@@ -404,25 +423,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
       },
       {
         "text": "2",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
-    "classValue": "fw-bold",
-    "colors": [],
-    "tokens": [
-      {
-        "text": "fw",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "bold",
         "type": "maple-value",
       },
     ],
@@ -504,21 +504,30 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "base-class",
+    "classValue": "fw-bold",
     "colors": [],
-    "tokens": [],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
   {
-    "classValue": "bgc-blue-500 c-white",
+    "classValue": "bgc-red;p-2",
     "colors": [
       {
-        "color": "rgba(0, 0, 255, 1)",
-        "text": "blue-500",
-      },
-      {
-        "color": "rgba(255, 255, 255, 1)",
-        "text": "white",
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red",
       },
     ],
     "tokens": [
@@ -531,11 +540,11 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "blue-500",
+        "text": "red",
         "type": "maple-value",
       },
       {
-        "text": "c",
+        "text": "p",
         "type": "maple-utility",
       },
       {
@@ -543,74 +552,10 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "white",
+        "text": "2",
         "type": "maple-value",
       },
     ],
-    "warnings": [],
-  },
-  {
-    "classValue": "bgc-gray-500 c-black",
-    "colors": [
-      {
-        "color": "rgba(128, 128, 128, 1)",
-        "text": "gray-500",
-      },
-      {
-        "color": "rgba(0, 0, 0, 1)",
-        "text": "black",
-      },
-    ],
-    "tokens": [
-      {
-        "text": "bgc",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "gray-500",
-        "type": "maple-value",
-      },
-      {
-        "text": "c",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "black",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
-    "classValue": "variants",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "intent",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "primary",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "secondary",
-    "colors": [],
-    "tokens": [],
     "warnings": [],
   },
   {
@@ -911,11 +856,44 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "fw-bold",
+    "classValue": "base-class",
     "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "variants",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "intent",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "primary",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-blue-500 c-white",
+    "colors": [
+      {
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "blue-500",
+      },
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
     "tokens": [
       {
-        "text": "fw",
+        "text": "bgc",
         "type": "maple-utility",
       },
       {
@@ -923,14 +901,114 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "bold",
+        "text": "blue-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "white",
         "type": "maple-value",
       },
     ],
     "warnings": [],
   },
   {
-    "classValue": "bgc-red;p-2",
+    "classValue": "secondary",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "bgc-gray-500 c-black",
+    "colors": [
+      {
+        "color": "rgba(128, 128, 128, 1)",
+        "text": "gray-500",
+      },
+      {
+        "color": "rgba(0, 0, 0, 1)",
+        "text": "black",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "black",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+]
+`;
+
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-php.php 1`] = `
+[
+  {
+    "classValue": "
+    fs-50
+    m-",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fs",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "50",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "2",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "3",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "
+    bgc-red
+    p-2
+    o-50
+  ",
     "colors": [
       {
         "color": "rgba(255, 0, 0, 1)",
@@ -962,14 +1040,54 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "text": "2",
         "type": "maple-value",
       },
+      {
+        "text": "o",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "50",
+        "type": "maple-value",
+      },
     ],
     "warnings": [],
   },
-]
-`;
-
-exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-php.php 1`] = `
-[
+  {
+    "classValue": "
+    fs-60
+    m-",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "fs",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "60",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "2",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "3",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
   {
     "classValue": "
   bgc-green-500
@@ -1393,6 +1511,11 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "tokens": [],
     "warnings": [],
   },
+]
+`;
+
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-razor.cshtml 1`] = `
+[
   {
     "classValue": "
     fs-50
@@ -1511,11 +1634,13 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "tokens": [],
     "warnings": [],
   },
-]
-`;
-
-exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-razor.cshtml 1`] = `
-[
+  {
+    "classValue": "
+  ",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
   {
     "classValue": "
   bgc-green-500 @@md:p-2
@@ -2087,49 +2212,17 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "tokens": [],
     "warnings": [],
   },
+]
+`;
+
+exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-react.jsx 1`] = `
+[
   {
-    "classValue": "
-    fs-50
-    m-",
-    "colors": [],
-    "tokens": [
-      {
-        "text": "fs",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "50",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
-    "classValue": "2",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "3",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "
-    bgc-red
-    p-2
-    o-50
-  ",
+    "classValue": "btn bgc-blue-500",
     "colors": [
       {
-        "color": "rgba(255, 0, 0, 1)",
-        "text": "red",
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "blue-500",
       },
     ],
     "tokens": [
@@ -2142,44 +2235,41 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "red",
-        "type": "maple-value",
-      },
-      {
-        "text": "p",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "2",
-        "type": "maple-value",
-      },
-      {
-        "text": "o",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "50",
+        "text": "blue-500",
         "type": "maple-value",
       },
     ],
     "warnings": [],
   },
   {
-    "classValue": "
-    fs-60
-    m-",
+    "classValue": "variants",
     "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "intent",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "primary",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "c-white fw-bold",
+    "colors": [
+      {
+        "color": "rgba(255, 255, 255, 1)",
+        "text": "white",
+      },
+    ],
     "tokens": [
       {
-        "text": "fs",
+        "text": "c",
         "type": "maple-utility",
       },
       {
@@ -2187,36 +2277,70 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-separator",
       },
       {
-        "text": "60",
+        "text": "white",
+        "type": "maple-value",
+      },
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
         "type": "maple-value",
       },
     ],
     "warnings": [],
   },
   {
-    "classValue": "2",
+    "classValue": "secondary",
     "colors": [],
     "tokens": [],
     "warnings": [],
   },
   {
-    "classValue": "3",
-    "colors": [],
-    "tokens": [],
+    "classValue": "c-gray-500 bgc-gray-100",
+    "colors": [
+      {
+        "color": "rgba(128, 128, 128, 1)",
+        "text": "gray-500",
+      },
+      {
+        "color": "rgba(228, 228, 228, 1)",
+        "text": "gray-100",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-500",
+        "type": "maple-value",
+      },
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "gray-100",
+        "type": "maple-value",
+      },
+    ],
     "warnings": [],
   },
-  {
-    "classValue": "
-  ",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-]
-`;
-
-exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-react.jsx 1`] = `
-[
   {
     "classValue": "bgc-blue-500 c-white p-4",
     "colors": [
@@ -2270,7 +2394,9 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "fw-bold ",
+    "classValue": "
+        fw-bold
+        ",
     "colors": [],
     "tokens": [
       {
@@ -2327,7 +2453,8 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "",
+    "classValue": "
+      ",
     "colors": [],
     "tokens": [],
     "warnings": [],
@@ -2357,6 +2484,119 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "tokens": [
       {
         "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "m-6",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "6",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "
+        fw-bold
+        m-4
+        c-red bgc-red
+        o-50
+        p-4
+      ",
+    "colors": [
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red",
+      },
+      {
+        "color": "rgba(255, 0, 0, 1)",
+        "text": "red",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "fw",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "bold",
+        "type": "maple-value",
+      },
+      {
+        "text": "m",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+      {
+        "text": "c",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red",
+        "type": "maple-value",
+      },
+      {
+        "text": "bgc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "red",
+        "type": "maple-value",
+      },
+      {
+        "text": "o",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "50",
+        "type": "maple-value",
+      },
+      {
+        "text": "p",
         "type": "maple-utility",
       },
       {
@@ -2440,56 +2680,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "fw-bold m-4",
-    "colors": [],
-    "tokens": [
-      {
-        "text": "fw",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "bold",
-        "type": "maple-value",
-      },
-      {
-        "text": "m",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "4",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
-    "classValue": "m-6",
-    "colors": [],
-    "tokens": [
-      {
-        "text": "m",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "6",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
     "classValue": "fw-bold",
     "colors": [],
     "tokens": [
@@ -2544,16 +2734,16 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
     ],
-    "warnings": [],
-  },
-  {
-    "classValue": "primary",
-    "colors": [],
-    "tokens": [],
     "warnings": [],
   },
   {
     "classValue": "intent",
+    "colors": [],
+    "tokens": [],
+    "warnings": [],
+  },
+  {
+    "classValue": "primary",
     "colors": [],
     "tokens": [],
     "warnings": [],
@@ -2617,8 +2807,8 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-          fxcol-ss invalid-maple-class
-          ",
+         fxcol-ss invalid-maple-class
+         ",
     "colors": [],
     "tokens": [
       {
@@ -2678,131 +2868,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-        ",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "btn bgc-blue-500",
-    "colors": [
-      {
-        "color": "rgba(0, 0, 255, 1)",
-        "text": "blue-500",
-      },
-    ],
-    "tokens": [
-      {
-        "text": "bgc",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "blue-500",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
-    "classValue": "c-white fw-bold",
-    "colors": [
-      {
-        "color": "rgba(255, 255, 255, 1)",
-        "text": "white",
-      },
-    ],
-    "tokens": [
-      {
-        "text": "c",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "white",
-        "type": "maple-value",
-      },
-      {
-        "text": "fw",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "bold",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
-    "classValue": "c-gray-500 bgc-gray-100",
-    "colors": [
-      {
-        "color": "rgba(128, 128, 128, 1)",
-        "text": "gray-500",
-      },
-      {
-        "color": "rgba(228, 228, 228, 1)",
-        "text": "gray-100",
-      },
-    ],
-    "tokens": [
-      {
-        "text": "c",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "gray-500",
-        "type": "maple-value",
-      },
-      {
-        "text": "bgc",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "gray-100",
-        "type": "maple-value",
-      },
-    ],
-    "warnings": [],
-  },
-  {
-    "classValue": "variants",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "intent",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "primary",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "secondary",
+       ",
     "colors": [],
     "tokens": [],
     "warnings": [],
@@ -2950,7 +3016,9 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
 exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-twig.twig 1`] = `
 [
   {
-    "classValue": "bgc-green-500 ",
+    "classValue": "
+  bgc-green-500
+  ",
     "colors": [
       {
         "color": "rgba(0, 128, 0, 1)",
@@ -2974,7 +3042,8 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "",
+    "classValue": "
+",
     "colors": [],
     "tokens": [],
     "warnings": [],
@@ -3040,7 +3109,8 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "",
+    "classValue": "
+    ",
     "colors": [],
     "tokens": [],
     "warnings": [],
@@ -3094,7 +3164,9 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": " fw-bold",
+    "classValue": "
+    fw-bold
+  ",
     "colors": [],
     "tokens": [
       {

@@ -4,86 +4,68 @@ import {
   HOST_REGEX,
   SPECIFIC_CLASS_REGEX,
 } from '../../constants/regex';
-import {
-  extractStringLiterals,
-  findClosingQuote,
-  pushInstance,
-  shouldSkipMatch,
-} from '../../helpers/extractor.helper';
-import { ClassInstance } from '../LanguageService';
+import { findClosingQuote } from '../../helpers/extractor.helper';
+import { MapleRegion } from '../LanguageService';
 import { BaseLanguageService } from './BaseLanguageService';
 
 export class AngularLanguageService extends BaseLanguageService {
   languageIds = ['html', 'typescript'];
 
-  protected extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void {
-    for (const match of text.matchAll(ANGULAR_VUE_EXPR_REGEX)) {
-      if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
+  public collectRegions(text: string): Array<MapleRegion> {
+    // Note: the base attribute/opt-in regions are contributed by
+    // HtmlLanguageService in the same composite; this service adds only the
+    // Angular-specific constructs.
+    const regions: Array<MapleRegion> = [];
 
+    // Template expressions: [ngClass]="...", [class.x]="..."
+    for (const match of text.matchAll(ANGULAR_VUE_EXPR_REGEX)) {
       const quote = match[1];
       const exprStart = match.index + match[0].length;
       const closingQuoteIndex = findClosingQuote(text, exprStart, quote);
+      if (closingQuoteIndex === -1) continue;
 
-      if (closingQuoteIndex !== -1) {
-        const expr = text.substring(exprStart, closingQuoteIndex);
-        extractStringLiterals(
-          this,
-          expr,
-          exprStart,
-          text,
-          match.index,
-          instances,
-          disabledBlocks,
-          (val, off, txt, idx, literal) =>
-            this.extractAttributeClasses(
-              val,
-              off,
-              txt,
-              idx,
-              instances,
-              disabledBlocks,
-              literal?.rawDelimiter,
-            ),
-        );
-      }
+      regions.push({
+        start: exprStart,
+        end: closingQuoteIndex,
+        kind: 'expression',
+        anchor: match.index,
+        // Angular template expressions support neither template literals nor
+        // multi-line strings
+        allowMultilineLiterals: false,
+      });
     }
 
+    // Component decorators: host: { class: '...' }
     for (const match of text.matchAll(HOST_REGEX)) {
-      if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
-
       const hostObj = match[1];
       const hostStart = match.index + match[0].indexOf(hostObj);
 
       for (const hcMatch of hostObj.matchAll(HOST_CLASS_REGEX)) {
         const quoteIdx = hcMatch[0].indexOf(hcMatch[1]);
         const start = hostStart + hcMatch.index + quoteIdx + 1;
-        this.extractAttributeClasses(
-          hcMatch[2],
+        regions.push({
           start,
-          text,
-          match.index,
-          instances,
-          disabledBlocks,
-        );
+          end: start + hcMatch[2].length,
+          kind: 'class-text',
+          anchor: match.index,
+          // The class list lives inside a TS string literal
+          allowMultilineLiterals: false,
+        });
       }
     }
 
+    // Specific class bindings: [class.name]
     for (const match of text.matchAll(SPECIFIC_CLASS_REGEX)) {
-      if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
-
       const start = match.index + match[0].indexOf(match[1]);
-      pushInstance(
-        instances,
-        match[1],
+      regions.push({
         start,
-        text,
-        match.index,
-        disabledBlocks,
-      );
+        end: start + match[1].length,
+        kind: 'class-text',
+        anchor: match.index,
+        allowMultilineLiterals: false,
+      });
     }
+
+    return regions;
   }
 }

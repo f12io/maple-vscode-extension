@@ -42,6 +42,36 @@ export interface StringLiteralMatch {
   isInterpolated: boolean;
 }
 
+/**
+ * A document range that holds maple classes. This is the single source of
+ * truth for "where do maple strings live" — extraction, formatting, and every
+ * feature built on them consume the same regions.
+ */
+export interface MapleRegion {
+  start: number;
+  end: number;
+  /**
+   * `class-text`: the range is raw class text (a class attribute value).
+   * `expression`: the range is code whose string literals are maple
+   * (opt-in expressions, clsx/cva arguments, className={...}, :class="...").
+   */
+  kind: 'class-text' | 'expression';
+  /**
+   * Anchor offset of the construct that produced the region (attribute or
+   * call start). Used for tag-name lookup, disable-comment checks, and
+   * formatter indentation.
+   */
+  anchor: number;
+  /** Extract unquoted object keys as classes (clsx objects, :class objects) */
+  includeObjectKeys?: boolean;
+  /**
+   * False when the host syntax cannot hold multi-line string literals
+   * (e.g. Angular template expressions); the formatter then only applies
+   * single-line normalizations. Defaults to true.
+   */
+  allowMultilineLiterals?: boolean;
+}
+
 /** Callback invoked for each interpolated string found during extraction. */
 export type StringExtractionCallback = (
   value: string,
@@ -61,7 +91,11 @@ export interface Token {
 export interface ILanguageService {
   languageIds: Array<string>;
   extractClasses(text: string): Array<ClassInstance>;
-  isInsideClassAttribute(text: string, offset: number): boolean;
+  /**
+   * Reports every maple region in the document. Single implementation per
+   * language; extraction and formatting both consume it.
+   */
+  collectRegions(text: string): Array<MapleRegion>;
   tokenizeClassesWithIndices(str: string): Array<Token>;
   /**
    * Resolves source-escaped class text to what the framework actually renders

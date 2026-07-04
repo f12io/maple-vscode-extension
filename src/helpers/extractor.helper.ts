@@ -310,40 +310,6 @@ export function findOptInRegions(
   return results;
 }
 
-export function extractOptInStrings(
-  service: ILanguageService,
-  text: string,
-  instances: Array<ClassInstance>,
-  disabledBlocks: Array<{ start: number; end: number }> = [],
-  extractCallback?: StringExtractionCallback,
-) {
-  for (const region of findOptInRegions(service, text)) {
-    if (shouldSkipMatch(text, region.matchIndex, disabledBlocks)) continue;
-
-    for (const literal of region.literals) {
-      const value = text.substring(literal.contentStart, literal.contentEnd);
-      if (literal.isInterpolated) {
-        // Interpolated content goes through the language-specific extractor
-        extractCallback?.(
-          value,
-          literal.contentStart,
-          text,
-          region.matchIndex,
-          literal,
-        );
-      } else {
-        pushInstance(
-          instances,
-          value,
-          literal.contentStart,
-          text,
-          region.matchIndex,
-          disabledBlocks,
-        );
-      }
-    }
-  }
-}
 
 export function extractStringLiterals(
   service: ILanguageService,
@@ -377,75 +343,6 @@ export function extractStringLiterals(
   }
 }
 
-export function extractStringsFromBraces(
-  service: ILanguageService,
-  text: string,
-  startRegex: RegExp,
-  openChar: string,
-  closeChar: string,
-  instances: Array<ClassInstance>,
-  disabledBlocks: Array<{ start: number; end: number }> = [],
-  extractCallback?: StringExtractionCallback,
-) {
-  for (const match of text.matchAll(startRegex)) {
-    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
-
-    let braceCount = 1;
-    let i = match.index + match[0].length;
-    let inString = false;
-    let quoteChar = null;
-    let isEscaped = false;
-
-    while (i < text.length && braceCount > 0) {
-      const char = text[i];
-      if (inString) {
-        if (isEscaped) {
-          isEscaped = false;
-        } else if (char === '\\') {
-          isEscaped = true;
-        } else if (char === quoteChar) {
-          inString = false;
-        }
-      } else {
-        if (isQuote(char)) {
-          inString = true;
-          quoteChar = char;
-        } else if (char === openChar) {
-          braceCount++;
-        } else if (char === closeChar) {
-          braceCount--;
-        }
-      }
-      i++;
-    }
-
-    if (braceCount === 0) {
-      const expr = text.substring(match.index + match[0].length, i - 1);
-      const exprStart = match.index + match[0].length;
-
-      extractStringLiterals(
-        service,
-        expr,
-        exprStart,
-        text,
-        match.index,
-        instances,
-        disabledBlocks,
-        extractCallback,
-      );
-
-      // Extract unquoted object keys (e.g., { fx: true } after Prettier removes quotes)
-      extractUnquotedObjectKeys(
-        expr,
-        exprStart,
-        text,
-        match.index,
-        instances,
-        disabledBlocks,
-      );
-    }
-  }
-}
 
 export function getExactWordRangeAtPosition(
   document: any,

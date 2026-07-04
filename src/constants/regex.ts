@@ -141,30 +141,4 @@ export const OPT_IN_COMMENT_REGEX = /\/\*\s*maple\s*\*\//g;
 /** 8. Explicit opt-in comments for objects */
 export const OPT_IN_OBJECT_START_REGEX = /\/\*\s*maple\s*\*\/\s*\{/gi;
 
-// ============================================================================
-// Cursor Position Detection (isInsideClassAttribute)
-// ============================================================================
 
-/**
- * Regex to determine if the cursor is currently inside a class attribute.
- * Deconstructed for readability.
- */
-const ANY_STANDARD_OR_VUE_ATTR = `(?:${STANDARD_CLASS_ATTRS}|${ANGULAR_VUE_CLASS_ATTRS})`;
-const QUOTED_VAL = `\\s*=\\s*(["'])`;
-
-const HOST_CLASS_VAL = `host\\s*:\\s*\\{[^}]*(?:'class'|"class"|class)\\s*:\\s*(["'\`])`;
-const ANGULAR_SPECIFIC_CLASS_VAL = `\\[class\\.[^\\]=]*\\]\\s*=\\s*(["'])`;
-const SVELTE_SPECIFIC_CLASS_VAL = `class:[a-zA-Z0-9\\-\\@\\:]+\\s*=\\s*(["'])`;
-const REACT_TEMPLATE_LITERAL_VAL = `className\\s*=\\s*\\{\\s*(\`)`;
-
-export const IS_INSIDE_CLASS_ATTR_REGEX = new RegExp(
-  `${ANY_STANDARD_OR_VUE_ATTR}${QUOTED_VAL}|` +
-    `${HOST_CLASS_VAL}|` +
-    `${ANGULAR_SPECIFIC_CLASS_VAL}|` +
-    `${SVELTE_SPECIFIC_CLASS_VAL}|` +
-    REACT_TEMPLATE_LITERAL_VAL,
-  'gi',
-);
-
-export const IS_INSIDE_NO_QUOTE_CLASS_REGEX =
-  /(?:\[class\.|class:)([a-zA-Z0-9\-\@\:]*)$/i;

@@ -1,5 +1,4 @@
 import { skipStringLiteral } from '../../helpers/extractor.helper';
-import { ClassInstance } from '../LanguageService';
 import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
@@ -43,15 +42,6 @@ export class PhpLanguageService extends HtmlLanguageService {
       i++;
     }
     return -1;
-  }
-
-  protected extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void {
-    super.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
-    // Standard classes and PHP interpolations inside them are handled by superclass
   }
 
   public formatInterpolation(

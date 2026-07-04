@@ -3,60 +3,44 @@ import {
   SPECIFIC_CLASS_REGEX,
   UTILITY_FUNC_START_REGEX,
 } from '../../constants/regex';
-import {
-  extractStringsFromBraces,
-  pushInstance,
-  shouldSkipMatch,
-} from '../../helpers/extractor.helper';
-import { ClassInstance } from '../LanguageService';
+import { MapleRegion } from '../LanguageService';
 import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class SvelteLanguageService extends HtmlLanguageService {
   languageIds = ['svelte'];
 
-  protected extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void {
-    super.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
+  public collectRegions(text: string): Array<MapleRegion> {
+    const regions = super.collectRegions(text);
+
     // Svelte class directives: class:name="..."
     for (const match of text.matchAll(SPECIFIC_CLASS_REGEX)) {
-      if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
-
       const start = match.index + match[0].indexOf(match[1]);
-      pushInstance(
-        instances,
-        match[1],
+      regions.push({
         start,
-        text,
-        match.index,
-        disabledBlocks,
-      );
+        end: start + match[1].length,
+        kind: 'class-text',
+        anchor: match.index,
+        allowMultilineLiterals: false,
+      });
     }
 
-    // Svelte class expressions: class={...}
-    extractStringsFromBraces(
-      this,
-      text,
-      JSX_EXPR_START_REGEX,
-      '{',
-      '}',
-      instances,
-      disabledBlocks,
-    );
-
-    // Utility functions: clsx(...), classNames(...), cva(...)
-    extractStringsFromBraces(
-      this,
-      text,
-      UTILITY_FUNC_START_REGEX,
-      '(',
-      ')',
-      instances,
-      disabledBlocks,
-    );
+    // Svelte class expressions class={...} and clsx/classNames/cva calls
+    for (const regex of [JSX_EXPR_START_REGEX, UTILITY_FUNC_START_REGEX]) {
+      for (const match of text.matchAll(regex)) {
+        const openIndex = match.index + match[0].length - 1;
+        const end = this.parseBalancedExpression(text, openIndex);
+        if (end === -1) continue;
+        regions.push({
+          start: openIndex + 1,
+          end: end - 1,
+          kind: 'expression',
+          anchor: match.index,
+          includeObjectKeys: true,
+        });
+      }
+    }
+    return regions;
   }
 
   protected parseInterpolation(

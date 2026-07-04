@@ -1,16 +1,15 @@
 import {
-  IS_INSIDE_CLASS_ATTR_REGEX,
+  MAPLE_INTERPOLATION_REGEX,
   OPT_IN_OBJECT_START_REGEX,
   STANDARD_ATTR_REGEX,
-  IS_INSIDE_NO_QUOTE_CLASS_REGEX,
-  MAPLE_INTERPOLATION_REGEX,
 } from '../../constants/regex';
 import {
-  extractOptInStrings,
   extractStringLiterals,
-  extractStringsFromBraces,
+  extractUnquotedObjectKeys,
   findClosingQuote,
+  findOptInRegions,
   getDisabledBlocks,
+  MAX_SCAN_LENGTH,
   pushInstance,
   shouldSkipMatch,
   skipStringLiteral,
@@ -19,16 +18,10 @@ import {
   ClassInstance,
   dedupeInstancesByStart,
   ILanguageService,
+  MapleRegion,
   StringLiteralMatch,
   Token,
 } from '../LanguageService';
-
-/**
- * How far back from the cursor to search for the enclosing class attribute.
- * Bounds the per-keystroke completion cost in huge documents; attributes
- * longer than this won't be detected.
- */
-const ATTRIBUTE_LOOKBEHIND_CHARS = 2000;
 
 export interface InterpolationMatch {
   innerExprStart: number;
@@ -63,43 +56,148 @@ export abstract class BaseLanguageService implements ILanguageService {
     const disabledBlocks = getDisabledBlocks(text);
     const instances: Array<ClassInstance> = [];
 
-    this.extractStandardAttributes(text, instances, disabledBlocks);
-    this.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
-    this.extractOptInComments(text, instances, disabledBlocks);
+    for (const region of this.collectRegions(text)) {
+      if (shouldSkipMatch(text, region.anchor, disabledBlocks)) continue;
 
-    return dedupeInstancesByStart(instances);
-  }
-
-  protected extractStandardAttributes(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ) {
-    for (const match of text.matchAll(STANDARD_ATTR_REGEX)) {
-      if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
-      const fullMatch = match[0];
-      const quote = match[1];
-      const attrStart = match.index + fullMatch.indexOf(quote) + 1;
-      const closingQuoteIndex = findClosingQuote(text, attrStart, quote);
-
-      if (closingQuoteIndex !== -1) {
-        if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
-
-        const innerString = text.substring(attrStart, closingQuoteIndex);
-        const contentStart = attrStart;
-        const contentEnd = contentStart + innerString.length;
-        const value = text.substring(contentStart, contentEnd);
-
+      if (region.kind === 'class-text') {
         this.extractAttributeClasses(
-          value,
-          contentStart,
+          text.substring(region.start, region.end),
+          region.start,
           text,
-          match.index,
+          region.anchor,
           instances,
           disabledBlocks,
         );
+      } else {
+        this.extractExpressionRegion(text, region, instances, disabledBlocks);
       }
     }
+
+    // Canonical document order, independent of region discovery order
+    return dedupeInstancesByStart(instances).sort((a, b) => a.start - b.start);
+  }
+
+  /**
+   * Reports every maple region this language knows about. Subclasses add
+   * framework-specific regions on top of the base set (class attributes and
+   * opt-in comments).
+   */
+  public collectRegions(text: string): Array<MapleRegion> {
+    const regions: Array<MapleRegion> = [];
+
+    // Standard class attributes: class="...", className='...'
+    for (const match of text.matchAll(STANDARD_ATTR_REGEX)) {
+      const quote = match[1];
+      const attrStart = match.index + match[0].indexOf(quote) + 1;
+      const closingQuoteIndex = findClosingQuote(text, attrStart, quote);
+      if (closingQuoteIndex === -1) continue;
+
+      regions.push({
+        start: attrStart,
+        end: closingQuoteIndex,
+        kind: 'class-text',
+        anchor: match.index,
+      });
+    }
+
+    // Opt-in expressions: /* maple */ <expression>
+    for (const optIn of findOptInRegions(this, text)) {
+      regions.push({
+        start: optIn.regionStart,
+        end: optIn.regionEnd,
+        kind: 'expression',
+        anchor: optIn.matchIndex,
+      });
+    }
+
+    // Opt-in objects: /* maple */ { 'c-red': cond, p2: true }
+    for (const match of text.matchAll(OPT_IN_OBJECT_START_REGEX)) {
+      const openBrace = match.index + match[0].length - 1;
+      const end = this.parseBalancedExpression(text, openBrace);
+      if (end === -1) continue;
+
+      regions.push({
+        start: openBrace + 1,
+        end: end - 1,
+        kind: 'expression',
+        anchor: match.index,
+        includeObjectKeys: true,
+      });
+    }
+
+    return regions;
+  }
+
+  /**
+   * Extracts maple classes from an `expression` region: every string literal
+   * is class text (interpolated ones recurse through the language-specific
+   * extractor), plus unquoted object keys when the region asks for them.
+   */
+  protected extractExpressionRegion(
+    text: string,
+    region: MapleRegion,
+    instances: Array<ClassInstance>,
+    disabledBlocks: Array<{ start: number; end: number }>,
+  ) {
+    const expr = text.substring(region.start, region.end);
+
+    extractStringLiterals(
+      this,
+      expr,
+      region.start,
+      text,
+      region.anchor,
+      instances,
+      disabledBlocks,
+      (val, off, txt, idx, literal) =>
+        this.extractAttributeClasses(
+          val,
+          off,
+          txt,
+          idx,
+          instances,
+          disabledBlocks,
+          literal?.rawDelimiter,
+        ),
+    );
+
+    if (region.includeObjectKeys) {
+      extractUnquotedObjectKeys(
+        expr,
+        region.start,
+        text,
+        region.anchor,
+        instances,
+        disabledBlocks,
+      );
+    }
+  }
+
+  /**
+   * Scans a bracketed region starting at `openIndex`, skipping string
+   * literals via `matchStringLiteral` (so template literals and interpolated
+   * strings are opaque). Returns the index after the matching close, or -1.
+   */
+  protected parseBalancedExpression(text: string, openIndex: number): number {
+    const open = text[openIndex];
+    const close = open === '(' ? ')' : open === '[' ? ']' : '}';
+    let depth = 1;
+    let i = openIndex + 1;
+    const limit = Math.min(text.length, openIndex + MAX_SCAN_LENGTH);
+    while (i < limit) {
+      const literal = this.matchStringLiteral(text, i);
+      if (literal) {
+        i = literal.endIndex;
+        continue;
+      }
+      if (text[i] === open) depth++;
+      else if (text[i] === close) {
+        depth--;
+        if (depth === 0) return i + 1;
+      }
+      i++;
+    }
+    return -1;
   }
 
   protected extractAttributeClasses(
@@ -320,92 +418,6 @@ export abstract class BaseLanguageService implements ILanguageService {
     }
 
     return tokens;
-  }
-
-  protected extractOptInComments(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ) {
-    extractOptInStrings(
-      this,
-      text,
-      instances,
-      disabledBlocks,
-      (val, off, txt, idx, literal) =>
-        this.extractAttributeClasses(
-          val,
-          off,
-          txt,
-          idx,
-          instances,
-          disabledBlocks,
-          literal?.rawDelimiter,
-        ),
-    );
-    extractStringsFromBraces(
-      this,
-      text,
-      OPT_IN_OBJECT_START_REGEX,
-      '{',
-      '}',
-      instances,
-      disabledBlocks,
-      (val, off, txt, idx, literal) =>
-        this.extractAttributeClasses(
-          val,
-          off,
-          txt,
-          idx,
-          instances,
-          disabledBlocks,
-          literal?.rawDelimiter,
-        ),
-    );
-  }
-
-  protected abstract extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void;
-
-  public isInsideClassAttribute(documentText: string, offset: number): boolean {
-    // Look backward a bounded distance to find the last attribute start
-    const prefix = documentText.substring(
-      Math.max(0, offset - ATTRIBUTE_LOOKBEHIND_CHARS),
-      offset,
-    );
-
-    let lastMatch = null;
-    for (const match of prefix.matchAll(IS_INSIDE_CLASS_ATTR_REGEX)) {
-      lastMatch = match;
-    }
-
-    if (!lastMatch) {
-      // Check for Angular/Svelte bindings without quotes
-      const noQuoteRegex = IS_INSIDE_NO_QUOTE_CLASS_REGEX;
-      if (noQuoteRegex.test(prefix)) {
-        return true;
-      }
-      return false;
-    }
-
-    // The quote character used or backtick if React template literal
-    const quote =
-      lastMatch[1] || lastMatch[2] || lastMatch[3] || lastMatch[4] || '\`';
-
-    // The string contents from the quote to the offset
-    const insideString = prefix.substring(
-      lastMatch.index + lastMatch[0].lastIndexOf(quote) + 1,
-    );
-
-    // If the insideString contains the matching quote (properly closed), it means the attribute was closed before the cursor
-    if (findClosingQuote(insideString, 0, quote) !== -1) {
-      return false;
-    }
-
-    return true;
   }
 
   public formatInterpolation(

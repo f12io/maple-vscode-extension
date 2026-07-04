@@ -1,6 +1,5 @@
 import { UTILITY_FUNC_START_REGEX } from '../../constants/regex';
-import { extractStringsFromBraces } from '../../helpers/extractor.helper';
-import { ClassInstance } from '../LanguageService';
+import { MapleRegion } from '../LanguageService';
 import {
   BaseLanguageService,
   InterpolationContext,
@@ -10,32 +9,22 @@ import {
 export class JavascriptLanguageService extends BaseLanguageService {
   languageIds = ['javascript', 'typescript'];
 
-  protected extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void {
-    this.extractStandardAttributes(text, instances, disabledBlocks);
-    // Utility functions: clsx(...), classNames(...), cva(...)
-    extractStringsFromBraces(
-      this,
-      text,
-      UTILITY_FUNC_START_REGEX,
-      '(',
-      ')',
-      instances,
-      disabledBlocks,
-      (val, off, txt, idx, literal) =>
-        this.extractAttributeClasses(
-          val,
-          off,
-          txt,
-          idx,
-          instances,
-          disabledBlocks,
-          literal?.rawDelimiter,
-        ),
-    );
+  public collectRegions(text: string): Array<MapleRegion> {
+    const regions = super.collectRegions(text);
+    // Arguments of clsx(...), classNames(...), cva(...)
+    for (const match of text.matchAll(UTILITY_FUNC_START_REGEX)) {
+      const openParen = match.index + match[0].length - 1;
+      const end = this.parseBalancedExpression(text, openParen);
+      if (end === -1) continue;
+      regions.push({
+        start: openParen + 1,
+        end: end - 1,
+        kind: 'expression',
+        anchor: match.index,
+        includeObjectKeys: true,
+      });
+    }
+    return regions;
   }
 
   protected parseInterpolation(

@@ -31,14 +31,13 @@ class CompositeLanguageService implements ILanguageService {
       instances.push(...service.extractClasses(text));
     }
 
-    return dedupeInstancesByStart(instances);
+    // Canonical document order, independent of service order
+    return dedupeInstancesByStart(instances).sort((a, b) => a.start - b.start);
   }
 
-  isInsideClassAttribute(text: string, offset: number): boolean {
-    for (const service of this.services) {
-      if (service.isInsideClassAttribute(text, offset)) return true;
-    }
-    return false;
+  collectRegions(text: string) {
+    // Regions come from every service handling this language, like extraction
+    return this.services.flatMap((service) => service.collectRegions(text));
   }
 
   getRenderedClassText(word: string): string {
@@ -60,6 +59,7 @@ class CompositeLanguageService implements ILanguageService {
       index,
     );
   }
+
 
   formatExpression(
     expr: string,

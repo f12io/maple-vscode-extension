@@ -1,5 +1,5 @@
 import { skipStringLiteral } from '../../helpers/extractor.helper';
-import { ClassInstance, StringLiteralMatch } from '../LanguageService';
+import { StringLiteralMatch } from '../LanguageService';
 import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
@@ -8,15 +8,6 @@ const MEMBER_ACCESS_REGEX = /^\.\w+/;
 
 export class RazorLanguageService extends HtmlLanguageService {
   languageIds = ['razor', 'aspnetcorerazor'];
-
-  protected extractFrameworkSpecificClasses(
-    text: string,
-    instances: Array<ClassInstance>,
-    disabledBlocks: Array<{ start: number; end: number }>,
-  ): void {
-    super.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
-    // Standard classes and Razor interpolations inside them are handled by superclass
-  }
 
   public getRenderedClassText(word: string): string {
     // Razor renders the @@ escape as a single literal @

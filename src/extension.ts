@@ -5,22 +5,36 @@ import {
   isExtensionExplicitlyDisabled,
   isFeatureEnabled,
 } from './helpers/config';
+import { initLogger } from './helpers/logger';
 import { MapleColorProvider } from './providers/ColorProvider';
 import { MapleCompletionProvider } from './providers/CompletionProvider';
 import { DecorationsManager } from './providers/DecorationsManager';
-import { subscribeToDocumentChanges } from './providers/DiagnosticsProvider';
+import {
+  refreshDiagnostics,
+  subscribeToDocumentChanges,
+} from './providers/DiagnosticsProvider';
 import { registerFormatterProvider } from './providers/FormatterProvider';
 import { MapleHoverProvider } from './providers/HoverProvider';
 
-export function activate(context: vscode.ExtensionContext) {
-  console.log(
-    'Congratulations, your extension "maple-vscode-extension" is now active!',
-  );
-  vscode.window.showInformationMessage('Maple Extension is now Active!');
+const COMPLETION_TRIGGER_CHARACTERS = [
+  '"',
+  "'",
+  ' ',
+  '-',
+  '|',
+  '/',
+  '@',
+  ';',
+  ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(
+    '',
+  ),
+];
 
+export function activate(context: vscode.ExtensionContext) {
+  initLogger(context);
   AliasCache.init(context);
 
-  const documentSelector: vscode.DocumentSelector = SUPPORTED_LANGUAGES;
+  const documentSelector: ReadonlyArray<string> = SUPPORTED_LANGUAGES;
 
   context.subscriptions.push(
     vscode.languages.registerHoverProvider(
@@ -29,16 +43,11 @@ export function activate(context: vscode.ExtensionContext) {
     ),
   );
 
-  const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(
-    '',
-  );
-  const numbers = '0123456789'.split('');
-
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
       documentSelector,
       new MapleCompletionProvider(),
-      ...['"', "'", ' ', '-', '|', '/', '@', ';', ...letters, ...numbers], // Trigger characters
+      ...COMPLETION_TRIGGER_CHARACTERS,
     ),
   );
 
@@ -69,28 +78,26 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Initial registration
   updateColorProvider();
-  registerFormatterProvider(context, documentSelector as Array<string>);
+  registerFormatterProvider(context, documentSelector);
 
-  const decorationsManager = new DecorationsManager(
-    context,
-    documentSelector as Array<string>,
-  );
+  const decorationsManager = new DecorationsManager(context, documentSelector);
   context.subscriptions.push(decorationsManager);
 
   const mapleDiagnostics = vscode.languages.createDiagnosticCollection('maple');
   context.subscriptions.push(mapleDiagnostics);
   subscribeToDocumentChanges(context, mapleDiagnostics);
+
+  function refreshVisibleEditors() {
+    for (const editor of vscode.window.visibleTextEditors) {
+      refreshDiagnostics(editor.document, mapleDiagnostics);
+      decorationsManager.updateDecorations(editor);
+    }
+  }
+
   context.subscriptions.push(
     AliasCache.onDidUpdateAliases.event(() => {
       if (isExtensionExplicitlyDisabled()) return;
-      for (const editor of vscode.window.visibleTextEditors) {
-        void import('./providers/DiagnosticsProvider').then(
-          ({ refreshDiagnostics }) => {
-            refreshDiagnostics(editor.document, mapleDiagnostics);
-          },
-        );
-        decorationsManager.updateDecorations(editor);
-      }
+      refreshVisibleEditors();
     }),
   );
   context.subscriptions.push(
@@ -100,16 +107,7 @@ export function activate(context: vscode.ExtensionContext) {
         e.affectsConfiguration('maple.features')
       ) {
         updateColorProvider();
-
-        // Refresh diagnostics and highlighting for all visible editors
-        for (const editor of vscode.window.visibleTextEditors) {
-          void import('./providers/DiagnosticsProvider').then(
-            ({ refreshDiagnostics }) => {
-              refreshDiagnostics(editor.document, mapleDiagnostics);
-            },
-          );
-          decorationsManager.updateDecorations(editor);
-        }
+        refreshVisibleEditors();
       }
     }),
   );

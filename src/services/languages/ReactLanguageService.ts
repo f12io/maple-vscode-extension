@@ -13,13 +13,14 @@ export class ReactLanguageService extends JavascriptLanguageService {
   ): void {
     // React / Solid JSX expressions: className={...}, class={...}, classList={...}
     extractStringsFromBraces(
+      this,
       text,
       JSX_EXPR_START_REGEX,
       '{',
       '}',
       instances,
       disabledBlocks,
-      (val: string, off: number, txt: string, idx: number) =>
+      (val, off, txt, idx, literal) =>
         this.extractAttributeClasses(
           val,
           off,
@@ -27,6 +28,7 @@ export class ReactLanguageService extends JavascriptLanguageService {
           idx,
           instances,
           disabledBlocks,
+          literal?.rawDelimiter,
         ),
     );
 

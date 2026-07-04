@@ -1,10 +1,11 @@
 import { UTILITY_FUNC_START_REGEX } from '../../constants/regex';
-import {
-  extractStringsFromBraces,
-  parseBalancedCharacters,
-} from '../../helpers/extractor.helper';
+import { extractStringsFromBraces } from '../../helpers/extractor.helper';
 import { ClassInstance } from '../LanguageService';
-import { BaseLanguageService, InterpolationMatch } from './BaseLanguageService';
+import {
+  BaseLanguageService,
+  InterpolationContext,
+  InterpolationMatch,
+} from './BaseLanguageService';
 
 export class JavascriptLanguageService extends BaseLanguageService {
   languageIds = ['javascript', 'typescript'];
@@ -17,13 +18,14 @@ export class JavascriptLanguageService extends BaseLanguageService {
     this.extractStandardAttributes(text, instances, disabledBlocks);
     // Utility functions: clsx(...), classNames(...), cva(...)
     extractStringsFromBraces(
+      this,
       text,
       UTILITY_FUNC_START_REGEX,
       '(',
       ')',
       instances,
       disabledBlocks,
-      (val: string, off: number, txt: string, idx: number) =>
+      (val, off, txt, idx, literal) =>
         this.extractAttributeClasses(
           val,
           off,
@@ -31,6 +33,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
           idx,
           instances,
           disabledBlocks,
+          literal?.rawDelimiter,
         ),
     );
   }
@@ -38,10 +41,11 @@ export class JavascriptLanguageService extends BaseLanguageService {
   protected parseInterpolation(
     value: string,
     index: number,
+    context?: InterpolationContext,
   ): InterpolationMatch | undefined {
     // JavaScript template literals: ${...}
     if (value.substring(index, index + 2) === '${') {
-      const end = parseBalancedCharacters(value, index + 2, '{', '}');
+      const end = this.parseBalanced(value, index + 1);
       if (end !== -1) {
         return {
           innerExprStart: index + 2,
@@ -50,37 +54,12 @@ export class JavascriptLanguageService extends BaseLanguageService {
         };
       }
     }
-    return super.parseInterpolation(value, index);
+    return super.parseInterpolation(value, index, context);
   }
 
   protected skipStringAt(expr: string, index: number): number {
     if (expr[index] === '`') {
-      let j = index + 1;
-      while (j < expr.length) {
-        if (expr[j] === '\\') {
-          j += 2;
-          continue;
-        }
-        if (expr[j] === '$' && expr[j + 1] === '{') {
-          j += 2;
-          let braceDepth = 1;
-          while (j < expr.length && braceDepth > 0) {
-            const se = this.skipStringAt(expr, j);
-            if (se > j) {
-              j = se;
-              continue;
-            }
-            if (expr[j] === '{') braceDepth++;
-            else if (expr[j] === '}') braceDepth--;
-            if (braceDepth > 0) j++;
-          }
-          if (j < expr.length) j++; // skip closing }
-          continue;
-        }
-        if (expr[j] === '`') return j + 1;
-        j++;
-      }
-      return expr.length;
+      return this.skipTemplateLiteral(expr, index);
     }
     return super.skipStringAt(expr, index);
   }
@@ -104,7 +83,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
         formatClassesFn,
       );
     }
-    const end = parseBalancedCharacters(cls, startIndex + 2, '{', '}');
+    const end = this.parseBalanced(cls, startIndex + 1);
     if (end === -1) {
       return super.formatInterpolation(
         cls,
@@ -117,8 +96,14 @@ export class JavascriptLanguageService extends BaseLanguageService {
     const prefix = cls.substring(0, startIndex);
     const suffix = cls.substring(end);
     const innerExpr = cls.substring(startIndex + 2, end - 1);
-    const ternary = this.parseTernaryArms(innerExpr);
-    if (!ternary) {
+
+    const formattedExpr = this.formatExpression(
+      innerExpr,
+      baseIndent,
+      maxClassesPerLine,
+      formatClassesFn,
+    );
+    if (formattedExpr === undefined) {
       return super.formatInterpolation(
         cls,
         baseIndent,
@@ -127,7 +112,23 @@ export class JavascriptLanguageService extends BaseLanguageService {
       );
     }
 
-    // Check if arms are template literals
+    return prefix + '${' + formattedExpr + '}' + suffix;
+  }
+
+  public formatExpression(
+    expr: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string | undefined {
+    const ternary = this.parseTernaryArms(expr);
+    if (!ternary) return undefined;
+
+    // Only ternaries with template-literal arms can hold multi-line output
     const consequentStr = ternary.consequent.trim();
     const alternateStr = ternary.alternate.trim();
 
@@ -137,12 +138,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
       !alternateStr.startsWith('`') ||
       !alternateStr.endsWith('`')
     ) {
-      return super.formatInterpolation(
-        cls,
-        baseIndent,
-        maxClassesPerLine,
-        formatClassesFn,
-      );
+      return undefined;
     }
 
     const consequentContent = consequentStr.slice(1, -1);
@@ -163,15 +159,12 @@ export class JavascriptLanguageService extends BaseLanguageService {
     // Always return the reconstructed ternary to enforce consistent spacing
 
     return (
-      prefix +
-      '${' +
       ternary.condition +
       ' ? `' +
       formattedConsequent +
       '` : `' +
       formattedAlternate +
-      '`}' +
-      suffix
+      '`'
     );
   }
 }

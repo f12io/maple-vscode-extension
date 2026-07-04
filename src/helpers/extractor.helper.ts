@@ -1,11 +1,16 @@
-import { ClassInstance } from '../services/LanguageService';
+import {
+  ClassInstance,
+  ILanguageService,
+  StringExtractionCallback,
+  StringLiteralMatch,
+} from '../services/LanguageService';
 
 import {
   DISABLE_REGEX,
   ENABLE_REGEX,
   MAPLE_CLASS_REGEX_NON_GLOBAL,
   OBJECT_KEY_REGEX,
-  OPT_IN_STRING_REGEX,
+  OPT_IN_COMMENT_REGEX,
   START_COMMENT_STAR_REGEX,
   START_TAG_NAME_REGEX,
   TOKEN_SPLIT_REGEX,
@@ -13,6 +18,36 @@ import {
 
 export function isQuote(char: string): boolean {
   return char === '"' || char === "'" || char === '`';
+}
+
+/**
+ * Upper bound on how far a single scan may advance before giving up.
+ * Guards every hand-rolled scanner against runaway scans on malformed input
+ * (e.g. an unterminated attribute in a huge minified file).
+ */
+export const MAX_SCAN_LENGTH = 5000;
+
+/**
+ * Skips a quoted string literal. `index` must hold the opening quote (`'` or
+ * `"`); backslash escapes are honored, so an escaped quote does not close the
+ * string. Returns the index just after the closing quote, or the scan bound
+ * when the string is unterminated.
+ */
+export function skipStringLiteral(text: string, index: number): number {
+  const quote = text[index];
+  const limit = Math.min(text.length, index + MAX_SCAN_LENGTH);
+  let i = index + 1;
+  while (i < limit) {
+    if (text[i] === '\\') {
+      i += 2;
+      continue;
+    }
+    if (text[i] === quote) {
+      return i + 1;
+    }
+    i++;
+  }
+  return limit;
 }
 
 export function findClosingQuote(
@@ -33,6 +68,14 @@ export function findClosingQuote(
       continue;
     }
 
+    if (parenDepth > 0 && (char === '"' || char === "'")) {
+      // Inside a Razor @(...) expression a quote starts a C# string literal,
+      // which may legally contain parens, braces, or the attribute's own
+      // quote char. Skip it entirely.
+      i = skipStringLiteral(text, i);
+      continue;
+    }
+
     if (char === '(' && prevChar === '@') {
       parenDepth++;
     } else if (char === '(' && parenDepth > 0) {
@@ -49,7 +92,7 @@ export function findClosingQuote(
       }
     }
 
-    if (i - startIndex > 5000) {
+    if (i - startIndex > MAX_SCAN_LENGTH) {
       return -1; // safety timeout
     }
 
@@ -181,247 +224,168 @@ export function extractUnquotedObjectKeys(
   }
 }
 
+export interface OptInRegion {
+  /** Index of the opt-in comment match */
+  matchIndex: number;
+  /** Start of the opted-in expression (first non-whitespace after comment) */
+  regionStart: number;
+  /** End of the opted-in expression (exclusive of the terminator) */
+  regionEnd: number;
+  /** Every string literal found in the region, in document order */
+  literals: Array<StringLiteralMatch>;
+}
+
+/**
+ * Locates all string literals opted in by a maple comment. The comment marks
+ * the whole following expression — like a class attribute, every string
+ * literal in it is maple (ternary arms, concatenation parts, ...). String
+ * boundaries are delegated to the language service, so each language's
+ * string grammar lives in exactly one place.
+ *
+ * The region ends at a `;` or `,` at bracket depth 0, at a closing bracket
+ * that was never opened inside the region, or at a plain assignment `=`
+ * (guarding against swallowing the next statement in semicolon-less code;
+ * comparison/arrow operators like `==`, `=>`, `<=` do not terminate).
+ */
+export function findOptInRegions(
+  service: ILanguageService,
+  text: string,
+): Array<OptInRegion> {
+  const results: Array<OptInRegion> = [];
+  let currentEnd = 0;
+
+  for (const match of text.matchAll(OPT_IN_COMMENT_REGEX)) {
+    if (match.index < currentEnd) continue;
+
+    let i = match.index + match[0].length;
+    while (i < text.length && text[i].trim() === '') i++;
+
+    // Objects (/* maple */ { ... }) are handled by the object opt-in path
+    if (text[i] === '{') continue;
+
+    const regionStart = i;
+    const regionLimit = Math.min(text.length, i + MAX_SCAN_LENGTH);
+    const literals: Array<StringLiteralMatch> = [];
+    let depth = 0;
+
+    while (i < regionLimit) {
+      const literal = service.matchStringLiteral(text, i);
+      if (literal) {
+        literals.push(literal);
+        i = literal.endIndex;
+        continue;
+      }
+
+      const ch = text[i];
+      if (ch === '(' || ch === '[' || ch === '{') {
+        depth++;
+      } else if (ch === ')' || ch === ']' || ch === '}') {
+        if (depth === 0) break; // closes a bracket opened before the region
+        depth--;
+      } else if (depth === 0 && (ch === ';' || ch === ',')) {
+        break;
+      } else if (
+        depth === 0 &&
+        ch === '=' &&
+        text[i + 1] !== '=' &&
+        text[i + 1] !== '>' &&
+        !'=<>!+-*/%&|^'.includes(text[i - 1] ?? '')
+      ) {
+        break; // plain assignment: the next statement has begun
+      }
+      i++;
+    }
+
+    if (literals.length > 0) {
+      results.push({
+        matchIndex: match.index,
+        regionStart,
+        regionEnd: i,
+        literals,
+      });
+    }
+    currentEnd = i;
+  }
+
+  return results;
+}
+
 export function extractOptInStrings(
+  service: ILanguageService,
   text: string,
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
-  extractCallback?: (
-    value: string,
-    offset: number,
-    text: string,
-    matchIndex: number,
-  ) => void,
+  extractCallback?: StringExtractionCallback,
 ) {
-  let currentEnd = 0;
-  for (const match of text.matchAll(OPT_IN_STRING_REGEX)) {
-    if (match.index < currentEnd) continue;
-    if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
+  for (const region of findOptInRegions(service, text)) {
+    if (shouldSkipMatch(text, region.matchIndex, disabledBlocks)) continue;
 
-    const quoteChar = match[1];
-    let j = match.index + match[0].length;
-    let braceDepth = 0;
-    let inString = false;
-    let innerQuoteChar = null;
-    let isEscaped = false;
-
-    const contentStart = j;
-    let matchEnd = -1;
-
-    while (j < text.length) {
-      const char = text[j];
-
-      if (isEscaped) {
-        isEscaped = false;
-        j++;
-        continue;
-      }
-
-      if (char === '\\') {
-        isEscaped = true;
-        j++;
-        continue;
-      }
-
-      if (quoteChar === '`') {
-        if (braceDepth === 0) {
-          if (char === '$' && text[j + 1] === '{') {
-            braceDepth++;
-            j += 2;
-            continue;
-          } else if (char === '`') {
-            matchEnd = j;
-            break;
-          }
-        } else {
-          if (inString) {
-            if (char === innerQuoteChar) {
-              inString = false;
-            }
-          } else {
-            if (isQuote(char)) {
-              inString = true;
-              innerQuoteChar = char;
-            } else if (char === '{') {
-              braceDepth++;
-            } else if (char === '}') {
-              braceDepth--;
-            }
-          }
-        }
-      } else {
-        if (char === quoteChar) {
-          matchEnd = j;
-          break;
-        }
-      }
-      j++;
-    }
-
-    if (matchEnd !== -1) {
-      const value = text.substring(contentStart, matchEnd);
-      if (quoteChar === '`') {
-        if (extractCallback) {
-          extractCallback(value, contentStart, text, match.index);
-        }
+    for (const literal of region.literals) {
+      const value = text.substring(literal.contentStart, literal.contentEnd);
+      if (literal.isInterpolated) {
+        // Interpolated content goes through the language-specific extractor
+        extractCallback?.(
+          value,
+          literal.contentStart,
+          text,
+          region.matchIndex,
+          literal,
+        );
       } else {
         pushInstance(
           instances,
           value,
-          contentStart,
+          literal.contentStart,
           text,
-          match.index,
+          region.matchIndex,
           disabledBlocks,
         );
       }
-      currentEnd = matchEnd + 1;
     }
   }
 }
 
-export function parseBalancedCharacters(
-  value: string,
-  startIndex: number,
-  openChar: string,
-  closeChar: string,
-): number {
-  let count = 1;
-  let i = startIndex;
-  while (i < value.length && count > 0) {
-    if (value[i] === openChar) count++;
-    else if (value[i] === closeChar) count--;
-    i++;
-  }
-  if (count === 0) return i;
-  return -1;
-}
-
 export function extractStringLiterals(
+  service: ILanguageService,
   expr: string,
   exprStart: number,
   text: string,
   matchIndex: number,
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
-  extractCallback?: (
-    value: string,
-    offset: number,
-    text: string,
-    matchIndex: number,
-    isCSharpInterpolated: boolean,
-  ) => void,
+  extractCallback?: StringExtractionCallback,
 ) {
   let j = 0;
 
   while (j < expr.length) {
-    const char = expr[j];
-    if (isQuote(char)) {
-      const quoteChar = char;
-      const start = exprStart + j + 1;
-      let isCSharpInterpolated = false;
-      if (j > 0 && expr[j - 1] === '$') {
-        isCSharpInterpolated = true;
-      }
-      let isEscaped = false;
-      let braceDepth = 0;
-      let matchEnd = -1;
-      let inInnerString = false;
-      let innerQuoteChar: string | null = null;
+    const literal = service.matchStringLiteral(expr, j);
+    if (!literal) {
       j++;
-
-      while (j < expr.length) {
-        const c = expr[j];
-        if (isEscaped) {
-          isEscaped = false;
-          j++;
-          continue;
-        }
-        if (c === '\\') {
-          isEscaped = true;
-          j++;
-          continue;
-        }
-
-        if (quoteChar === '`' || isCSharpInterpolated) {
-          if (braceDepth === 0) {
-            if (quoteChar === '`' && c === '$' && expr[j + 1] === '{') {
-              braceDepth++;
-              j += 2;
-              continue;
-            } else if (isCSharpInterpolated && c === '{') {
-              braceDepth++;
-              j++;
-              continue;
-            } else if (c === quoteChar) {
-              matchEnd = j;
-              break;
-            }
-          } else {
-            if (inInnerString) {
-              if (c === innerQuoteChar) {
-                inInnerString = false;
-              }
-            } else {
-              if (isQuote(c)) {
-                inInnerString = true;
-                innerQuoteChar = c;
-              } else if (c === '{') {
-                braceDepth++;
-              } else if (c === '}') {
-                braceDepth--;
-              }
-            }
-          }
-        } else {
-          if (c === quoteChar) {
-            matchEnd = j;
-            break;
-          }
-        }
-        j++;
-      }
-
-      if (matchEnd !== -1) {
-        const valueStr = expr.substring(start - exprStart, matchEnd);
-        if (quoteChar === '`' || isCSharpInterpolated) {
-          if (extractCallback) {
-            extractCallback(
-              valueStr,
-              start,
-              text,
-              matchIndex,
-              isCSharpInterpolated,
-            );
-          }
-        } else {
-          pushInstance(
-            instances,
-            valueStr,
-            start,
-            text,
-            matchIndex,
-            disabledBlocks,
-          );
-        }
-      }
+      continue;
     }
-    j++;
+
+    const value = expr.substring(literal.contentStart, literal.contentEnd);
+    const start = exprStart + literal.contentStart;
+
+    if (literal.isInterpolated) {
+      extractCallback?.(value, start, text, matchIndex, literal);
+    } else {
+      pushInstance(instances, value, start, text, matchIndex, disabledBlocks);
+    }
+
+    j = literal.endIndex;
   }
 }
 
 export function extractStringsFromBraces(
+  service: ILanguageService,
   text: string,
   startRegex: RegExp,
   openChar: string,
   closeChar: string,
   instances: Array<ClassInstance>,
   disabledBlocks: Array<{ start: number; end: number }> = [],
-  extractCallback?: (
-    value: string,
-    offset: number,
-    text: string,
-    matchIndex: number,
-    isCSharpInterpolated: boolean,
-  ) => void,
+  extractCallback?: StringExtractionCallback,
 ) {
   for (const match of text.matchAll(startRegex)) {
     if (shouldSkipMatch(text, match.index, disabledBlocks)) continue;
@@ -460,6 +424,7 @@ export function extractStringsFromBraces(
       const exprStart = match.index + match[0].length;
 
       extractStringLiterals(
+        service,
         expr,
         exprStart,
         text,

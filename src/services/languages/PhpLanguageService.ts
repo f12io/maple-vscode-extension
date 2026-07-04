@@ -1,5 +1,6 @@
+import { skipStringLiteral } from '../../helpers/extractor.helper';
 import { ClassInstance } from '../LanguageService';
-import { InterpolationMatch } from './BaseLanguageService';
+import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 interface PhpConcatSegment {
@@ -11,6 +12,38 @@ interface PhpConcatSegment {
 
 export class PhpLanguageService extends HtmlLanguageService {
   languageIds = ['php'];
+
+  public getMultilineStringDelimiters(
+    rawQuote: string,
+    content: string,
+  ): { open: string; close: string } | undefined {
+    // PHP string literals may legally contain raw newlines
+    if (rawQuote === "'" || rawQuote === '"') {
+      return { open: rawQuote, close: rawQuote };
+    }
+    return super.getMultilineStringDelimiters(rawQuote, content);
+  }
+
+  /**
+   * Finds the `?>` that closes a PHP block, skipping string literals so a
+   * `?>` inside '...' or "..." does not terminate the block early. Returns
+   * the index of the `?` or -1.
+   */
+  private findPhpCloseTag(value: string, from: number): number {
+    let i = from;
+    while (i < value.length) {
+      const stringEnd = this.skipStringAt(value, i);
+      if (stringEnd > i) {
+        i = stringEnd;
+        continue;
+      }
+      if (value[i] === '?' && value[i + 1] === '>') {
+        return i;
+      }
+      i++;
+    }
+    return -1;
+  }
 
   protected extractFrameworkSpecificClasses(
     text: string,
@@ -63,7 +96,7 @@ export class PhpLanguageService extends HtmlLanguageService {
     if (startIndex === -1) {
       return undefined;
     }
-    const end = cls.indexOf('?>', startIndex + 2);
+    const end = this.findPhpCloseTag(cls, startIndex + 2);
     if (end === -1) {
       return undefined;
     }
@@ -83,7 +116,28 @@ export class PhpLanguageService extends HtmlLanguageService {
     }
     innerExpr = innerExpr.trim();
 
-    const ternary = this.parseTernaryArms(innerExpr);
+    const formattedExpr = this.formatExpression(
+      innerExpr,
+      baseIndent,
+      maxClassesPerLine,
+      formatClassesFn,
+    );
+    if (formattedExpr === undefined) return undefined;
+
+    return prefix + openTag + ' ' + formattedExpr + ' ?>' + suffix;
+  }
+
+  public formatExpression(
+    expr: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string | undefined {
+    const ternary = this.parseTernaryArms(expr);
     if (!ternary) return undefined;
 
     const exprIndent = baseIndent + '  ';
@@ -108,16 +162,11 @@ export class PhpLanguageService extends HtmlLanguageService {
     // Always return the reconstructed ternary to enforce consistent spacing
 
     return (
-      prefix +
-      openTag +
-      ' ' +
       ternary.condition +
       ' ? ' +
       formattedConsequent +
       ' : ' +
-      formattedAlternate +
-      ' ?>' +
-      suffix
+      formattedAlternate
     );
   }
 
@@ -224,18 +273,7 @@ export class PhpLanguageService extends HtmlLanguageService {
       if (ch === "'" || ch === '"') {
         const quoteChar = ch;
         const start = i;
-        i++;
-        while (i < str.length) {
-          if (str[i] === '\\') {
-            i += 2;
-            continue;
-          }
-          if (str[i] === quoteChar) {
-            i++;
-            break;
-          }
-          i++;
-        }
+        i = skipStringLiteral(str, i);
         const value = str.substring(start, i);
         const content = str.substring(start + 1, i - 1);
         segments.push({ type: 'string', value, content, quoteChar });
@@ -245,16 +283,12 @@ export class PhpLanguageService extends HtmlLanguageService {
         let depth = 1;
         i++;
         while (i < str.length && depth > 0) {
+          if (str[i] === "'" || str[i] === '"') {
+            i = skipStringLiteral(str, i);
+            continue;
+          }
           if (str[i] === '(') depth++;
           else if (str[i] === ')') depth--;
-          else if (str[i] === "'" || str[i] === '"') {
-            const q = str[i];
-            i++;
-            while (i < str.length && str[i] !== q) {
-              if (str[i] === '\\') i++;
-              i++;
-            }
-          }
           if (depth > 0) i++;
         }
         if (i < str.length) i++; // skip closing )
@@ -291,10 +325,11 @@ export class PhpLanguageService extends HtmlLanguageService {
   protected parseInterpolation(
     value: string,
     index: number,
+    context?: InterpolationContext,
   ): InterpolationMatch | undefined {
     // PHP interpolation: <? ... ?>
     if (value.substring(index, index + 2) === '<?') {
-      const phpEnd = value.indexOf('?>', index + 2);
+      const phpEnd = this.findPhpCloseTag(value, index + 2);
       if (phpEnd !== -1) {
         return {
           innerExprStart: index + 2,
@@ -316,6 +351,6 @@ export class PhpLanguageService extends HtmlLanguageService {
       }
     }
 
-    return super.parseInterpolation(value, index);
+    return super.parseInterpolation(value, index, context);
   }
 }

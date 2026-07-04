@@ -1,6 +1,9 @@
-import { parseBalancedCharacters } from '../../helpers/extractor.helper';
 import { ClassInstance } from '../LanguageService';
-import { BaseLanguageService, InterpolationMatch } from './BaseLanguageService';
+import {
+  BaseLanguageService,
+  InterpolationContext,
+  InterpolationMatch,
+} from './BaseLanguageService';
 
 export class HtmlLanguageService extends BaseLanguageService {
   languageIds = ['html'];
@@ -16,11 +19,14 @@ export class HtmlLanguageService extends BaseLanguageService {
   protected parseInterpolation(
     value: string,
     index: number,
+    context?: InterpolationContext,
   ): InterpolationMatch | undefined {
     // Angular/Twig interpolations: {{...}}
     if (value.substring(index, index + 2) === '{{') {
-      // Start tracking after the first '{' so count is 1. The second '{' will increment count to 2.
-      const end = parseBalancedCharacters(value, index + 1, '{', '}');
+      // Balance from the first '{'; the second '{' nests, so the scan ends
+      // just after the matching '}}'. String literals inside the expression
+      // are skipped via the language-aware parseBalanced.
+      const end = this.parseBalanced(value, index);
       if (end !== -1) {
         return {
           innerExprStart: index + 2, // The content inside {{
@@ -29,6 +35,6 @@ export class HtmlLanguageService extends BaseLanguageService {
         };
       }
     }
-    return super.parseInterpolation(value, index);
+    return super.parseInterpolation(value, index, context);
   }
 }

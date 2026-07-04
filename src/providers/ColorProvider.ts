@@ -16,6 +16,7 @@ import {
 } from '../helpers/color.helper';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
+import { safeRun } from '../helpers/logger';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 export class MapleColorProvider implements vscode.DocumentColorProvider {
@@ -23,6 +24,17 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<Array<vscode.ColorInformation>> {
+    return safeRun(
+      'colorProvider',
+      () => this.doProvideDocumentColors(document, token),
+      [],
+    );
+  }
+
+  private doProvideDocumentColors(
+    document: vscode.TextDocument,
+    _token: vscode.CancellationToken,
+  ): Array<vscode.ColorInformation> {
     if (
       !isExtensionEnabled(document) ||
       isFileExcluded(document.uri) ||
@@ -78,6 +90,18 @@ export class MapleColorProvider implements vscode.DocumentColorProvider {
     context: { document: vscode.TextDocument; range: vscode.Range },
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<Array<vscode.ColorPresentation>> {
+    return safeRun(
+      'colorPresentations',
+      () => this.doProvideColorPresentations(color, context, token),
+      [],
+    );
+  }
+
+  private doProvideColorPresentations(
+    color: vscode.Color,
+    context: { document: vscode.TextDocument; range: vscode.Range },
+    _token: vscode.CancellationToken,
+  ): Array<vscode.ColorPresentation> {
     const r = Math.round(color.red * 255);
     const g = Math.round(color.green * 255);
     const b = Math.round(color.blue * 255);

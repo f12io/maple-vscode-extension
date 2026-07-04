@@ -11,7 +11,9 @@ import {
   PropertyHelper,
 } from '@f12io/maple';
 import * as vscode from 'vscode';
+import { namedColors } from '@f12io/coco';
 import { AliasCache } from '../helpers/alias-cache';
+import { safeRun } from '../helpers/logger';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import { getExactWordRangeAtPosition } from '../helpers/extractor.helper';
@@ -37,6 +39,19 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
   ): vscode.ProviderResult<
     Array<vscode.CompletionItem> | vscode.CompletionList
   > {
+    return safeRun(
+      'completion',
+      () => this.doProvideCompletionItems(document, position, token, context),
+      undefined,
+    );
+  }
+
+  private doProvideCompletionItems(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    _token: vscode.CancellationToken,
+    _context: vscode.CompletionContext,
+  ): Array<vscode.CompletionItem> | vscode.CompletionList | undefined {
     if (
       !isExtensionEnabled(document) ||
       isFileExcluded(document.uri) ||
@@ -413,7 +428,6 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
               }
             }
 
-            const { namedColors } = require('@f12io/coco');
             const colorArgs = lastArg.split('_');
             const colorTypedFull = colorArgs[0];
 
@@ -522,7 +536,6 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
           }
         } else if (isColorProp) {
           const typedValue = checkWord.substring(activePrefix.length + 1);
-          const { namedColors } = require('@f12io/coco');
 
           const hasOpacity = typedValue.includes('/');
           let colorTyped = typedValue;
@@ -561,7 +574,7 @@ export class MapleCompletionProvider implements vscode.CompletionItemProvider {
                     vscode.CompletionItemKind.Color,
                   );
                   if (wordRange) baseItem.range = wordRange;
-                  baseItem.detail = `${namedColors[colorName]}`;
+                  baseItem.detail = namedColors[colorName];
                   baseItem.sortText = `5-${colorName}-000`;
                   items.push(baseItem);
                 }

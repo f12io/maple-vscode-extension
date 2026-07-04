@@ -1,10 +1,20 @@
 @code {
   private bool isActive = true;
-  private string extraClass = /* maple */ "p-4";
+  private string extraClass = /* maple */ $@"
+    fs-50
+    m-{(isActive ? "2" : "3")}
+    bgc-red
+    p-2
+    o-50
+  " : $@"
+    fs-60
+    m-{(isActive ? "2" : "3")}
+  ";
 }
 
 <div class="
-  bgc-green-500
+  bgc-green-500 @@md:p-2
+  @(x ? $"fs-50\tm-2 p-1 bgc-red o-50 c-white" : "fs-60")
   @extraClass
 ">
   <span class="@(isActive ? "c-white" : "c-gray-500")">

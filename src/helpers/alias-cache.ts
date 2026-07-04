@@ -5,6 +5,7 @@ import {
   SUPPORTED_FILES_GLOB,
 } from '../constants/languages';
 import { ALIAS_REGEX } from '../constants/regex';
+import { logError } from './logger';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 /**
@@ -91,7 +92,7 @@ export class AliasCache {
         await this.processFile(file, false);
       }
     } catch (error) {
-      console.error('Error scanning workspace for aliases:', error);
+      logError('aliasCache', error);
     }
     this.onDidUpdateAliases.fire();
   }

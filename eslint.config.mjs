@@ -77,7 +77,12 @@ export default defineConfig([
     },
   },
   {
-    files: ['eslint.config.mjs', '__mocks__/**/*.js'],
+    files: [
+      'eslint.config.mjs',
+      'esbuild.mjs',
+      'scripts/**/*.mjs',
+      '__mocks__/**/*.js',
+    ],
     extends: [tseslint.configs.disableTypeChecked],
   },
 ]);

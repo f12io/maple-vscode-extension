@@ -1,6 +1,10 @@
 import * as vscode from 'vscode';
 import { getLanguageIdFromFileName } from '../constants/languages';
-import { ClassInstance, ILanguageService } from './LanguageService';
+import {
+  ClassInstance,
+  dedupeInstancesByStart,
+  ILanguageService,
+} from './LanguageService';
 import { AngularLanguageService } from './languages/AngularLanguageService';
 import { HtmlLanguageService } from './languages/HtmlLanguageService';
 import { JavascriptLanguageService } from './languages/JavascriptLanguageService';
@@ -27,16 +31,7 @@ class CompositeLanguageService implements ILanguageService {
       instances.push(...service.extractClasses(text));
     }
 
-    // Deduplicate
-    const uniqueInstances: Array<ClassInstance> = [];
-    const seenStarts = new Set<number>();
-    for (const instance of instances) {
-      if (!seenStarts.has(instance.start)) {
-        seenStarts.add(instance.start);
-        uniqueInstances.push(instance);
-      }
-    }
-    return uniqueInstances;
+    return dedupeInstancesByStart(instances);
   }
 
   isInsideClassAttribute(text: string, offset: number): boolean {
@@ -44,6 +39,44 @@ class CompositeLanguageService implements ILanguageService {
       if (service.isInsideClassAttribute(text, offset)) return true;
     }
     return false;
+  }
+
+  getRenderedClassText(word: string): string {
+    return this.services[this.services.length - 1].getRenderedClassText(word);
+  }
+
+  getMultilineStringDelimiters(
+    rawQuote: string,
+    content: string,
+  ): { open: string; close: string } | undefined {
+    return this.services[
+      this.services.length - 1
+    ].getMultilineStringDelimiters(rawQuote, content);
+  }
+
+  matchStringLiteral(text: string, index: number) {
+    return this.services[this.services.length - 1].matchStringLiteral(
+      text,
+      index,
+    );
+  }
+
+  formatExpression(
+    expr: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string | undefined {
+    return this.services[this.services.length - 1].formatExpression(
+      expr,
+      baseIndent,
+      maxClassesPerLine,
+      formatClassesFn,
+    );
   }
 
   tokenizeClassesWithIndices(str: string) {

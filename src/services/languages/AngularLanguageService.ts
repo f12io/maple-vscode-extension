@@ -31,13 +31,14 @@ export class AngularLanguageService extends BaseLanguageService {
       if (closingQuoteIndex !== -1) {
         const expr = text.substring(exprStart, closingQuoteIndex);
         extractStringLiterals(
+          this,
           expr,
           exprStart,
           text,
           match.index,
           instances,
           disabledBlocks,
-          (val, off, txt, idx) =>
+          (val, off, txt, idx, literal) =>
             this.extractAttributeClasses(
               val,
               off,
@@ -45,6 +46,7 @@ export class AngularLanguageService extends BaseLanguageService {
               idx,
               instances,
               disabledBlocks,
+              literal?.rawDelimiter,
             ),
         );
       }

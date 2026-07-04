@@ -1,0 +1,190 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v[0-9]*'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release-tag:
+    name: Validate Release Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag, branch, and package versions
+        id: validate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+
+          # The VS Code Marketplace only accepts plain X.Y.Z versions
+          # (no semver prerelease suffixes), so tags are restricted to match.
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release tag: $tag (must be vX.Y.Z)"
+            exit 1
+          fi
+
+          git fetch origin main --tags --force
+
+          tag_commit="$(git rev-list -n 1 "$tag")"
+          main_head="$(git rev-parse origin/main)"
+
+          if [ "$tag_commit" != "$main_head" ]; then
+            echo "Tag $tag must point to the current origin/main HEAD"
+            echo "Tag commit:  $tag_commit"
+            echo "Main HEAD:   $main_head"
+            exit 1
+          fi
+
+          latest_tag="$(
+            git tag --merged origin/main --list 'v[0-9]*' --sort=-v:refname |
+            grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' |
+            head -n 1
+          )"
+
+          if [ "$tag" != "$latest_tag" ]; then
+            echo "Tag $tag is not the latest main tag. Latest is $latest_tag"
+            exit 1
+          fi
+
+          tag_version="${tag#v}"
+          package_version="$(node -p "require('./package.json').version")"
+          lock_version="$(node -p "require('./package-lock.json').version")"
+          lock_root_version="$(node -p "require('./package-lock.json').packages[''].version")"
+
+          if [ "$tag_version" != "$package_version" ]; then
+            echo "Tag version $tag_version does not match package.json version $package_version"
+            exit 1
+          fi
+
+          if [ "$package_version" != "$lock_version" ]; then
+            echo "package.json version $package_version does not match package-lock.json version $lock_version"
+            exit 1
+          fi
+
+          if [ "$package_version" != "$lock_root_version" ]; then
+            echo "package.json version $package_version does not match package-lock root package version $lock_root_version"
+            exit 1
+          fi
+
+          echo "version=$package_version" >> "$GITHUB_OUTPUT"
+
+  build-and-test:
+    name: Build & Test
+    needs: validate-release-tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type Check
+        run: npm run typecheck
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Package Extension
+        run: npm run package
+
+      - name: Verify Artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          vsix="maple-vscode-extension-${{ needs.validate-release-tag.outputs.version }}.vsix"
+          test -s "$vsix"
+          ls -lh "$vsix"
+
+      - name: Upload VSIX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: '*.vsix'
+
+  create-github-release:
+    name: Create Draft GitHub Release
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
+
+      - name: Create Draft Release & Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: '*.vsix'
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+
+  publish-marketplace:
+    name: Publish to VS Code Marketplace
+    needs: [validate-release-tag, create-github-release]
+    runs-on: ubuntu-latest
+    env:
+      OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: vsix
+
+      - name: Publish to VS Code Marketplace
+        run: npx vsce publish --packagePath "maple-vscode-extension-${{ needs.validate-release-tag.outputs.version }}.vsix"
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX
+        if: env.OVSX_PAT != ''
+        run: npx --yes ovsx publish "maple-vscode-extension-${{ needs.validate-release-tag.outputs.version }}.vsix" --pat "$OVSX_PAT"
+
+  publish-github-release:
+    name: Publish GitHub Release
+    needs: publish-marketplace
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish Draft Release
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+        env:
+          GH_TOKEN: ${{ github.token }}

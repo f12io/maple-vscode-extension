@@ -13,13 +13,43 @@ import {
   getDisabledBlocks,
   pushInstance,
   shouldSkipMatch,
+  skipStringLiteral,
 } from '../../helpers/extractor.helper';
-import { ClassInstance, ILanguageService, Token } from '../LanguageService';
+import {
+  ClassInstance,
+  dedupeInstancesByStart,
+  ILanguageService,
+  StringLiteralMatch,
+  Token,
+} from '../LanguageService';
+
+/**
+ * How far back from the cursor to search for the enclosing class attribute.
+ * Bounds the per-keystroke completion cost in huge documents; attributes
+ * longer than this won't be detected.
+ */
+const ATTRIBUTE_LOOKBEHIND_CHARS = 2000;
 
 export interface InterpolationMatch {
   innerExprStart: number;
   innerExprEnd: number;
   endIndex: number;
+  /**
+   * The matched range is literal text (e.g. Razor's `@@` or C#'s `{{` escape):
+   * consume it verbatim without splitting the instance or extracting an
+   * expression from it.
+   */
+  isLiteral?: boolean;
+}
+
+export interface InterpolationContext {
+  /**
+   * Opening delimiter of the enclosing interpolated string (e.g. `$"`, `$@"`
+   * or `` ` ``) while extracting its contents; undefined at the top level of
+   * markup attributes. Services interpret the delimiters they own (e.g. Razor
+   * treats braces as expression holes inside `$"`/`$@"` strings).
+   */
+  stringDelimiter?: string;
 }
 
 export abstract class BaseLanguageService implements ILanguageService {
@@ -37,18 +67,7 @@ export abstract class BaseLanguageService implements ILanguageService {
     this.extractFrameworkSpecificClasses(text, instances, disabledBlocks);
     this.extractOptInComments(text, instances, disabledBlocks);
 
-    // Deduplicate instances by start offset
-    const uniqueInstances: Array<ClassInstance> = [];
-    const seenStarts = new Set<number>();
-
-    for (const instance of instances) {
-      if (!seenStarts.has(instance.start)) {
-        seenStarts.add(instance.start);
-        uniqueInstances.push(instance);
-      }
-    }
-
-    return uniqueInstances;
+    return dedupeInstancesByStart(instances);
   }
 
   protected extractStandardAttributes(
@@ -90,14 +109,22 @@ export abstract class BaseLanguageService implements ILanguageService {
     matchIndex: number,
     instances: Array<ClassInstance>,
     disabledBlocks: Array<{ start: number; end: number }> = [],
+    stringDelimiter?: string,
   ) {
+    const context: InterpolationContext = { stringDelimiter };
     let currentStr = '';
     let currentStart = offset;
     let j = 0;
 
     while (j < value.length) {
-      const interp = this.parseInterpolation(value, j);
+      const interp = this.parseInterpolation(value, j, context);
       if (interp) {
+        if (interp.isLiteral) {
+          currentStr += value.substring(j, interp.endIndex);
+          j = interp.endIndex;
+          continue;
+        }
+
         pushInstance(
           instances,
           currentStr,
@@ -113,13 +140,14 @@ export abstract class BaseLanguageService implements ILanguageService {
           interp.innerExprEnd,
         );
         extractStringLiterals(
+          this,
           innerExpr,
           offset + interp.innerExprStart,
           text,
           matchIndex,
           instances,
           disabledBlocks,
-          (val, off, txt, idx) =>
+          (val, off, txt, idx, literal) =>
             this.extractAttributeClasses(
               val,
               off,
@@ -127,6 +155,7 @@ export abstract class BaseLanguageService implements ILanguageService {
               idx,
               instances,
               disabledBlocks,
+              literal?.rawDelimiter,
             ),
         );
 
@@ -165,7 +194,78 @@ export abstract class BaseLanguageService implements ILanguageService {
   protected parseInterpolation(
     value: string,
     index: number,
+    context?: InterpolationContext,
   ): InterpolationMatch | undefined {
+    return undefined;
+  }
+
+  public getRenderedClassText(word: string): string {
+    return word;
+  }
+
+  public formatExpression(
+    expr: string,
+    baseIndent: string,
+    maxClassesPerLine: number,
+    formatClassesFn: (
+      value: string,
+      indent: string,
+      maxClasses: number,
+    ) => string,
+  ): string | undefined {
+    return undefined;
+  }
+
+  public matchStringLiteral(
+    text: string,
+    index: number,
+  ): StringLiteralMatch | undefined {
+    const ch = text[index];
+    if (ch === "'" || ch === '"') {
+      const end = skipStringLiteral(text, index);
+      if (end < index + 2 || text[end - 1] !== ch) return undefined;
+      return {
+        start: index,
+        contentStart: index + 1,
+        contentEnd: end - 1,
+        endIndex: end,
+        rawDelimiter: ch,
+        isInterpolated: false,
+      };
+    }
+    if (ch === '`') {
+      const end = this.skipTemplateLiteral(text, index);
+      if (end < index + 2 || text[end - 1] !== '`') return undefined;
+      return {
+        start: index,
+        contentStart: index + 1,
+        contentEnd: end - 1,
+        endIndex: end,
+        rawDelimiter: '`',
+        isInterpolated: true,
+      };
+    }
+    return undefined;
+  }
+
+  public getMultilineStringDelimiters(
+    rawQuote: string,
+    content: string,
+  ): { open: string; close: string } | undefined {
+    // Default policy is JavaScript-flavored (html/jsx/vue/svelte/twig opt-in
+    // strings live in scripts): template literals hold newlines; '/" strings
+    // are upgraded to template literals when that cannot change semantics.
+    if (rawQuote === '`') {
+      return { open: '`', close: '`' };
+    }
+    if (
+      (rawQuote === "'" || rawQuote === '"') &&
+      !content.includes('`') &&
+      !content.includes('${') &&
+      !content.includes('\\')
+    ) {
+      return { open: '`', close: '`' };
+    }
     return undefined;
   }
 
@@ -183,7 +283,9 @@ export abstract class BaseLanguageService implements ILanguageService {
         if (tokenStart === -1) tokenStart = i;
         currentToken += str.substring(i, interp.endIndex);
         i = interp.endIndex - 1;
-        tokenHasInterpolation = true;
+        if (!interp.isLiteral) {
+          tokenHasInterpolation = true;
+        }
         continue;
       }
 
@@ -225,24 +327,12 @@ export abstract class BaseLanguageService implements ILanguageService {
     instances: Array<ClassInstance>,
     disabledBlocks: Array<{ start: number; end: number }>,
   ) {
-    extractOptInStrings(text, instances, disabledBlocks, (val, off, txt, idx) =>
-      this.extractAttributeClasses(
-        val,
-        off,
-        txt,
-        idx,
-        instances,
-        disabledBlocks,
-      ),
-    );
-    extractStringsFromBraces(
+    extractOptInStrings(
+      this,
       text,
-      OPT_IN_OBJECT_START_REGEX,
-      '{',
-      '}',
       instances,
       disabledBlocks,
-      (val: string, off: number, txt: string, idx: number) =>
+      (val, off, txt, idx, literal) =>
         this.extractAttributeClasses(
           val,
           off,
@@ -250,6 +340,26 @@ export abstract class BaseLanguageService implements ILanguageService {
           idx,
           instances,
           disabledBlocks,
+          literal?.rawDelimiter,
+        ),
+    );
+    extractStringsFromBraces(
+      this,
+      text,
+      OPT_IN_OBJECT_START_REGEX,
+      '{',
+      '}',
+      instances,
+      disabledBlocks,
+      (val, off, txt, idx, literal) =>
+        this.extractAttributeClasses(
+          val,
+          off,
+          txt,
+          idx,
+          instances,
+          disabledBlocks,
+          literal?.rawDelimiter,
         ),
     );
   }
@@ -261,8 +371,11 @@ export abstract class BaseLanguageService implements ILanguageService {
   ): void;
 
   public isInsideClassAttribute(documentText: string, offset: number): boolean {
-    // Look backward up to 2000 characters to find the last attribute start
-    const prefix = documentText.substring(Math.max(0, offset - 2000), offset);
+    // Look backward a bounded distance to find the last attribute start
+    const prefix = documentText.substring(
+      Math.max(0, offset - ATTRIBUTE_LOOKBEHIND_CHARS),
+      offset,
+    );
 
     let lastMatch = null;
     for (const match of prefix.matchAll(IS_INSIDE_CLASS_ATTR_REGEX)) {
@@ -312,13 +425,14 @@ export abstract class BaseLanguageService implements ILanguageService {
     }> = [];
 
     extractStringLiterals(
+      this,
       cls,
       0,
       cls,
       0,
       [],
       [],
-      (value, offset, _text, _matchIndex, isCSharpInterpolated) => {
+      (value, offset, _text, _matchIndex, literal) => {
         const innerIndent = baseIndent + '  ';
         const formatted = formatClassesFn(
           value,
@@ -326,13 +440,24 @@ export abstract class BaseLanguageService implements ILanguageService {
           maxClassesPerLine,
         );
 
-        if (formatted !== value) {
-          replacements.push({
-            start: offset,
-            end: offset + value.length,
-            replacement: formatted,
-          });
+        if (formatted === value) return;
+
+        // A multi-line result requires a string form that legally holds
+        // newlines; when none exists (e.g. escape-bearing C# $" strings)
+        // leave the string untouched rather than corrupt it.
+        if (
+          formatted.includes('\n') &&
+          literal &&
+          !this.getMultilineStringDelimiters(literal.rawDelimiter, value)
+        ) {
+          return;
         }
+
+        replacements.push({
+          start: offset,
+          end: offset + value.length,
+          replacement: formatted,
+        });
       },
     );
 
@@ -401,38 +526,77 @@ export abstract class BaseLanguageService implements ILanguageService {
     return undefined;
   }
 
+  /**
+   * Scans a JS template literal starting at the backtick and returns the
+   * index after the closing backtick, honoring `${...}` holes (which may
+   * contain nested strings and template literals).
+   */
+  protected skipTemplateLiteral(expr: string, index: number): number {
+    let j = index + 1;
+    while (j < expr.length) {
+      if (expr[j] === '\\') {
+        j += 2;
+        continue;
+      }
+      if (expr[j] === '$' && expr[j + 1] === '{') {
+        j += 2;
+        let braceDepth = 1;
+        while (j < expr.length && braceDepth > 0) {
+          const se = this.skipStringAt(expr, j);
+          if (se > j) {
+            j = se;
+            continue;
+          }
+          if (expr[j] === '{') braceDepth++;
+          else if (expr[j] === '}') braceDepth--;
+          if (braceDepth > 0) j++;
+        }
+        if (j < expr.length) j++; // skip closing }
+        continue;
+      }
+      if (expr[j] === '`') return j + 1;
+      j++;
+    }
+    return expr.length;
+  }
+
   protected skipStringAt(expr: string, index: number): number {
     const ch = expr[index];
     if (ch === "'" || ch === '"') {
-      let j = index + 1;
-      while (j < expr.length) {
-        if (expr[j] === '\\') {
-          j += 2;
-          continue;
-        }
-        if (expr[j] === ch) return j + 1;
-        j++;
-      }
-      return expr.length;
+      return skipStringLiteral(expr, index);
     }
     return index;
   }
 
-  private skipBalanced(expr: string, startIndex: number): number {
-    const open = expr[startIndex];
+  /**
+   * Scans a bracketed region starting at `openIndex` (which must hold the
+   * opening char), skipping string literals via the language-specific
+   * `skipStringAt`. Returns the index just after the matching close, or -1
+   * when unbalanced.
+   */
+  protected parseBalanced(expr: string, openIndex: number): number {
+    const open = expr[openIndex];
     const close = open === '(' ? ')' : open === '[' ? ']' : '}';
     let depth = 1;
-    let j = startIndex + 1;
-    while (j < expr.length && depth > 0) {
+    let j = openIndex + 1;
+    while (j < expr.length) {
       const se = this.skipStringAt(expr, j);
       if (se > j) {
         j = se;
         continue;
       }
       if (expr[j] === open) depth++;
-      else if (expr[j] === close) depth--;
-      if (depth > 0) j++;
+      else if (expr[j] === close) {
+        depth--;
+        if (depth === 0) return j + 1;
+      }
+      j++;
     }
-    return j < expr.length ? j + 1 : expr.length;
+    return -1;
+  }
+
+  private skipBalanced(expr: string, startIndex: number): number {
+    const end = this.parseBalanced(expr, startIndex);
+    return end === -1 ? expr.length : end;
   }
 }

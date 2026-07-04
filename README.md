@@ -57,8 +57,9 @@ You can use special comments directly in your code to control the extension's be
 - **`/* maple-disable-next-line */`**: Disables the extension for the immediately following line.
 - **`/* maple-disable */`**: Disables all Maple extension features (autocomplete, hover, diagnostics) for all code that follows this comment in the file.
 - **`/* maple-enable */`**: Re-enables Maple extension features after a disable comment.
-- **`/* maple */`**: Explicitly opts-in a string, template literal, or object in JavaScript/TypeScript files. This forces the extension to parse the contents as Maple classes, even if it's not a standard `class="..."` attribute.
-  - Example: `` const styles = /* maple */ `bgc-red-500 p-4`; ``
+- **`/* maple */`**: Explicitly opts-in the following expression. Every string literal in it — including ternary arms, concatenation parts, template literals, and interpolated strings — is parsed as Maple classes until the statement ends (`;`, a top-level `,`, or a closing bracket). Objects (`/* maple */ { ... }`) opt in their keys.
+  - Example: ``const styles = /* maple */ `bgc-red-500 p-4`;``
+  - Example: `const styles = /* maple */ isActive ? 'bgc-red-500 p-4' : 'bgc-gray-300 p-2';`
 
 ## Commands
 
@@ -76,3 +77,17 @@ The extension provides features for the following file types (when enabled):
 - PHP (`.php`)
 - Twig (`.twig`)
 - JavaScript/TypeScript (Template literals tagged with `/* maple */`)
+
+## Troubleshooting
+
+If a feature stops working, check the **Maple CSS** output channel
+(`View → Output → Maple CSS`) for errors and include them when
+[filing an issue](https://github.com/f12io/maple-vscode-extension/issues).
+
+## Contributing
+
+Contributions are welcome! See [contributing docs](https://github.com/f12io/maple-vscode-extension/blob/main/.github/CONTRIBUTING.md) for development setup, project layout, and pull request guidelines.
+
+## License
+
+Released under the [Root Source License (ROOT)](LICENSE), an MIT-style permissive license with an additional distribution condition for systems that can recreate the source on demand. © [f12.io](https://f12.io)

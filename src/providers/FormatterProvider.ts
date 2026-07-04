@@ -2,11 +2,11 @@ import { parseClass } from '@f12io/maple';
 import * as vscode from 'vscode';
 import {
   INDENT_WHITESPACE_REGEX,
-  MAPLE_TAG_START_REGEX,
   STANDARD_ATTR_REGEX,
 } from '../constants/regex';
 import { isExtensionExplicitlyDisabled } from '../helpers/config';
-import { findClosingQuote } from '../helpers/extractor.helper';
+import { findClosingQuote, findOptInRegions } from '../helpers/extractor.helper';
+import { safeRun } from '../helpers/logger';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 function getIndentFromIndex(text: string, index: number): string {
@@ -102,7 +102,18 @@ export function formatClasses(
   return formatted;
 }
 
-function applyFormatting(
+export function applyFormatting(
+  document: vscode.TextDocument,
+  maxClassesPerLine: number,
+): Array<vscode.TextEdit> {
+  return safeRun(
+    'formatter',
+    () => doApplyFormatting(document, maxClassesPerLine),
+    [],
+  );
+}
+
+function doApplyFormatting(
   document: vscode.TextDocument,
   maxClassesPerLine: number,
 ): Array<vscode.TextEdit> {
@@ -137,32 +148,73 @@ function applyFormatting(
     }
   }
 
-  for (const match of text.matchAll(MAPLE_TAG_START_REGEX)) {
-    const fullMatch = match[0];
-    const quote = match[1];
+  // Opted-in expressions: /* maple */ <expression with string literals>
+  const service = LanguageServiceRegistry.getServiceForDocument(document);
+  if (service) {
+    const formatClassesFn = (value: string, indent: string, max: number) =>
+      formatClasses(value, indent, max, document.languageId, document);
 
-    const innerStart = match.index + fullMatch.length;
-    const innerEnd = findClosingQuote(text, innerStart, quote);
+    for (const region of findOptInRegions(service, text)) {
+      const baseIndent = getIndentFromIndex(text, region.matchIndex);
 
-    if (innerEnd === -1) continue;
-
-    const innerString = text.substring(innerStart, innerEnd);
-
-    const baseIndent = getIndentFromIndex(text, match.index);
-    const formatted = formatClasses(
-      innerString,
-      baseIndent,
-      maxClassesPerLine,
-      document.languageId,
-      document,
-    );
-
-    if (formatted !== innerString) {
-      const range = new vscode.Range(
-        document.positionAt(innerStart),
-        document.positionAt(innerEnd),
+      // Structured expressions (ternaries, concatenations) get the same
+      // treatment as interpolations inside class attributes.
+      const regionText = text
+        .substring(region.regionStart, region.regionEnd)
+        .trimEnd();
+      const structured = service.formatExpression(
+        regionText,
+        baseIndent,
+        maxClassesPerLine,
+        formatClassesFn,
       );
-      edits.push(vscode.TextEdit.replace(range, formatted));
+      if (structured !== undefined) {
+        if (structured !== regionText) {
+          const range = new vscode.Range(
+            document.positionAt(region.regionStart),
+            document.positionAt(region.regionStart + regionText.length),
+          );
+          edits.push(vscode.TextEdit.replace(range, structured));
+        }
+        continue;
+      }
+
+      // Otherwise format each string literal on its own.
+      for (const literal of region.literals) {
+        const innerString = text.substring(
+          literal.contentStart,
+          literal.contentEnd,
+        );
+
+        const formatted = formatClassesFn(
+          innerString,
+          baseIndent,
+          maxClassesPerLine,
+        );
+        if (formatted === innerString) continue;
+
+        // Keep the original delimiters for single-line results; multi-line
+        // results need delimiters that legally contain newlines (or none
+        // exist and the string is left untouched).
+        let open = literal.rawDelimiter;
+        let close =
+          literal.rawDelimiter === '`' ? '`' : literal.rawDelimiter.slice(-1);
+        if (formatted.includes('\n')) {
+          const delimiters = service.getMultilineStringDelimiters(
+            literal.rawDelimiter,
+            innerString,
+          );
+          if (!delimiters) continue;
+          open = delimiters.open;
+          close = delimiters.close;
+        }
+
+        const range = new vscode.Range(
+          document.positionAt(literal.start),
+          document.positionAt(literal.endIndex),
+        );
+        edits.push(vscode.TextEdit.replace(range, open + formatted + close));
+      }
     }
   }
 
@@ -171,7 +223,7 @@ function applyFormatting(
 
 export function registerFormatterProvider(
   context: vscode.ExtensionContext,
-  supportedLanguages: Array<string>,
+  supportedLanguages: ReadonlyArray<string>,
 ) {
   // Register Manual Command
   context.subscriptions.push(

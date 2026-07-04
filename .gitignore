@@ -13,7 +13,7 @@ yarn-error.log
 Thumbs.db
 
 # VS Code Extension
-*.vsix
+**/*.vsix
 .vscode-test/
 
 # Testing

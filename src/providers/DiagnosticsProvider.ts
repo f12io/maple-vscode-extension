@@ -18,9 +18,24 @@ import {
   parseMapleToken,
   stripQuotes,
 } from '../helpers/maple-parser';
+import { safeRun } from '../helpers/logger';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
+/** Delay before re-linting a document after the user stops typing. */
+const DIAGNOSTICS_DEBOUNCE_MS = 250;
+
 export function refreshDiagnostics(
+  doc: vscode.TextDocument,
+  mapleDiagnostics: vscode.DiagnosticCollection,
+): void {
+  safeRun(
+    'diagnostics',
+    () => doRefreshDiagnostics(doc, mapleDiagnostics),
+    undefined,
+  );
+}
+
+function doRefreshDiagnostics(
   doc: vscode.TextDocument,
   mapleDiagnostics: vscode.DiagnosticCollection,
 ): void {
@@ -251,15 +266,44 @@ export function subscribeToDocumentChanges(
     }),
   );
 
+  // Debounce per document so we don't re-parse the whole file on every keystroke
+  const pendingRefreshes = new Map<string, NodeJS.Timeout>();
+
   context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument((e) =>
-      refreshDiagnostics(e.document, mapleDiagnostics),
-    ),
+    vscode.workspace.onDidChangeTextDocument((e) => {
+      const key = e.document.uri.toString();
+      const pending = pendingRefreshes.get(key);
+      if (pending) {
+        clearTimeout(pending);
+      }
+      pendingRefreshes.set(
+        key,
+        setTimeout(() => {
+          pendingRefreshes.delete(key);
+          refreshDiagnostics(e.document, mapleDiagnostics);
+        }, DIAGNOSTICS_DEBOUNCE_MS),
+      );
+    }),
   );
 
   context.subscriptions.push(
-    vscode.workspace.onDidCloseTextDocument((doc) =>
-      mapleDiagnostics.delete(doc.uri),
-    ),
+    vscode.workspace.onDidCloseTextDocument((doc) => {
+      const key = doc.uri.toString();
+      const pending = pendingRefreshes.get(key);
+      if (pending) {
+        clearTimeout(pending);
+        pendingRefreshes.delete(key);
+      }
+      mapleDiagnostics.delete(doc.uri);
+    }),
+  );
+
+  context.subscriptions.push(
+    new vscode.Disposable(() => {
+      for (const timeout of pendingRefreshes.values()) {
+        clearTimeout(timeout);
+      }
+      pendingRefreshes.clear();
+    }),
   );
 }

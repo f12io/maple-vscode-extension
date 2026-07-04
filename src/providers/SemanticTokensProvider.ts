@@ -9,6 +9,7 @@ import {
 } from '../constants/regex';
 import { AliasCache } from '../helpers/alias-cache';
 import { getHighlightingMode, isExtensionEnabled } from '../helpers/config';
+import { safeRun } from '../helpers/logger';
 import { isFileExcluded } from '../helpers/exclude';
 import { getUtilKey } from '../helpers/get-util-key';
 import {
@@ -42,7 +43,7 @@ export const semanticTokensLegend = new vscode.SemanticTokensLegend(
   tokenModifiers,
 );
 
-const semanticTokenIndexes = {
+export const semanticTokenIndexes = {
   mapleMediaQuery: 0,
   mapleUtility: 1,
   mapleValue: 2,
@@ -65,6 +66,17 @@ export class MapleSemanticTokensProvider
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.SemanticTokens> {
+    return safeRun(
+      'semanticTokens',
+      () => this.doProvideDocumentSemanticTokens(document, token),
+      new vscode.SemanticTokens(new Uint32Array(0)),
+    );
+  }
+
+  private doProvideDocumentSemanticTokens(
+    document: vscode.TextDocument,
+    _token: vscode.CancellationToken,
+  ): vscode.SemanticTokens {
     if (
       !isExtensionEnabled(document) ||
       isFileExcluded(document.uri) ||

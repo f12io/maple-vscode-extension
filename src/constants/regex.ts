@@ -87,7 +87,6 @@ export const TOKEN_SPLIT_REGEX = /(["'`\s])/;
 
 
 /** Matches the start of a string literal tagged with maple and captures its quote */
-export const MAPLE_TAG_START_REGEX = /\/\*\s*maple\s*\*\/\s*(["'`])/g;
 
 /** Matches object keys inside an expression that aren't quoted. e.g. { active: true } -> 'active' */
 export const OBJECT_KEY_REGEX = /(?:[{,])\s*([a-zA-Z0-9\-_]+)\s*:/g;
@@ -136,8 +135,8 @@ export const JSX_EXPR_START_REGEX = new RegExp(
 /** 6. Utility functions: clsx(...), classNames(...), cva(...) */
 export const UTILITY_FUNC_START_REGEX = /(?:clsx|classNames|cva)\s*\(/gi;
 
-/** 7. Explicit opt-in comments for strings */
-export const OPT_IN_STRING_REGEX = /\/\*\s*maple\s*\*\/\s*(["'`])/g;
+/** 7. Explicit opt-in comment marking the following expression as maple */
+export const OPT_IN_COMMENT_REGEX = /\/\*\s*maple\s*\*\//g;
 
 /** 8. Explicit opt-in comments for objects */
 export const OPT_IN_OBJECT_START_REGEX = /\/\*\s*maple\s*\*\/\s*\{/gi;

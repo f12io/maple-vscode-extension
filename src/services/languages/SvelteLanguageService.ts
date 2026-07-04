@@ -5,12 +5,11 @@ import {
 } from '../../constants/regex';
 import {
   extractStringsFromBraces,
-  parseBalancedCharacters,
   pushInstance,
   shouldSkipMatch,
 } from '../../helpers/extractor.helper';
 import { ClassInstance } from '../LanguageService';
-import { InterpolationMatch } from './BaseLanguageService';
+import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class SvelteLanguageService extends HtmlLanguageService {
@@ -39,6 +38,7 @@ export class SvelteLanguageService extends HtmlLanguageService {
 
     // Svelte class expressions: class={...}
     extractStringsFromBraces(
+      this,
       text,
       JSX_EXPR_START_REGEX,
       '{',
@@ -49,6 +49,7 @@ export class SvelteLanguageService extends HtmlLanguageService {
 
     // Utility functions: clsx(...), classNames(...), cva(...)
     extractStringsFromBraces(
+      this,
       text,
       UTILITY_FUNC_START_REGEX,
       '(',
@@ -61,10 +62,11 @@ export class SvelteLanguageService extends HtmlLanguageService {
   protected parseInterpolation(
     value: string,
     index: number,
+    context?: InterpolationContext,
   ): InterpolationMatch | undefined {
     // Svelte interpolations inside class attribute: {isActive ? '...' : '...'}
     if (value[index] === '{') {
-      const end = parseBalancedCharacters(value, index + 1, '{', '}');
+      const end = this.parseBalanced(value, index);
       if (end !== -1) {
         return {
           innerExprStart: index + 1,
@@ -73,6 +75,14 @@ export class SvelteLanguageService extends HtmlLanguageService {
         };
       }
     }
-    return super.parseInterpolation(value, index);
+    return super.parseInterpolation(value, index, context);
+  }
+
+  protected skipStringAt(expr: string, index: number): number {
+    // Svelte expressions may contain JS template literals
+    if (expr[index] === '`') {
+      return this.skipTemplateLiteral(expr, index);
+    }
+    return super.skipStringAt(expr, index);
   }
 }

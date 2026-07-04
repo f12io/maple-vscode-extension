@@ -1,4 +1,4 @@
-import * as picomatch from 'picomatch';
+import picomatch from 'picomatch';
 import * as vscode from 'vscode';
 
 let cachedPatterns: Array<string> = [];

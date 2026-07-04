@@ -94,7 +94,32 @@ export class CompletionList {
 }
 
 export class MarkdownString {
-  constructor(public value: string) {}
+  constructor(public value: string = '') {}
+
+  appendMarkdown(text: string): MarkdownString {
+    this.value += text;
+    return this;
+  }
+
+  appendCodeblock(code: string, language?: string): MarkdownString {
+    this.value += `\n\`\`\`${language ?? ''}\n${code}\n\`\`\`\n`;
+    return this;
+  }
+}
+
+export class TextEdit {
+  constructor(
+    public range: Range,
+    public newText: string,
+  ) {}
+
+  static replace(range: Range, newText: string): TextEdit {
+    return new TextEdit(range, newText);
+  }
+}
+
+export class Hover {
+  constructor(public contents: MarkdownString | Array<MarkdownString>) {}
 }
 
 export class SemanticTokensLegend {

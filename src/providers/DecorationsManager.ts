@@ -1,114 +1,50 @@
 import * as vscode from 'vscode';
 import { getHighlightingMode } from '../helpers/config';
-import { MapleSemanticTokensProvider } from './SemanticTokensProvider';
+import { safeRun } from '../helpers/logger';
+import {
+  MapleSemanticTokensProvider,
+  semanticTokenIndexes,
+} from './SemanticTokensProvider';
+
+// Decoration colors mapped to ANSI terminal theme colors for rich, theme-aware
+// text highlighting that won't be overwritten by Svelte/Vue semantic tokens.
+const DECORATION_COLORS: Record<number, string> = {
+  [semanticTokenIndexes.mapleMediaQuery]: 'terminal.ansiBrightMagenta',
+  [semanticTokenIndexes.mapleUtility]: 'terminal.ansiBrightCyan',
+  [semanticTokenIndexes.mapleValue]: 'terminal.ansiBrightGreen',
+  [semanticTokenIndexes.mapleParentSelector]: 'terminal.ansiBrightBlue',
+  [semanticTokenIndexes.mapleSelfSelector]: 'terminal.ansiBrightBlue',
+  [semanticTokenIndexes.mapleChildSelector]: 'terminal.ansiBrightBlue',
+  [semanticTokenIndexes.mapleSelectorOperator]: 'terminal.ansiMagenta',
+  [semanticTokenIndexes.mapleSeparator]: 'terminal.ansiMagenta',
+  [semanticTokenIndexes.mapleUnderscore]: 'terminal.ansiMagenta',
+  [semanticTokenIndexes.mapleAlias]: 'terminal.ansiBrightYellow',
+  [semanticTokenIndexes.mapleVariable]: 'terminal.ansiBrightCyan',
+  [semanticTokenIndexes.mapleImportant]: 'terminal.ansiBrightRed',
+  [semanticTokenIndexes.mapleAliasParamKey]: 'terminal.ansiBrightYellow',
+};
 
 export class DecorationsManager {
   private decorationTypes = new Map<number, vscode.TextEditorDecorationType>();
   private semanticProvider: MapleSemanticTokensProvider;
   private timeout: NodeJS.Timeout | undefined = undefined;
-  private documentSelector: Array<string>;
+  private documentSelector: ReadonlyArray<string>;
 
   constructor(
     context: vscode.ExtensionContext,
-    documentSelector: Array<string>,
+    documentSelector: ReadonlyArray<string>,
   ) {
     this.semanticProvider = new MapleSemanticTokensProvider();
     this.documentSelector = documentSelector;
 
-    // Initialize decoration types mapped to ANSI terminal colors for rich, theme-aware text highlighting
-    // that won't be overwritten by Svelte/Vue semantic tokens.
-
-    // 0: maple-mediaQuery
-    this.decorationTypes.set(
-      0,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightMagenta'),
-      }),
-    );
-    // 1: maple-utility
-    this.decorationTypes.set(
-      1,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightCyan'),
-      }),
-    );
-    // 2: maple-value
-    this.decorationTypes.set(
-      2,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightGreen'),
-      }),
-    );
-    // 3: maple-parent-selector
-    this.decorationTypes.set(
-      3,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightBlue'),
-      }),
-    );
-    // 4: maple-self-selector
-    this.decorationTypes.set(
-      4,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightBlue'),
-      }),
-    );
-    // 5: maple-child-selector
-    this.decorationTypes.set(
-      5,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightBlue'),
-      }),
-    );
-    // 6: maple-selector-operator
-    this.decorationTypes.set(
-      6,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiMagenta'),
-      }),
-    );
-    // 7: maple-separator
-    this.decorationTypes.set(
-      7,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiMagenta'),
-      }),
-    );
-    // 8: maple-underscore
-    this.decorationTypes.set(
-      8,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiMagenta'),
-      }),
-    );
-    // 9: maple-alias
-    this.decorationTypes.set(
-      9,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightYellow'),
-      }),
-    );
-    // 10: maple-variable
-    this.decorationTypes.set(
-      10,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightCyan'),
-      }),
-    );
-    // 11: maple-important
-    this.decorationTypes.set(
-      11,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightRed'),
-      }),
-    );
-    // 12: maple-alias-param-key
-    this.decorationTypes.set(
-      12,
-      vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('terminal.ansiBrightYellow'),
-      }),
-    );
+    for (const [tokenType, themeColor] of Object.entries(DECORATION_COLORS)) {
+      this.decorationTypes.set(
+        Number(tokenType),
+        vscode.window.createTextEditorDecorationType({
+          color: new vscode.ThemeColor(themeColor),
+        }),
+      );
+    }
 
     // Register event listeners
     let activeEditor = vscode.window.activeTextEditor;
@@ -154,6 +90,10 @@ export class DecorationsManager {
   }
 
   public updateDecorations(editor: vscode.TextEditor) {
+    safeRun('decorations', () => this.doUpdateDecorations(editor), undefined);
+  }
+
+  private doUpdateDecorations(editor: vscode.TextEditor) {
     const document = editor.document;
 
     // Check if the document matches our supported languages
@@ -170,13 +110,14 @@ export class DecorationsManager {
       return;
     }
 
-    const token = new vscode.CancellationTokenSource().token;
+    const tokenSource = new vscode.CancellationTokenSource();
 
     // Call the existing semantic token provider
-    const semanticTokensResult =
-      this.semanticProvider.provideDocumentSemanticTokens(document, token) as
-        | vscode.SemanticTokens
-        | undefined;
+    const semanticTokensResult = this.semanticProvider.provideDocumentSemanticTokens(
+      document,
+      tokenSource.token,
+    ) as vscode.SemanticTokens | undefined;
+    tokenSource.dispose();
 
     if (!semanticTokensResult?.data || semanticTokensResult.data.length === 0) {
       // Clear decorations if no tokens are returned
@@ -224,16 +165,17 @@ export class DecorationsManager {
 
     // Apply decorations
     if (highlightingMode === 'minimal') {
+      const { mapleUtility, mapleValue, mapleAlias } = semanticTokenIndexes;
       const combinedValueRanges = [
-        ...(rangesByType.get(1) || []), // maple-utility
-        ...(rangesByType.get(2) || []), // maple-value
-        ...(rangesByType.get(9) || []), // maple-alias
+        ...(rangesByType.get(mapleUtility) || []),
+        ...(rangesByType.get(mapleValue) || []),
+        ...(rangesByType.get(mapleAlias) || []),
       ];
 
       for (const [tokenType, decorationType] of this.decorationTypes) {
-        if (tokenType === 2) {
+        if (tokenType === mapleValue) {
           editor.setDecorations(decorationType, combinedValueRanges);
-        } else if (tokenType === 1 || tokenType === 9) {
+        } else if (tokenType === mapleUtility || tokenType === mapleAlias) {
           editor.setDecorations(decorationType, []);
         } else {
           const ranges = rangesByType.get(tokenType) || [];

@@ -28,6 +28,7 @@ export class VueLanguageService extends HtmlLanguageService {
       if (closingQuoteIndex !== -1) {
         const expr = text.substring(exprStart, closingQuoteIndex);
         extractStringLiterals(
+          this,
           expr,
           exprStart,
           text,

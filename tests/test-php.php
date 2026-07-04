@@ -1,6 +1,14 @@
 <?php
 $isActive = TRUE;
-$extraClass = /* maple */ "p-4";
+$extraClass = /* maple */ $isActive ? '
+    fs-50
+    m-' . ($isActive ? '2' : '3') . '
+    bgc-red
+    p-2
+    o-50
+  ' : '
+    fs-60
+    m-' . ($isActive ? '2' : '3');
 ?>
 
 <div class="

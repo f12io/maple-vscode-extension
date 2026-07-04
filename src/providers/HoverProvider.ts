@@ -1,5 +1,8 @@
 import { convert, parseClass, StringHelper } from '@f12io/maple';
-import * as prettier from 'prettier';
+// The standalone build with an explicit plugin keeps prettier bundler-friendly
+// (the default entry resolves its parsers dynamically at runtime).
+import * as postcssPlugin from 'prettier/plugins/postcss';
+import * as prettier from 'prettier/standalone';
 import * as vscode from 'vscode';
 import {
   getParamSubstituteRegex,
@@ -14,13 +17,37 @@ import {
   isAliasMarker,
   parseMapleToken,
 } from '../helpers/maple-parser';
+import { logError } from '../helpers/logger';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
+
+function formatCss(css: string): Promise<string> {
+  return prettier.format(css, {
+    parser: 'css',
+    plugins: [postcssPlugin],
+    printWidth: 80,
+    tabWidth: 2,
+    useTabs: false,
+  });
+}
 
 export class MapleHoverProvider implements vscode.HoverProvider {
   async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
     token: vscode.CancellationToken,
+  ): Promise<vscode.Hover | null> {
+    try {
+      return await this.doProvideHover(document, position, token);
+    } catch (error) {
+      logError('hover', error);
+      return null;
+    }
+  }
+
+  private async doProvideHover(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    _token: vscode.CancellationToken,
   ): Promise<vscode.Hover | null> {
     if (
       !isExtensionEnabled(document) ||
@@ -42,28 +69,25 @@ export class MapleHoverProvider implements vscode.HoverProvider {
 
     if (!currentInstance) return null;
 
-    const words = StringHelper.split(currentInstance.value, ' ');
-    let currentWordStart = currentInstance.start;
+    // Token-based lookup splits on all whitespace (not just spaces), so words
+    // in multi-line class attributes don't drag newlines into the maple engine
     let word = '';
-
-    for (const w of words) {
-      // Find the actual start index of this word within the attribute string
-      // handling potential multiple spaces
-      const wStart =
-        currentInstance.value.indexOf(
-          w,
-          currentWordStart - currentInstance.start,
-        ) + currentInstance.start;
-      const wEnd = wStart + w.length;
-
+    for (const token of languageService.tokenizeClassesWithIndices(
+      currentInstance.value,
+    )) {
+      const wStart = currentInstance.start + token.start;
+      const wEnd = currentInstance.start + token.end;
       if (offset >= wStart && offset <= wEnd) {
-        word = w;
+        word = token.value;
         break;
       }
-      currentWordStart = wEnd;
     }
 
     if (!word) return null;
+
+    // Show the CSS for what the framework renders, not the source escape
+    // (e.g. Razor renders @@md:p-2 as @md:p-2)
+    word = languageService.getRenderedClassText(word);
 
     // 1. Try to parse the class to separate prefixes from the core utility
     const { activeWord, isMapleIntent, prefixes } = parseMapleToken(word);
@@ -148,12 +172,7 @@ export class MapleHoverProvider implements vscode.HoverProvider {
 
           if (expandedCss) {
             try {
-              const formattedCss = await prettier.format(expandedCss, {
-                parser: 'css',
-                printWidth: 80,
-                tabWidth: 2,
-                useTabs: false,
-              });
+              const formattedCss = await formatCss(expandedCss);
               markdown.appendCodeblock(formattedCss, 'css');
             } catch (ignoreError) {
               markdown.appendCodeblock(expandedCss, 'css');
@@ -171,12 +190,7 @@ export class MapleHoverProvider implements vscode.HoverProvider {
       const markdown = new vscode.MarkdownString();
 
       try {
-        const formattedCss = await prettier.format(css, {
-          parser: 'css',
-          printWidth: 80,
-          tabWidth: 2,
-          useTabs: false,
-        });
+        const formattedCss = await formatCss(css);
         markdown.appendCodeblock(formattedCss, 'css');
       } catch (ignoreError) {
         markdown.appendCodeblock(css, 'css');

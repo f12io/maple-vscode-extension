@@ -3,11 +3,31 @@
   "displayName": "Maple CSS",
   "description": "Auto-suggestions, hover help, diagnostics, color swatches and formatter for the Maple CSS engine",
   "version": "0.0.1",
+  "publisher": "f12io",
+  "license": "ROOT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f12io/maple-vscode-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/f12io/maple-vscode-extension/issues"
+  },
+  "homepage": "https://github.com/f12io/maple-vscode-extension#readme",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "keywords": [
+    "maple",
+    "css",
+    "utility-first",
+    "intellisense",
+    "autocomplete",
+    "formatter"
   ],
   "activationEvents": [
     "onLanguage:html",
@@ -22,7 +42,7 @@
     "onLanguage:php",
     "onLanguage:twig"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "semanticTokenTypes": [
       {
@@ -217,21 +237,29 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run typecheck && npm run bundle -- --production",
+    "typecheck": "tsc -p ./ --noEmit",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile",
+    "bundle": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "watch:tsc": "tsc -watch -p ./ --noEmit",
+    "pretest": "npm run typecheck",
     "lint": "eslint .",
     "prettier:fix": "prettier --write . --ignore-path .gitignore",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "package": "vsce package --no-dependencies",
+    "preversion": "node scripts/preversion-check.mjs && npm run lint && npm run typecheck && npm test && npm run bundle -- --production",
+    "release": "node scripts/release.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/node": "^20.19.43",
     "@types/picomatch": "^4.0.3",
-    "@types/vscode": "^1.125.0",
+    "@types/vscode": "^1.80.0",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.28.1",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.5.0",

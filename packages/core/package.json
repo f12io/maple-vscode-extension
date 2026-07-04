@@ -30,7 +30,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@f12io/maple": "^2.0.20"
+    "@f12io/maple": "^2.0.21"
   },
   "engines": {
     "node": ">=18"

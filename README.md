@@ -13,7 +13,7 @@ The official VS Code extension for the **Maple CSS Engine**. This extension prov
 
 ## Getting Started
 
-By default, the extension is disabled to avoid interfering with non-Maple projects, **unless** you are working on an HTML file that includes `maple.js` or `maple.min.js` in its `<head>`. In that case, the extension automatically activates!
+By default, the extension is disabled to avoid interfering with non-Maple projects, **unless** you are working on an HTML file that includes `maple.js` or `maple.min.js` in its `<head>`. In that case, the extension automatically activates.
 
 To manually enable it across your entire workspace, open your `settings.json` (or use the VS Code settings UI) and set:
 

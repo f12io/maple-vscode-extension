@@ -2,7 +2,7 @@ import {
   MAPLE_INTERPOLATION_REGEX,
   OPT_IN_OBJECT_START_REGEX,
   STANDARD_ATTR_REGEX,
-} from '../../constants/regex';
+} from '../regex';
 import {
   extractStringLiterals,
   extractUnquotedObjectKeys,
@@ -13,7 +13,7 @@ import {
   pushInstance,
   shouldSkipMatch,
   skipStringLiteral,
-} from '../../helpers/extractor.helper';
+} from '../extractor.helper';
 import {
   ClassInstance,
   dedupeInstancesByStart,

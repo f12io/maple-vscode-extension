@@ -1,3 +1,4 @@
+import { namedColors } from '@f12io/coco';
 import {
   COLOR_MAX_TONE,
   COLOR_MIN_TONE,
@@ -10,13 +11,12 @@ import {
   PROP_UNIT_MAP,
   PropertyHelper,
 } from '@f12io/maple';
+import { getExactWordRangeAtPosition } from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
-import { namedColors } from '@f12io/coco';
 import { AliasCache } from '../helpers/alias-cache';
-import { safeRun } from '../helpers/logger';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
-import { getExactWordRangeAtPosition } from '../helpers/extractor.helper';
+import { safeRun } from '../helpers/logger';
 import {
   ABBREVIATIONS,
   BUILTIN_ALIASES,

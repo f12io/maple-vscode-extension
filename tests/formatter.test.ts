@@ -39,45 +39,61 @@ describe('FormatterProvider.formatClasses', () => {
   const baseIndent = '  ';
 
   it('formats Javascript template literals', () => {
-    const input = "c-blue p-2 m-${isActive ? '2' : '3'} o-50 fw-normal ${isActive ? 'fs-50' : 'fs-60'} ${isActive ? `fs-50 m-${isActive ? '2' : '3'} bgc-red p-2 o-50` : `fs-60 m-${isActive ? '2' : '3'}`}";
-    
+    const input =
+      "c-blue p-2 m-${isActive ? '2' : '3'} o-50 fw-normal ${isActive ? 'fs-50' : 'fs-60'} ${isActive ? `fs-50 m-${isActive ? '2' : '3'} bgc-red p-2 o-50` : `fs-60 m-${isActive ? '2' : '3'}`}";
+
     const expected = `
-    c-blue
-    p-2
+    c-blue p-2
     m-\${isActive ? '2' : '3'}
     o-50 fw-normal
     \${isActive ? 'fs-50' : 'fs-60'}
     \${isActive ? \`
       fs-50
       m-\${isActive ? '2' : '3'}
-      bgc-red
-      p-2
-      o-50
+      bgc-red p-2 o-50
     \` : \`
       fs-60
       m-\${isActive ? '2' : '3'}
     \`}
   `;
 
-    const result = formatClasses(input, baseIndent, maxClassesPerLine, 'javascript');
+    const result = formatClasses(
+      input,
+      baseIndent,
+      maxClassesPerLine,
+      'javascript',
+    );
+    expect(result).toBe(expected);
+  });
+
+  it('merges singleton type-groups into neighboring lines', () => {
+    // `fx` (flex → space type) sits between differently-typed neighbors;
+    // without merging it would be stranded on a line of its own
+    const input = 'bgc-primary-muted c-red m-2 p-2 fs-5 o-50 fx fxrow-cc abs';
+
+    const expected = `
+    bgc-primary-muted c-red
+    m-2 p-2 fs-5 o-50
+    fx fxrow-cc abs
+  `;
+
+    const result = formatClasses(input, baseIndent, maxClassesPerLine, 'html');
     expect(result).toBe(expected);
   });
 
   it('formats PHP expressions', () => {
-    const input = "c-blue p-2 m-<?= $isActive ? '2' : '3' ?> o-50 fw-normal <?= $isActive ? 'fs-50' : 'fs-60' ?> <?= $isActive ? 'fs-50 m-' . ($isActive ? '2' : '3') . ' bgc-red p-2 o-50' : 'fs-60 m-' . ($isActive ? '2' : '3') ?>";
-    
+    const input =
+      "c-blue p-2 m-<?= $isActive ? '2' : '3' ?> o-50 fw-normal <?= $isActive ? 'fs-50' : 'fs-60' ?> <?= $isActive ? 'fs-50 m-' . ($isActive ? '2' : '3') . ' bgc-red p-2 o-50' : 'fs-60 m-' . ($isActive ? '2' : '3') ?>";
+
     const expected = `
-    c-blue
-    p-2
+    c-blue p-2
     m-<?= $isActive ? '2' : '3' ?>
     o-50 fw-normal
     <?= $isActive ? 'fs-50' : 'fs-60' ?>
     <?= $isActive ? '
       fs-50
       m-' . ($isActive ? '2' : '3') . '
-      bgc-red
-      p-2
-      o-50
+      bgc-red p-2 o-50
     ' : '
       fs-60
       m-' . ($isActive ? '2' : '3') ?>
@@ -88,20 +104,18 @@ describe('FormatterProvider.formatClasses', () => {
   });
 
   it('formats Razor expressions', () => {
-    const input = 'c-blue p-2 m-@(isActive ?"2" : "3") o-50 fw-normal @(isActive ? "fs-50" : "fs-60") @(isActive ? $@"fs-50 m-{(isActive ? "2" : "3")} bgc-red p-2 o-50" : $@"fs-60 m-{(isActive ? "2" : "3")}")';
-    
+    const input =
+      'c-blue p-2 m-@(isActive ?"2" : "3") o-50 fw-normal @(isActive ? "fs-50" : "fs-60") @(isActive ? $@"fs-50 m-{(isActive ? "2" : "3")} bgc-red p-2 o-50" : $@"fs-60 m-{(isActive ? "2" : "3")}")';
+
     const expected = `
-    c-blue
-    p-2
+    c-blue p-2
     m-@(isActive ? "2" : "3")
     o-50 fw-normal
     @(isActive ? "fs-50" : "fs-60")
     @(isActive ? $@"
       fs-50
       m-{(isActive ? "2" : "3")}
-      bgc-red
-      p-2
-      o-50
+      bgc-red p-2 o-50
     " : $@"
       fs-60
       m-{(isActive ? "2" : "3")}

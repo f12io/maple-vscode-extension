@@ -46,7 +46,7 @@ The extension includes a built-in formatter specifically for Maple classes (trig
 - `maple.format.onSave` _(default: `false`)_: Automatically format Maple classes on save. Requires `maple.format.enabled` to be `true`.
 - `maple.format.maxClassesPerLine` _(default: `4`)_: The maximum number of classes to allow on a single line before wrapping. Set to `1` to force every class onto its own line.
 
-> **Prettier Users**: Because Prettier aggressively squashes HTML classes, formatting them in VS Code can cause conflicts and flickering on save. If you actively use Prettier and "Format on Save", we highly recommend installing the `@f12io/prettier-plugin-maple` npm package instead of using the built-in formatter!
+> **Prettier Users**: Because Prettier aggressively squashes HTML classes, formatting them in VS Code can cause conflicts and flickering on save. If you actively use Prettier and "Format on Save", install [`@f12io/prettier-plugin-maple`](packages/prettier-plugin) instead of enabling the built-in formatter — it applies the same Maple layout inside Prettier's own pass (HTML class attributes, JSX/TS constructs, clsx/cva calls, and opt-in strings), so one formatter produces the final state.
 
 ## Comment Directives
 

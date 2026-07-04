@@ -1,8 +1,8 @@
+import { getLanguageIdFromFileName } from '@f12io/maple-language-core';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
-import { getLanguageIdFromFileName } from '../src/constants/languages';
 import { MapleColorProvider } from '../src/providers/ColorProvider';
 import { refreshDiagnostics } from '../src/providers/DiagnosticsProvider';
 import {

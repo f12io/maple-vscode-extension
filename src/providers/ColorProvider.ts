@@ -7,8 +7,8 @@ import {
   REGEX_RESERVED_KEYWORDS,
   StringHelper,
 } from '@f12io/maple';
+import { MAPLE_CLASS_REGEX } from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
-import { MAPLE_CLASS_REGEX } from '../constants/regex';
 import {
   cocoWithResolver,
   colorPrefixes,

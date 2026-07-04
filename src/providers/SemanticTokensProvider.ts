@@ -1,17 +1,17 @@
 import { BUILTIN_ALIASES, parseClass, StringHelper } from '@f12io/maple';
-import * as vscode from 'vscode';
 import {
   ALIAS_REGEX,
   MAPLE_CLASS_REGEX,
   MAPLE_COMMA_SPLIT_REGEX,
   MAPLE_PARAMS_SPLIT_REGEX,
   MAPLE_UNDERSCORE_SPLIT_REGEX,
-} from '../constants/regex';
+} from '@f12io/maple-language-core';
+import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
 import { getHighlightingMode, isExtensionEnabled } from '../helpers/config';
-import { safeRun } from '../helpers/logger';
 import { isFileExcluded } from '../helpers/exclude';
 import { getUtilKey } from '../helpers/get-util-key';
+import { safeRun } from '../helpers/logger';
 import {
   checkConverted,
   getAliasName,

@@ -3,7 +3,7 @@ import {
   ILanguageService,
   StringExtractionCallback,
   StringLiteralMatch,
-} from '../services/LanguageService';
+} from './LanguageService';
 
 import {
   DISABLE_REGEX,
@@ -14,7 +14,7 @@ import {
   START_COMMENT_STAR_REGEX,
   START_TAG_NAME_REGEX,
   TOKEN_SPLIT_REGEX,
-} from '../constants/regex';
+} from './regex';
 
 export function isQuote(char: string): boolean {
   return char === '"' || char === "'" || char === '`';

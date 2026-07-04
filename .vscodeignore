@@ -19,3 +19,5 @@ vitest.config.ts
 package-lock.json
 CONTRIBUTING.md
 **/*.vsix
+packages/**
+scripts/**

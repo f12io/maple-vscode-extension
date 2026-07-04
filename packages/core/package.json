@@ -1,0 +1,38 @@
+{
+  "name": "@f12io/maple-language-core",
+  "version": "0.0.2",
+  "description": "Editor-agnostic language tooling for the Maple CSS: region discovery, class extraction, and the class formatter shared by the VS Code extension and the Prettier plugin.",
+  "license": "ROOT",
+  "author": "f12.io",
+  "homepage": "https://github.com/f12io/maple-vscode-extension/tree/main/packages/core#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f12io/maple-vscode-extension.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/f12io/maple-vscode-extension/issues"
+  },
+  "keywords": [
+    "maple",
+    "css",
+    "utility-classes",
+    "formatter",
+    "language-tools"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@f12io/maple": "^2.0.20"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,5 +1,5 @@
-import { JSX_EXPR_START_REGEX } from '../../constants/regex';
 import { MapleRegion } from '../LanguageService';
+import { JSX_EXPR_START_REGEX } from '../regex';
 import { JavascriptLanguageService } from './JavascriptLanguageService';
 
 export class ReactLanguageService extends JavascriptLanguageService {

@@ -1,5 +1,5 @@
+import { SUPPORTED_LANGUAGES } from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
-import { SUPPORTED_LANGUAGES } from './constants/languages';
 import { AliasCache } from './helpers/alias-cache';
 import {
   isExtensionExplicitlyDisabled,
@@ -25,9 +25,7 @@ const COMPLETION_TRIGGER_CHARACTERS = [
   '/',
   '@',
   ';',
-  ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(
-    '',
-  ),
+  ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split(''),
 ];
 
 export function activate(context: vscode.ExtensionContext) {

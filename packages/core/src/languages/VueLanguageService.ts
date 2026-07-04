@@ -1,6 +1,6 @@
-import { ANGULAR_VUE_EXPR_REGEX } from '../../constants/regex';
-import { findClosingQuote } from '../../helpers/extractor.helper';
+import { findClosingQuote } from '../extractor.helper';
 import { MapleRegion } from '../LanguageService';
+import { ANGULAR_VUE_EXPR_REGEX } from '../regex';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class VueLanguageService extends HtmlLanguageService {

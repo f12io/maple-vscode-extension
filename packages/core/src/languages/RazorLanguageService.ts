@@ -1,4 +1,4 @@
-import { skipStringLiteral } from '../../helpers/extractor.helper';
+import { skipStringLiteral } from '../extractor.helper';
 import { StringLiteralMatch } from '../LanguageService';
 import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';

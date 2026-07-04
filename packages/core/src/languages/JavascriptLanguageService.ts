@@ -1,4 +1,4 @@
-import { UTILITY_FUNC_START_REGEX } from '../../constants/regex';
+import { UTILITY_FUNC_START_REGEX } from '../regex';
 import { MapleRegion } from '../LanguageService';
 import {
   BaseLanguageService,

@@ -1,5 +1,5 @@
+import { HEAD_TAG_REGEX, MAPLE_SCRIPT_REGEX } from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
-import { HEAD_TAG_REGEX, MAPLE_SCRIPT_REGEX } from '../constants/regex';
 
 export function isExtensionExplicitlyDisabled(): boolean {
   const config = vscode.workspace.getConfiguration('maple');

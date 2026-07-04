@@ -35,6 +35,10 @@ const ctx = await esbuild.context({
   target: 'node16',
   outfile: 'dist/extension.js',
   external: ['vscode'],
+  // Bundle the workspace core from source so no package build is required
+  alias: {
+    '@f12io/maple-language-core': './packages/core/src/index.ts',
+  },
   logLevel: 'silent',
   plugins: [esbuildProblemMatcherPlugin],
 });

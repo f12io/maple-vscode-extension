@@ -5,7 +5,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['out', 'dist', '.vscode-test', '__mocks__']),
+  globalIgnores(['out', '**/dist', '.vscode-test', '__mocks__']),
   {
     extends: [
       eslintJs.configs.recommended,

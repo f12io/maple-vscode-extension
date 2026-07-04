@@ -1,11 +1,11 @@
+import { findClosingQuote } from '../extractor.helper';
+import { MapleRegion } from '../LanguageService';
 import {
   ANGULAR_VUE_EXPR_REGEX,
   HOST_CLASS_REGEX,
   HOST_REGEX,
   SPECIFIC_CLASS_REGEX,
-} from '../../constants/regex';
-import { findClosingQuote } from '../../helpers/extractor.helper';
-import { MapleRegion } from '../LanguageService';
+} from '../regex';
 import { BaseLanguageService } from './BaseLanguageService';
 
 export class AngularLanguageService extends BaseLanguageService {

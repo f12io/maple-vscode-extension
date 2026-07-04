@@ -1,0 +1,42 @@
+{
+  "name": "@f12io/prettier-plugin-maple",
+  "version": "0.0.2",
+  "description": "Prettier plugin that formats Maple CSS utility classes in class attributes, className expressions, clsx/cva calls, and /* maple */ opt-in strings — so Prettier and the Maple VS Code extension agree on one layout.",
+  "license": "ROOT",
+  "author": "f12.io",
+  "homepage": "https://github.com/f12io/maple-vscode-extension/tree/main/packages/prettier-plugin#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/f12io/maple-vscode-extension.git",
+    "directory": "packages/prettier-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/f12io/maple-vscode-extension/issues"
+  },
+  "keywords": [
+    "prettier",
+    "prettier-plugin",
+    "maple",
+    "css",
+    "utility-classes",
+    "formatter"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@f12io/maple-language-core": "0.0.2"
+  },
+  "peerDependencies": {
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

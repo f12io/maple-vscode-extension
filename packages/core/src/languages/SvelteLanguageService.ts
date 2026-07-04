@@ -1,10 +1,13 @@
+import { MapleRegion } from '../LanguageService';
 import {
   JSX_EXPR_START_REGEX,
   SPECIFIC_CLASS_REGEX,
   UTILITY_FUNC_START_REGEX,
-} from '../../constants/regex';
-import { MapleRegion } from '../LanguageService';
-import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
+} from '../regex';
+import {
+  InterpolationContext,
+  InterpolationMatch,
+} from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
 export class SvelteLanguageService extends HtmlLanguageService {

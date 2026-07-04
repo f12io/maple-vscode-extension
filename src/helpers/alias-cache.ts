@@ -1,12 +1,12 @@
-import * as fs from 'fs';
-import * as vscode from 'vscode';
 import {
+  ALIAS_REGEX,
   getLanguageIdFromExtension,
   SUPPORTED_FILES_GLOB,
-} from '../constants/languages';
-import { ALIAS_REGEX } from '../constants/regex';
-import { logError } from './logger';
+} from '@f12io/maple-language-core';
+import * as fs from 'fs';
+import * as vscode from 'vscode';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
+import { logError } from './logger';
 
 /**
  * A workspace-wide cache that scans files for custom Maple aliases

@@ -14,25 +14,26 @@ Open the folder in VS Code and press `F5` ("Run Extension") to launch an
 Extension Development Host with the extension loaded against the sample files
 in `tests/`.
 
-## Project layout
+## Repository layout
 
-- `src/extension.ts` — activation entry point; registers all providers
-- `src/providers/` — one file per editor feature (completion, hover, diagnostics, semantic tokens, colors, decorations, formatter)
-- `src/services/languages/` — per-framework class extraction (HTML, React, Vue, Svelte, Angular, PHP, Twig, Razor); all extend `BaseLanguageService`
-- `src/helpers/` — parsing, caching, config, and logging utilities
-- `src/constants/` — shared regexes and language definitions
-- `tests/` — Vitest suites plus fixture files for each supported framework
-- `__mocks__/vscode.ts` — the VS Code API mock used by the tests
+This is an npm workspace monorepo shipping three artifacts in lockstep:
 
-## Development workflow
+- **Root** — the VS Code extension (`src/`, bundled to `dist/extension.js`)
+- **`packages/core`** — `@f12io/maple-language-core`: editor-agnostic region
+  discovery, extraction, and the class layout engine. No `vscode` imports
+  allowed here; both other artifacts consume it.
+- **`packages/prettier-plugin`** — `@f12io/prettier-plugin-maple`: thin
+  Prettier adapter over the core engine.
 
-| Command             | What it does                      |
-| ------------------- | --------------------------------- |
-| `npm run watch`     | Bundle with esbuild in watch mode |
-| `npm run typecheck` | Type-check without emitting       |
-| `npm run lint`      | ESLint                            |
-| `npm test`          | Run the Vitest suite              |
-| `npm run package`   | Build a `.vsix` with vsce         |
+Tests and the esbuild bundle resolve the workspace packages from source (via
+aliases), so no build step is needed during development. `npm run
+build:packages` produces the publishable `dist/` output and type-checks both
+packages; `npm run typecheck` runs it plus the extension check.
+
+All three artifacts share one version. `npm run release -- patch` bumps the
+root, and the `version` lifecycle syncs `packages/*/package.json` before the
+release commit; the tag then publishes the extension to the Marketplace and
+both packages to npm (via npm trusted publishing).
 
 ## Pull requests
 
@@ -66,4 +67,5 @@ pushes. The tag triggers `.github/workflows/release.yml`, which:
 2. Lints, type-checks, tests, and packages the `.vsix`
 3. Creates a draft GitHub release with generated notes and the `.vsix` attached
 4. Publishes to the VS Code Marketplace (and Open VSX if configured)
-5. Flips the draft release to published
+5. Publishes both packages to npm (via npm trusted publishing)
+6. Flips the draft release to published

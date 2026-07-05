@@ -12,7 +12,14 @@
   "bugs": {
     "url": "https://github.com/f12io/maple-vscode-extension/issues"
   },
-  "homepage": "https://github.com/f12io/maple-vscode-extension#readme",
+  "homepage": "https://github.com/f12io/maple-vscode-extension",
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#006EFF",
+    "theme": "dark"
+  },
+  "pricing": "Free",
+  "qna": "marketplace",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -277,5 +284,15 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true,
+      "description": "Maple CSS only reads workspace files to provide language features; it never executes workspace content."
+    },
+    "virtualWorkspaces": {
+      "supported": "limited",
+      "description": "Custom alias discovery scans files on disk and is unavailable in virtual workspaces; other features work on open documents."
+    }
+  }
 }

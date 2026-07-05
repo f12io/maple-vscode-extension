@@ -4,7 +4,7 @@ Editor-agnostic language tooling for [Maple CSS Engine](https://github.com/f12io
 region discovery, class extraction, string grammar, and class formatting
 logic. This package is the single source of truth consumed by the
 [Maple VS Code extension](https://marketplace.visualstudio.com/items?itemName=f12io.maple-vscode-extension)
-and [`@f12io/prettier-plugin-maple`](https://www.npmjs.com/package/@f12io/prettier-plugin-maple).
+and [@f12io/prettier-plugin-maple](https://www.npmjs.com/package/@f12io/prettier-plugin-maple).
 
 ## What it provides
 

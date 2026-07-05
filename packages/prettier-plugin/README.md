@@ -1,11 +1,11 @@
 # @f12io/prettier-plugin-maple
 
-Prettier plugin for the [Maple CSS](https://github.com/f12io/maple).
-It formats Maple utility classes with the same layout engine as the
-[Maple VS Code extension](https://github.com/f12io/maple-vscode-extension),
-so a single Prettier pass produces the final layout — no editor tug-of-war,
-no format-on-save flicker, and the same result in CI, pre-commit hooks, and
-every editor Prettier runs in.
+Prettier plugin for the [Maple CSS Engine](https://github.com/f12io/maple).
+It automatically formats your Maple utility classes to ensure a consistent
+layout across your project. Because it shares the same formatting logic as the
+[Maple VS Code extension](https://marketplace.visualstudio.com/items?itemName=f12io.maple-vscode-extension),
+you get identical results everywhere—whether you are formatting on save in your
+editor, running pre-commit hooks, or running CI pipelines.
 
 ## Install
 

@@ -261,6 +261,8 @@
     "version": "node scripts/sync-versions.mjs && npm install --package-lock-only && git add packages/core/package.json packages/prettier-plugin/package.json package-lock.json"
   },
   "devDependencies": {
+    "@emnapi/core": "^1.11.2",
+    "@emnapi/runtime": "^1.11.2",
     "@eslint/js": "^9.39.4",
     "@types/node": "^20.19.43",
     "@types/picomatch": "^4.0.3",
@@ -294,6 +296,5 @@
       "supported": "limited",
       "description": "Custom alias discovery scans files on disk and is unavailable in virtual workspaces; other features work on open documents."
     }
-  },
-  "packageManager": "npm@11.6.2"
+  }
 }

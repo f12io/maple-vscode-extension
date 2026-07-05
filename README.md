@@ -1,6 +1,6 @@
 # Maple Extension for VS Code
 
-The official [VS Code extension](https://marketplace.visualstudio.com/items?itemName=f12io.maple-vscode-extension) for the [`Maple CSS Engine`](https://github.com/f12io/maple). This extension provides a rich, intelligent developer experience for writing Maple utility classes in your HTML, Vue, React, Svelte, and PHP files.
+The official [VS Code extension](https://marketplace.visualstudio.com/items?itemName=f12io.maple-vscode-extension) for the [Maple CSS Engine](https://github.com/f12io/maple). This extension provides a rich, intelligent developer experience for writing Maple utility classes in your HTML, Vue, React, Svelte, and PHP files.
 
 ## Features
 

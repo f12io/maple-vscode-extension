@@ -1,6 +1,6 @@
 {
   "name": "@f12io/maple-language-core",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Editor-agnostic language tooling for the Maple CSS: region discovery, class extraction, and the class formatter shared by the VS Code extension and the Prettier plugin.",
   "license": "ROOT",
   "author": "f12.io",

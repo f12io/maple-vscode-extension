@@ -25,7 +25,7 @@ export function isQuote(char: string): boolean {
  * Guards every hand-rolled scanner against runaway scans on malformed input
  * (e.g. an unterminated attribute in a huge minified file).
  */
-export const MAX_SCAN_LENGTH = 5000;
+export const MAX_SCAN_LENGTH = 200_000;
 
 /**
  * Skips a quoted string literal. `index` must hold the opening quote (`'` or
@@ -310,7 +310,6 @@ export function findOptInRegions(
   return results;
 }
 
-
 export function extractStringLiterals(
   service: ILanguageService,
   expr: string,
@@ -342,7 +341,6 @@ export function extractStringLiterals(
     j = literal.endIndex;
   }
 }
-
 
 export function getExactWordRangeAtPosition(
   document: any,

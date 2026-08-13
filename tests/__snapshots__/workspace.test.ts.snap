@@ -1005,9 +1005,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -1259,8 +1257,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-  c-blue
-  p-2
+  c-blue p-2
   m-",
     "colors": [
       {
@@ -1421,9 +1418,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -1551,9 +1546,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -1953,8 +1946,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-  c-blue
-  p-2
+  c-blue p-2
   m-",
     "colors": [
       {
@@ -2115,9 +2107,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -2518,11 +2508,8 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-        fw-bold
-        m-4
-        c-red bgc-red
-        o-50
-        p-4
+        fw-bold m-4
+        c-red bgc-red o-50 p-4
       ",
     "colors": [
       {

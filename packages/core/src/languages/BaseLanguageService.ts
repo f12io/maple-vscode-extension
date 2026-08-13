@@ -310,6 +310,7 @@ export abstract class BaseLanguageService implements ILanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     return undefined;
   }
@@ -429,6 +430,7 @@ export abstract class BaseLanguageService implements ILanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string {
     const replacements: Array<{
       start: number;
@@ -445,7 +447,7 @@ export abstract class BaseLanguageService implements ILanguageService {
       [],
       [],
       (value, offset, _text, _matchIndex, literal) => {
-        const innerIndent = baseIndent + '  ';
+        const innerIndent = baseIndent + indentUnit;
         const formatted = formatClassesFn(
           value,
           innerIndent,

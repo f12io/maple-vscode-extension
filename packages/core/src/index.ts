@@ -11,6 +11,7 @@ export { LanguageServiceRegistry } from './registry';
 export {
   applyTextEdits,
   computeFormattingEdits,
+  detectIndentUnit,
   formatClasses,
   formatText,
 } from './formatter';

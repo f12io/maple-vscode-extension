@@ -11,9 +11,20 @@ export interface TextReplacement {
   newText: string;
 }
 
+/**
+ * Indentation of the line `index` sits on. Read from the whole line, not just
+ * up to `index`: an attribute region anchors on the whitespace *before* the
+ * attribute name (`STANDARD_ATTR_REGEX` opens with `(?:^|[\s<>])`), so an
+ * attribute that starts its own line would otherwise report one character less
+ * than the line is actually indented.
+ */
 function getIndentFromIndex(text: string, index: number): string {
   const lineStart = text.lastIndexOf('\n', index) + 1;
-  const lineText = text.substring(lineStart, index);
+  const lineEnd = text.indexOf('\n', lineStart);
+  const lineText = text.substring(
+    lineStart,
+    lineEnd === -1 ? text.length : lineEnd,
+  );
   const match = lineText.match(INDENT_WHITESPACE_REGEX);
   return match ? match[0] : '';
 }
@@ -25,6 +36,59 @@ export interface FormatClassesOptions {
    * whose classes are alias definitions that read poorly side by side.
    */
   oneClassPerLine?: boolean;
+  /** One indentation level; `detectIndentUnit` reads it off the file. */
+  indentUnit?: string;
+}
+
+/** Used when the file has no indentation to learn from. */
+const DEFAULT_INDENT_UNIT = '  ';
+
+/**
+ * One indentation level as the file itself writes it: a tab when the file
+ * indents with tabs, otherwise the step it most often changes indentation by.
+ *
+ * The step is counted from differences between consecutive lines rather than
+ * from the narrowest indent, because a single odd line — a ` *` comment
+ * continuation, a wrapped attribute — must not redefine the whole file's
+ * indentation.
+ */
+export function detectIndentUnit(text: string): string {
+  const stepCounts = new Map<number, number>();
+  let tabLines = 0;
+  let spaceLines = 0;
+  let previousWidth = 0;
+
+  for (const line of text.split('\n')) {
+    const indent = line.match(INDENT_WHITESPACE_REGEX)?.[0] ?? '';
+    if (indent.length === line.length) continue; // blank / whitespace-only
+
+    if (indent.startsWith('\t')) {
+      tabLines++;
+      previousWidth = 0;
+      continue;
+    }
+    if (indent.length > 0) spaceLines++;
+
+    const step = Math.abs(indent.length - previousWidth);
+    if (step > 0) stepCounts.set(step, (stepCounts.get(step) ?? 0) + 1);
+    previousWidth = indent.length;
+  }
+
+  if (tabLines > 0 && tabLines >= spaceLines) return '\t';
+
+  let bestStep = 0;
+  let bestCount = 0;
+  for (const [step, count] of stepCounts) {
+    // Ties go to the wider step. The narrow ones come from lines that are not
+    // structure — a one-space nudge inside a wrapped attribute, a comment
+    // continuation — and picking those would shrink the file's indentation.
+    if (count > bestCount || (count === bestCount && step > bestStep)) {
+      bestStep = step;
+      bestCount = count;
+    }
+  }
+
+  return bestStep > 0 ? ' '.repeat(bestStep) : DEFAULT_INDENT_UNIT;
 }
 
 /** Number of line breaks in `str`; 2 or more means the author left a blank line. */
@@ -84,6 +148,8 @@ export function formatClasses(
   const onePerLine =
     options.oneClassPerLine === true && tokens.length > maxClassesPerLine;
 
+  const indentUnit = options.indentUnit ?? DEFAULT_INDENT_UNIT;
+
   const formatToken = (token: string) =>
     service.formatInterpolation(
       token,
@@ -91,6 +157,7 @@ export function formatClasses(
       maxClassesPerLine,
       (value, indent, maxClasses) =>
         formatClasses(value, indent, maxClasses, service, options),
+      indentUnit,
     );
 
   const layoutBlock = (blockTokens: Array<Token>): Array<FormatLine> => {
@@ -183,7 +250,7 @@ export function formatClasses(
     return blockLines[0][0].classes.join(' ');
   }
 
-  const indent = baseIndent + '  ';
+  const indent = baseIndent + indentUnit;
   return (
     '\n' +
     blockLines
@@ -207,6 +274,7 @@ export function computeFormattingEdits(
   maxClassesPerLine: number,
 ): Array<TextReplacement> {
   const edits: Array<TextReplacement> = [];
+  const indentUnit = detectIndentUnit(text);
 
   // The same regions extraction consumes; when regions overlap (e.g.
   // /* maple */ clsx(...), or clsx inside a className expression) the
@@ -223,6 +291,7 @@ export function computeFormattingEdits(
     const baseIndent = getIndentFromIndex(text, region.anchor);
     // The html element holds alias definitions; those get a line each.
     const classOptions: FormatClassesOptions = {
+      indentUnit,
       oneClassPerLine: getTagNameBackwards(text, region.anchor) === 'html',
     };
     const formatClassesFn = (value: string, indent: string, max: number) =>
@@ -253,6 +322,7 @@ export function computeFormattingEdits(
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
     if (structured !== undefined) {
       if (

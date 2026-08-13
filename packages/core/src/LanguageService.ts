@@ -138,6 +138,8 @@ export interface ILanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    /** One indentation level, as written in the host file. */
+    indentUnit: string,
   ): string | undefined;
   formatInterpolation(
     cls: string,
@@ -148,5 +150,7 @@ export interface ILanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    /** One indentation level, as written in the host file. */
+    indentUnit: string,
   ): string;
 }

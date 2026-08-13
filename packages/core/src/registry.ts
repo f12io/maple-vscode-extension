@@ -68,12 +68,14 @@ class CompositeLanguageService implements ILanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     return this.services[this.services.length - 1].formatExpression(
       expr,
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
   }
 
@@ -94,12 +96,14 @@ class CompositeLanguageService implements ILanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string {
     return this.services[this.services.length - 1].formatInterpolation(
       cls,
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
   }
 }

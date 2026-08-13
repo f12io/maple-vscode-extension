@@ -53,12 +53,14 @@ export class PhpLanguageService extends HtmlLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string {
     const ternaryResult = this.formatTernaryInterpolation(
       cls,
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
     if (ternaryResult !== undefined) {
       return ternaryResult;
@@ -69,6 +71,7 @@ export class PhpLanguageService extends HtmlLanguageService {
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
   }
 
@@ -81,6 +84,7 @@ export class PhpLanguageService extends HtmlLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     const startIndex = cls.indexOf('<?');
     if (startIndex === -1) {
@@ -111,6 +115,7 @@ export class PhpLanguageService extends HtmlLanguageService {
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
     if (formattedExpr === undefined) return undefined;
 
@@ -126,23 +131,26 @@ export class PhpLanguageService extends HtmlLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     const ternary = this.parseTernaryArms(expr);
     if (!ternary) return undefined;
 
-    const exprIndent = baseIndent + '  ';
+    const exprIndent = baseIndent + indentUnit;
 
     const formattedConsequent = this.formatPhpArm(
       ternary.consequent.trim(),
       exprIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
     const formattedAlternate = this.formatPhpArm(
       ternary.alternate.trim(),
       exprIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
 
     if (formattedConsequent === undefined || formattedAlternate === undefined) {
@@ -169,6 +177,7 @@ export class PhpLanguageService extends HtmlLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     const segments = this.parsePhpConcatenation(arm);
     if (segments.length === 0) return undefined;

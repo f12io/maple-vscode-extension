@@ -3,9 +3,7 @@ $isActive = TRUE;
 $extraClass = /* maple */ $isActive ? '
     fs-50
     m-' . ($isActive ? '2' : '3') . '
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ' : '
     fs-60
     m-' . ($isActive ? '2' : '3');
@@ -27,17 +25,14 @@ $extraClass = /* maple */ $isActive ? '
 </div>
 
 <div class="
-  c-blue
-  p-2
+  c-blue p-2
   m-<?= $isActive ? '2' : '3' ?>
   o-50 fw-normal
   <?= $isActive ? 'fs-50' : 'fs-60' ?>
   <?= $isActive ? '
     fs-50
     m-' . ($isActive ? '2' : '3') . '
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ' : '
     fs-60
     m-' . ($isActive ? '2' : '3') ?>

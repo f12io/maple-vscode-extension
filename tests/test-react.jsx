@@ -26,11 +26,8 @@ export function MyComponent() {
         })}
       ></span>
       <span className={clsx(`
-        fw-bold
-        m-4
-        c-red bgc-red
-        o-50
-        p-4
+        fw-bold m-4
+        c-red bgc-red o-50 p-4
       `, 'm-6')}></span>
       <span className={clsx(['fw-bold m-4', 'm-6'])}></span>
       <span className={clsx([true && 'fw-bold', true ? 'm-6' : 'm-4'])}></span>

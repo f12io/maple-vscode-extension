@@ -42,8 +42,7 @@ JS).
 ```html
 <div
   class="
-    c-blue
-    p-2 m-2 fs-50
+    c-blue p-2 m-2 fs-50
     o-50 fw-normal
   "
 ></div>
@@ -70,9 +69,7 @@ own and never merges with its neighbours.
 ```html
 <div
   class="
-    c-blue p-2
-
-    m-2 fs-50
+    c-blue p-2 m-2 fs-50
     o-50 fw-normal
   "
 ></div>

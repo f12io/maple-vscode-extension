@@ -161,6 +161,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string {
     // Try ternary expansion for @(...) expressions
     const ternaryResult = this.formatTernaryInterpolation(
@@ -168,6 +169,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
     if (ternaryResult !== undefined) {
       return ternaryResult;
@@ -178,6 +180,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
 
     if (formatted === cls) return formatted;
@@ -218,6 +221,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     const startIndex = cls.indexOf('@(');
     if (startIndex === -1) return undefined;
@@ -233,6 +237,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
     if (formattedExpr === undefined) return undefined;
 
@@ -248,6 +253,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     const ternary = this.parseTernaryArms(expr);
     if (!ternary) return undefined;
@@ -272,7 +278,7 @@ export class RazorLanguageService extends HtmlLanguageService {
       return undefined;
     }
 
-    const exprIndent = baseIndent + '  ';
+    const exprIndent = baseIndent + indentUnit;
 
     const formattedConsequent = formatClassesFn(
       consequentContent,

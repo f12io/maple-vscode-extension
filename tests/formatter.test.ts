@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type * as vscode from 'vscode';
-import { formatText } from '@f12io/maple-language-core';
+import { detectIndentUnit, formatText } from '@f12io/maple-language-core';
 import {
   applyFormatting,
   formatClasses,
@@ -413,5 +413,120 @@ describe('author blank lines are preserved', () => {
   --alias-e=fs-50
 ">`);
     expect(format(once)).toBe(once);
+  });
+});
+
+describe('indentation follows the file', () => {
+  const maxClassesPerLine = 4;
+  const classes = 'bgc-red-500 p-2 m-4 o-50 c-blue brc-red-500';
+
+  it('defaults to two spaces when the file has no indentation', () => {
+    expect(formatText(`<div class="${classes}">`, 'html', maxClassesPerLine))
+      .toBe(`<div class="
+  bgc-red-500 p-2 m-4 o-50
+  c-blue brc-red-500
+">`);
+  });
+
+  it('uses a tab when the file is tab-indented', () => {
+    const text = `<body>\n\t<div class="${classes}"></div>\n</body>`;
+
+    expect(formatText(text, 'html', maxClassesPerLine)).toBe(`<body>
+\t<div class="
+\t\tbgc-red-500 p-2 m-4 o-50
+\t\tc-blue brc-red-500
+\t"></div>
+</body>`);
+  });
+
+  it('uses four spaces when the file indents by four', () => {
+    const text = `<body>\n    <div class="${classes}"></div>\n</body>`;
+
+    expect(formatText(text, 'html', maxClassesPerLine)).toBe(`<body>
+    <div class="
+        bgc-red-500 p-2 m-4 o-50
+        c-blue brc-red-500
+    "></div>
+</body>`);
+  });
+
+  it('gives nested interpolations the same unit', () => {
+    const text = [
+      'function a() {',
+      '\tconst cls = /* maple */ `c-blue p-2 m-2 o-50 fw-normal ${cond ? `p-4 m-4 o-60 fw-bold` : `p-8`}`;',
+      '}',
+    ].join('\n');
+
+    const out = formatText(text, 'javascript', maxClassesPerLine);
+
+    expect(out).toContain('\n\t\tc-blue');
+    expect(out).not.toContain('  c-blue');
+  });
+});
+
+describe('detectIndentUnit', () => {
+  it('reads the file step', () => {
+    expect(detectIndentUnit('<a>\n  <b>\n    <c>\n  </b>\n</a>')).toBe('  ');
+    expect(detectIndentUnit('<a>\n    <b>\n        <c>\n    </b>\n</a>')).toBe(
+      '    ',
+    );
+    expect(detectIndentUnit('<a>\n\t<b>\n\t\t<c>\n\t</b>\n</a>')).toBe('\t');
+  });
+
+  it('is not thrown off by one-space comment continuations', () => {
+    const js = [
+      '/**',
+      ' * A doc block whose continuation lines are indented by one.',
+      ' */',
+      'function a() {',
+      '  const b = 1;',
+      '  if (b) {',
+      '    return 2;',
+      '  }',
+      '}',
+    ].join('\n');
+
+    expect(detectIndentUnit(js)).toBe('  ');
+  });
+
+  it('falls back to two spaces when the file has no indentation', () => {
+    expect(detectIndentUnit('<div class="a b">x</div>')).toBe('  ');
+  });
+});
+
+describe('attribute on its own line', () => {
+  const maxClassesPerLine = 4;
+
+  it('indents from the attribute line, not one character short of it', () => {
+    const text = `<html\n  class="--alias-a=p-2 --alias-b=m-2 --alias-c=o-50 --alias-d=c-red-500 --alias-e=fs-50"\n>\n  <body></body>\n</html>`;
+
+    expect(formatText(text, 'html', maxClassesPerLine)).toBe(`<html
+  class="
+    --alias-a=p-2
+    --alias-b=m-2
+    --alias-c=o-50
+    --alias-d=c-red-500
+    --alias-e=fs-50
+  "
+>
+  <body></body>
+</html>`);
+  });
+
+  it('repairs a file whose classes drifted to an odd column, then holds', () => {
+    const drifted = `<html\n  class="\n   --alias-a=p-2\n   --alias-b=m-2\n   --alias-c=o-50\n   --alias-d=c-red-500\n   --alias-e=fs-50\n "\n>`;
+
+    const repaired = formatText(drifted, 'html', maxClassesPerLine);
+
+    expect(repaired).toBe(`<html
+  class="
+    --alias-a=p-2
+    --alias-b=m-2
+    --alias-c=o-50
+    --alias-d=c-red-500
+    --alias-e=fs-50
+  "
+>`);
+    expect(formatText(repaired, 'html', maxClassesPerLine)).toBe(repaired);
   });
 });

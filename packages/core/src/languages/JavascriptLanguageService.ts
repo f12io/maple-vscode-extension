@@ -62,6 +62,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string {
     const startIndex = cls.indexOf('${');
     if (startIndex === -1) {
@@ -70,6 +71,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
         baseIndent,
         maxClassesPerLine,
         formatClassesFn,
+        indentUnit,
       );
     }
     const end = this.parseBalanced(cls, startIndex + 1);
@@ -79,6 +81,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
         baseIndent,
         maxClassesPerLine,
         formatClassesFn,
+        indentUnit,
       );
     }
 
@@ -91,6 +94,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
       baseIndent,
       maxClassesPerLine,
       formatClassesFn,
+      indentUnit,
     );
     if (formattedExpr === undefined) {
       return super.formatInterpolation(
@@ -98,6 +102,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
         baseIndent,
         maxClassesPerLine,
         formatClassesFn,
+        indentUnit,
       );
     }
 
@@ -113,6 +118,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
       indent: string,
       maxClasses: number,
     ) => string,
+    indentUnit: string,
   ): string | undefined {
     const ternary = this.parseTernaryArms(expr);
     if (!ternary) return undefined;
@@ -132,7 +138,7 @@ export class JavascriptLanguageService extends BaseLanguageService {
 
     const consequentContent = consequentStr.slice(1, -1);
     const alternateContent = alternateStr.slice(1, -1);
-    const exprIndent = baseIndent + '  ';
+    const exprIndent = baseIndent + indentUnit;
 
     const formattedConsequent = formatClassesFn(
       consequentContent,

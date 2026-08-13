@@ -71,6 +71,18 @@ function doRefreshDiagnostics(
     for (const token of tokens) {
       if (token.value.includes('${') || token.hasInterpolation) continue;
 
+      // An alias definition (`--alias-name=u1;u2;u3`) is a single token, but the
+      // class regex splits it on ';'. Those fragments are the alias body, not
+      // utilities applied to this element, so they get their own conflict scope:
+      // they must not clash with the element's own classes or with other aliases.
+      const isAliasDefinitionToken = isAliasDefinition(
+        stripQuotes(token.value).word,
+      );
+      const aliasBodySelectors = new Map<
+        string,
+        { range: vscode.Range; isAdded: boolean }
+      >();
+
       for (const wordMatch of token.value.matchAll(MAPLE_CLASS_REGEX)) {
         let cls = wordMatch[0];
 
@@ -213,11 +225,19 @@ function doRefreshDiagnostics(
                 doc.positionAt(endIdx),
               );
 
-              const previousSelector = seenSelectors.get(conflictKey);
+              // The first fragment of an alias definition is the `--alias-name=`
+              // declaration itself, which still belongs to the element scope so a
+              // duplicated alias name is reported.
+              const scope =
+                isAliasDefinitionToken && wordMatch.index > 0
+                  ? aliasBodySelectors
+                  : seenSelectors;
+
+              const previousSelector = scope.get(conflictKey);
               if (previousSelector) {
                 if (!previousSelector.isAdded) {
                   previousSelector.isAdded = true;
-                  seenSelectors.set(conflictKey, previousSelector);
+                  scope.set(conflictKey, previousSelector);
 
                   const firstDiagnostic = new vscode.Diagnostic(
                     previousSelector.range,
@@ -236,7 +256,7 @@ function doRefreshDiagnostics(
                 diagnostic.source = 'Maple';
                 diagnostics.push(diagnostic);
               } else {
-                seenSelectors.set(conflictKey, { range, isAdded: false });
+                scope.set(conflictKey, { range, isAdded: false });
               }
             }
           }

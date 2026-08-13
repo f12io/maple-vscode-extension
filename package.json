@@ -2,7 +2,7 @@
   "name": "maple-vscode-extension",
   "displayName": "Maple CSS",
   "description": "Auto-suggestions, hover help, diagnostics, color swatches and formatter for the Maple CSS engine",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "publisher": "f12io",
   "license": "ROOT",
   "repository": {
@@ -282,7 +282,7 @@
   "dependencies": {
     "@f12io/coco": "^2.1.9",
     "@f12io/maple": "^2.0.23",
-    "@f12io/maple-language-core": "0.0.11",
+    "@f12io/maple-language-core": "0.0.12",
     "picomatch": "^4.0.4"
   },
   "workspaces": [

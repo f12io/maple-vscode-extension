@@ -15,6 +15,7 @@ import { safeRun } from '../helpers/logger';
 import {
   checkConverted,
   getAliasName,
+  isAliasDefinition,
   isAliasMarker,
   isVariable,
   stripQuotes,
@@ -193,6 +194,9 @@ export class MapleSemanticTokensProvider
           currentClassName: string,
           currentOffset: number,
           parsed: any,
+          // An alias body is a template, not a class: `{utility}` placeholders
+          // keep it from converting, so the convertibility gate is skipped.
+          forceHighlight = false,
         ) => {
           const srcClass = parsed.srcClass || currentClassName;
           let mediaQuery = '';
@@ -250,7 +254,7 @@ export class MapleSemanticTokensProvider
 
           const isConverted = checkConverted(currentClassName);
 
-          if (!isConverted && !isAlias) {
+          if (!isConverted && !isAlias && !forceHighlight) {
             return;
           }
 
@@ -652,6 +656,34 @@ export class MapleSemanticTokensProvider
             }
           }
         };
+
+        // `--alias-x=^:is(p,.\@p1)>:{utility}`: when the alias body carries
+        // selectors the engine folds `--alias-x=` into the prefix chain, so the
+        // definition is no longer the parsed utility. Emit the alias name and
+        // `=` here, then highlight the body as a class of its own.
+        const equalsIndex = className.indexOf('=');
+        if (
+          isAliasDefinition(className) &&
+          equalsIndex !== -1 &&
+          !parsedClass.utilKey?.startsWith('--alias-')
+        ) {
+          pushKeyValueTokens(
+            semanticTokenIndexes.mapleAlias,
+            className,
+            currentClassNameOffset,
+            startPos,
+            false,
+          );
+
+          const body = className.substring(equalsIndex + 1);
+          const bodyOffset = currentClassNameOffset + equalsIndex + 1;
+          const parsedBody = parseClass(body);
+
+          if (parsedBody) {
+            processClassTokens(body, bodyOffset, parsedBody, true);
+          }
+          continue;
+        }
 
         processClassTokens(className, currentClassNameOffset, parsedClass);
       }

@@ -5,7 +5,9 @@
 // ============================================================================
 // Maple Token Parsing
 // ============================================================================
-export const MAPLE_CLASS_PATTERN = `[\\w\\-@:\\[\\]\\#\\.\\%\\|_\\/\\(\\)\\,\\=\\!\\^\\&\\>\\<\\~\\+\\*\\'\\"\\{\\}]+`;
+// Includes `\` so CSS-escaped selectors stay in one piece, e.g. the
+// `.\@p1` inside `--alias-x=^:is(p,.\@p1)>:{utility}`.
+export const MAPLE_CLASS_PATTERN = `[\\w\\-@:\\[\\]\\#\\.\\%\\|_\\/\\(\\)\\,\\=\\!\\^\\&\\>\\<\\~\\+\\*\\'\\"\\{\\}\\\\]+`;
 
 /** Global matcher for all maple class tokens. */
 export const MAPLE_CLASS_REGEX = new RegExp(MAPLE_CLASS_PATTERN, 'g');

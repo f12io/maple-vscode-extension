@@ -153,8 +153,13 @@ function doRefreshDiagnostics(
             hasError = true;
             errorMsg = `Invalid usage of '!important'. Use '=' operator or '[]' brackets for string literals.`;
           } else if (
-            isAliasDefinition(activeWord) &&
-            activeWord.includes('=')
+            // `activeWord` covers prefixed definitions (`@md:--alias-card=...`),
+            // the raw class covers bodies that carry selectors
+            // (`--alias-x=^:is(p,.\@p1)>:{utility}`), where the engine folds the
+            // `--alias-x=` part into the prefix chain and it disappears from
+            // `activeWord`.
+            (isAliasDefinition(activeWord) && activeWord.includes('=')) ||
+            (isAliasDefinition(cls) && cls.includes('='))
           ) {
             if (instance.tagName && instance.tagName !== 'html') {
               hasError = true;

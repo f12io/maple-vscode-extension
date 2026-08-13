@@ -1005,9 +1005,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -1259,8 +1257,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-  c-blue
-  p-2
+  c-blue p-2
   m-",
     "colors": [
       {
@@ -1421,9 +1418,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -1551,9 +1546,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -1953,8 +1946,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-  c-blue
-  p-2
+  c-blue p-2
   m-",
     "colors": [
       {
@@ -2115,9 +2107,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-    bgc-red
-    p-2
-    o-50
+    bgc-red p-2 o-50
   ",
     "colors": [
       {
@@ -2518,11 +2508,8 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-        fw-bold
-        m-4
+        fw-bold m-4 p-4 o-50
         c-red bgc-red
-        o-50
-        p-4
       ",
     "colors": [
       {
@@ -2560,6 +2547,30 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
       {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+      {
+        "text": "o",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "50",
+        "type": "maple-value",
+      },
+      {
         "text": "c",
         "type": "maple-utility",
       },
@@ -2581,30 +2592,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
       },
       {
         "text": "red",
-        "type": "maple-value",
-      },
-      {
-        "text": "o",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "50",
-        "type": "maple-value",
-      },
-      {
-        "text": "p",
-        "type": "maple-utility",
-      },
-      {
-        "text": "-",
-        "type": "maple-separator",
-      },
-      {
-        "text": "4",
         "type": "maple-value",
       },
     ],
@@ -3327,7 +3314,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
 exports[`Workspace Highlights and Colors > should generate consistent semantic tokens and colors for test-workspace.html 1`] = `
 [
   {
-    "classValue": "--alias-btn=bgc-red-500;p-2 @md:--alias-card=p-{space,4};c-{color,black} @dark:--l-shift=-0.7",
+    "classValue": "--alias-btn=bgc-red-500;p-2 @md:--alias-card=p-{space,4};c-{color,black} @dark:--l-shift=-0.7;--alias-underline=brb;brc-{color,body}-90;pb-{space,2} --alias-prose-child=^:is(p,li,.\\@p1,.\\@p2,.\\@p3,.\\@p4,.\\@p5,.\\@p6)>:{utility}",
     "colors": [
       {
         "color": "rgba(255, 0, 0, 1)",
@@ -3458,6 +3445,182 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
       {
         "text": "-0.7",
         "type": "maple-value",
+      },
+      {
+        "text": "--alias-underline",
+        "type": "maple-alias",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "brb",
+        "type": "maple-alias",
+      },
+      {
+        "text": "brc",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "{",
+        "type": "maple-separator",
+      },
+      {
+        "text": "color",
+        "type": "maple-alias-param-key",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": "body",
+        "type": "maple-value",
+      },
+      {
+        "text": "}",
+        "type": "maple-separator",
+      },
+      {
+        "text": "-90",
+        "type": "maple-value",
+      },
+      {
+        "text": "pb",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "{",
+        "type": "maple-separator",
+      },
+      {
+        "text": "space",
+        "type": "maple-alias-param-key",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": "2",
+        "type": "maple-value",
+      },
+      {
+        "text": "}",
+        "type": "maple-separator",
+      },
+      {
+        "text": "--alias-prose-child",
+        "type": "maple-alias",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "^",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ":is",
+        "type": "maple-parent-selector",
+      },
+      {
+        "text": "(",
+        "type": "maple-separator",
+      },
+      {
+        "text": "p",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": "li",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": ".\\@p1",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": ".\\@p2",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": ".\\@p3",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": ".\\@p4",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": ".\\@p5",
+        "type": "maple-value",
+      },
+      {
+        "text": ",",
+        "type": "maple-separator",
+      },
+      {
+        "text": ".\\@p6",
+        "type": "maple-value",
+      },
+      {
+        "text": ")",
+        "type": "maple-separator",
+      },
+      {
+        "text": ">",
+        "type": "maple-parent-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "{",
+        "type": "maple-separator",
+      },
+      {
+        "text": "utility",
+        "type": "maple-alias-param-key",
+      },
+      {
+        "text": "}",
+        "type": "maple-separator",
       },
     ],
     "warnings": [],

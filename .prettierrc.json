@@ -1,4 +1,8 @@
 {
+  "plugins": [
+    "@f12io/prettier-plugin-maple"
+  ],
+  "mapleMaxClassesPerLine": 4,
   "arrowParens": "always",
   "bracketSpacing": true,
   "printWidth": 80,

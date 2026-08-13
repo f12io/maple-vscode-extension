@@ -264,6 +264,7 @@
     "@emnapi/core": "^1.11.2",
     "@emnapi/runtime": "^1.11.2",
     "@eslint/js": "^9.39.4",
+    "@f12io/prettier-plugin-maple": "^0.0.10",
     "@types/node": "^20.19.43",
     "@types/picomatch": "^4.0.3",
     "@types/vscode": "^1.80.0",
@@ -273,16 +274,16 @@
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.5.0",
+    "prettier": "^3.9.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.61.1",
     "vitest": "^4.1.9"
   },
   "dependencies": {
     "@f12io/coco": "^2.1.9",
-    "@f12io/maple": "^2.0.21",
+    "@f12io/maple": "^2.0.23",
     "@f12io/maple-language-core": "0.0.10",
-    "picomatch": "^4.0.4",
-    "prettier": "^3.8.4"
+    "picomatch": "^4.0.4"
   },
   "workspaces": [
     "packages/*"

@@ -49,6 +49,35 @@ JS).
 ></div>
 ```
 
+The `html` element is laid out one class per line once it exceeds the limit,
+since its classes are alias definitions:
+
+```html
+<html
+  class="
+    --alias-btn=bgc-red-500;p-2
+    --alias-card=p-{space,4}
+    --alias-underline=brb;brc-{color,body}-90
+    --alias-square=px-{space,1.5};ar=1
+    --alias-prose=fs-50;lh-1.6
+  "
+></html>
+```
+
+Blank lines are preserved: each run of classes between them is formatted on its
+own and never merges with its neighbours.
+
+```html
+<div
+  class="
+    c-blue p-2
+
+    m-2 fs-50
+    o-50 fw-normal
+  "
+></div>
+```
+
 ## Options
 
 | Option                   | Default | Description                                                              |

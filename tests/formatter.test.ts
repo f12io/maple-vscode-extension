@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type * as vscode from 'vscode';
+import { formatText } from '@f12io/maple-language-core';
 import {
   applyFormatting,
   formatClasses,
@@ -324,5 +325,93 @@ describe('applyFormatting for /* maple */ opt-in strings', () => {
     const edits = applyFormatting(doc, maxClassesPerLine);
 
     expect(edits).toHaveLength(0);
+  });
+});
+
+describe('html element gets one class per line', () => {
+  const maxClassesPerLine = 4;
+
+  const format = (text: string) => formatText(text, 'html', maxClassesPerLine);
+
+  it('keeps the html tag on one line at or under the limit', () => {
+    const text =
+      '<html class="--alias-a=p-2 --alias-b=m-2 --alias-c=o-50 --alias-d=c-red-500">';
+
+    expect(format(text)).toBe(text);
+  });
+
+  it('gives every class its own line once over the limit', () => {
+    const text =
+      '<html class="--alias-a=p-2 --alias-b=m-2 --alias-c=o-50 --alias-d=c-red-500 --alias-e=fs-50">';
+
+    expect(format(text)).toBe(`<html class="
+  --alias-a=p-2
+  --alias-b=m-2
+  --alias-c=o-50
+  --alias-d=c-red-500
+  --alias-e=fs-50
+">`);
+  });
+
+  it('still groups by property type on other elements', () => {
+    const text =
+      '<div class="bgc-red-500 p-2 m-4 o-50 c-blue brc-red-500 pb-2 mt-4">';
+
+    expect(format(text)).toBe(`<div class="
+  bgc-red-500 p-2 m-4 o-50
+  c-blue brc-red-500
+  pb-2 mt-4
+">`);
+  });
+});
+
+describe('author blank lines are preserved', () => {
+  const maxClassesPerLine = 4;
+
+  const format = (text: string) => formatText(text, 'html', maxClassesPerLine);
+
+  it('formats each block on its own, without merging across the gap', () => {
+    const text = `<div class="
+  bgc-red-500 p-2
+
+  m-4 o-50 c-blue brc-red-500 pb-2 mt-4
+">`;
+
+    expect(format(text)).toBe(`<div class="
+  bgc-red-500 p-2
+
+  m-4 o-50
+  c-blue brc-red-500
+  pb-2 mt-4
+">`);
+  });
+
+  it('keeps short blocks apart instead of collapsing to one line', () => {
+    const text = `<div class="
+  p-2
+
+  m-4
+">`;
+
+    expect(format(text)).toBe(text);
+  });
+
+  it('is stable across repeated formatting', () => {
+    const text = `<html class="
+  --alias-a=p-2 --alias-b=m-2
+
+  --alias-c=o-50 --alias-d=c-red-500 --alias-e=fs-50
+">`;
+
+    const once = format(text);
+    expect(once).toBe(`<html class="
+  --alias-a=p-2
+  --alias-b=m-2
+
+  --alias-c=o-50
+  --alias-d=c-red-500
+  --alias-e=fs-50
+">`);
+    expect(format(once)).toBe(once);
   });
 });

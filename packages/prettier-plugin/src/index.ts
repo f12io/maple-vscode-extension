@@ -104,15 +104,18 @@ const PRINTER_LANGUAGE: Record<string, string> = {
  * mapleMaxClassesPerLine. Returns undefined to fall back to Prettier's own
  * attribute printing (which collapses values onto a single line).
  */
+interface HtmlAttributeNode {
+  type?: string;
+  kind?: string;
+  name?: string;
+  fullName?: string;
+  rawName?: string;
+  value?: unknown;
+  parent?: { name?: string; fullName?: string; rawName?: string };
+}
+
 function printMapleClassAttribute(
-  node: {
-    type?: string;
-    kind?: string;
-    name?: string;
-    fullName?: string;
-    rawName?: string;
-    value?: unknown;
-  },
+  node: HtmlAttributeNode,
   parserOptions: ParserOptions & { mapleMaxClassesPerLine?: number },
 ): Doc | undefined {
   // Prettier's html AST discriminates via `kind` (older versions used `type`)
@@ -131,18 +134,21 @@ function printMapleClassAttribute(
   if (!service) return undefined;
 
   const maxClassesPerLine = parserOptions.mapleMaxClassesPerLine ?? 4;
+  const tagName = node.parent?.fullName ?? node.parent?.name;
   const formatted = formatClasses(
     node.value.trim(),
     '',
     maxClassesPerLine,
     service,
+    { oneClassPerLine: tagName?.toLowerCase() === 'html' },
   );
   if (!formatted.includes('\n')) return undefined;
 
-  const lines = formatted
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
+  // Blank lines are the author's grouping — keep them, but drop the empty
+  // first/last lines that come from the leading and trailing newline.
+  const lines = formatted.split('\n').map((line) => line.trim());
+  while (lines.length > 0 && lines[0].length === 0) lines.shift();
+  while (lines.length > 0 && lines[lines.length - 1].length === 0) lines.pop();
 
   const { hardline, indent, join } = doc.builders;
   return [

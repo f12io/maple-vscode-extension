@@ -1,6 +1,7 @@
 import { parseClass } from '@f12io/maple';
+import { getTagNameBackwards } from './extractor.helper';
 import { INDENT_WHITESPACE_REGEX } from './regex';
-import { ILanguageService } from './LanguageService';
+import { ILanguageService, Token } from './LanguageService';
 import { LanguageServiceRegistry } from './registry';
 
 /** A plain text replacement, editor-agnostic. Offsets refer to the input text. */
@@ -17,16 +18,38 @@ function getIndentFromIndex(text: string, index: number): string {
   return match ? match[0] : '';
 }
 
+export interface FormatClassesOptions {
+  /**
+   * Give every class its own line once the count exceeds `maxClassesPerLine`,
+   * instead of packing lines up to the limit. Used for the `html` element,
+   * whose classes are alias definitions that read poorly side by side.
+   */
+  oneClassPerLine?: boolean;
+}
+
+/** Number of line breaks in `str`; 2 or more means the author left a blank line. */
+function countNewlines(str: string): number {
+  let count = 0;
+  for (const char of str) {
+    if (char === '\n') count++;
+  }
+  return count;
+}
+
 /**
  * Formats a maple class string: wraps onto multiple lines when it exceeds
  * `maxClassesPerLine`, grouping classes by property type, and recursing into
  * interpolation expressions via the language service.
+ *
+ * Blank lines the author wrote are preserved: each run of classes between them
+ * is a block that formats on its own and never merges with its neighbours.
  */
 export function formatClasses(
   classStr: string,
   baseIndent: string,
   maxClassesPerLine: number,
   service: ILanguageService,
+  options: FormatClassesOptions = {},
 ): string {
   const tokens = service.tokenizeClassesWithIndices(classStr);
   if (tokens.length === 0) return '';
@@ -43,92 +66,131 @@ export function formatClasses(
     hasExpression: boolean;
   }
 
-  const lines: Array<FormatLine> = [];
-  let currentLine: FormatLine = { classes: [], hasExpression: false };
-  let lastPropType: number | null = null;
-
+  // A blank line between two classes starts a new block. Blocks are laid out
+  // independently, so classes never cross a separator the author put there.
+  const blocks: Array<Array<Token>> = [[]];
+  let previousEnd = -1;
   for (const token of tokens) {
-    const cls = token.value;
-    let propType = -1;
-    try {
-      const parsed = parseClass(cls);
-      propType = parsed?.propType ?? -1;
-    } catch {
-      propType = -1;
+    if (
+      previousEnd !== -1 &&
+      countNewlines(classStr.substring(previousEnd, token.start)) > 1
+    ) {
+      blocks.push([]);
+    }
+    blocks[blocks.length - 1].push(token);
+    previousEnd = token.end;
+  }
+
+  const onePerLine =
+    options.oneClassPerLine === true && tokens.length > maxClassesPerLine;
+
+  const formatToken = (token: string) =>
+    service.formatInterpolation(
+      token,
+      baseIndent,
+      maxClassesPerLine,
+      (value, indent, maxClasses) =>
+        formatClasses(value, indent, maxClasses, service, options),
+    );
+
+  const layoutBlock = (blockTokens: Array<Token>): Array<FormatLine> => {
+    if (onePerLine) {
+      return blockTokens.map((token) => ({
+        classes: [
+          token.hasInterpolation ? formatToken(token.value) : token.value,
+        ],
+        hasExpression: token.hasInterpolation === true,
+      }));
     }
 
-    const isNewType =
-      tokens.length > maxClassesPerLine &&
-      lastPropType !== null &&
-      lastPropType !== propType;
-    const isOverLimit = currentLine.classes.length >= maxClassesPerLine;
-    const isExpression = token.hasInterpolation;
+    const lines: Array<FormatLine> = [];
+    let currentLine: FormatLine = { classes: [], hasExpression: false };
+    let lastPropType: number | null = null;
 
-    if (
-      currentLine.classes.length > 0 &&
-      (isNewType || isOverLimit || isExpression || currentLine.hasExpression)
-    ) {
+    for (const token of blockTokens) {
+      const cls = token.value;
+      let propType = -1;
+      try {
+        const parsed = parseClass(cls);
+        propType = parsed?.propType ?? -1;
+      } catch {
+        propType = -1;
+      }
+
+      const isNewType =
+        tokens.length > maxClassesPerLine &&
+        lastPropType !== null &&
+        lastPropType !== propType;
+      const isOverLimit = currentLine.classes.length >= maxClassesPerLine;
+      const isExpression = token.hasInterpolation;
+
+      if (
+        currentLine.classes.length > 0 &&
+        (isNewType || isOverLimit || isExpression || currentLine.hasExpression)
+      ) {
+        lines.push(currentLine);
+        currentLine = { classes: [], hasExpression: false };
+      }
+
+      if (isExpression) {
+        currentLine.classes.push(formatToken(cls));
+        currentLine.hasExpression = true;
+      } else {
+        currentLine.classes.push(cls);
+      }
+      lastPropType = propType;
+    }
+
+    if (currentLine.classes.length > 0) {
       lines.push(currentLine);
-      currentLine = { classes: [], hasExpression: false };
     }
 
-    if (isExpression) {
-      const formattedCls = service.formatInterpolation(
-        cls,
-        baseIndent,
-        maxClassesPerLine,
-        (value, indent, maxClasses) =>
-          formatClasses(value, indent, maxClasses, service),
-      );
-      currentLine.classes.push(formattedCls);
-      currentLine.hasExpression = true;
-    } else {
-      currentLine.classes.push(cls);
+    // Property-type boundaries can strand a single class on its own line
+    // (e.g. `fx` between an opacity and an alias). Merge singleton lines into
+    // the previous line when it has room, otherwise into the next one.
+    // Expression lines stay isolated by design.
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.classes.length !== 1 || line.hasExpression) continue;
+
+      const prev = lines[i - 1];
+      const next = lines[i + 1];
+      if (
+        prev &&
+        !prev.hasExpression &&
+        prev.classes.length < maxClassesPerLine
+      ) {
+        prev.classes.push(...line.classes);
+        lines.splice(i, 1);
+        i--;
+      } else if (
+        next &&
+        !next.hasExpression &&
+        next.classes.length < maxClassesPerLine
+      ) {
+        next.classes.unshift(...line.classes);
+        lines.splice(i, 1);
+        i--;
+      }
     }
-    lastPropType = propType;
-  }
 
-  if (currentLine.classes.length > 0) {
-    lines.push(currentLine);
-  }
+    return lines;
+  };
 
-  // Property-type boundaries can strand a single class on its own line
-  // (e.g. `fx` between an opacity and an alias). Merge singleton lines into
-  // the previous line when it has room, otherwise into the next one.
-  // Expression lines stay isolated by design.
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.classes.length !== 1 || line.hasExpression) continue;
+  const blockLines = blocks.map(layoutBlock);
 
-    const prev = lines[i - 1];
-    const next = lines[i + 1];
-    if (
-      prev &&
-      !prev.hasExpression &&
-      prev.classes.length < maxClassesPerLine
-    ) {
-      prev.classes.push(...line.classes);
-      lines.splice(i, 1);
-      i--;
-    } else if (
-      next &&
-      !next.hasExpression &&
-      next.classes.length < maxClassesPerLine
-    ) {
-      next.classes.unshift(...line.classes);
-      lines.splice(i, 1);
-      i--;
-    }
-  }
-
-  if (lines.length === 1) {
-    return lines[0].classes.join(' ');
+  if (blockLines.length === 1 && blockLines[0].length === 1) {
+    return blockLines[0][0].classes.join(' ');
   }
 
   const indent = baseIndent + '  ';
   return (
     '\n' +
-    lines.map((line) => indent + line.classes.join(' ')).join('\n') +
+    blockLines
+      .map((lines) =>
+        lines.map((line) => indent + line.classes.join(' ')).join('\n'),
+      )
+      .join('\n\n') +
     '\n' +
     baseIndent
   );
@@ -146,9 +208,6 @@ export function computeFormattingEdits(
 ): Array<TextReplacement> {
   const edits: Array<TextReplacement> = [];
 
-  const formatClassesFn = (value: string, indent: string, max: number) =>
-    formatClasses(value, indent, max, service);
-
   // The same regions extraction consumes; when regions overlap (e.g.
   // /* maple */ clsx(...), or clsx inside a className expression) the
   // outermost one formats everything inside it.
@@ -162,6 +221,12 @@ export function computeFormattingEdits(
 
     const allowMultiline = region.allowMultilineLiterals !== false;
     const baseIndent = getIndentFromIndex(text, region.anchor);
+    // The html element holds alias definitions; those get a line each.
+    const classOptions: FormatClassesOptions = {
+      oneClassPerLine: getTagNameBackwards(text, region.anchor) === 'html',
+    };
+    const formatClassesFn = (value: string, indent: string, max: number) =>
+      formatClasses(value, indent, max, service, classOptions);
 
     if (region.kind === 'class-text') {
       const innerString = text.substring(region.start, region.end);

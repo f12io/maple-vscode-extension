@@ -264,7 +264,7 @@
     "@emnapi/core": "^1.11.2",
     "@emnapi/runtime": "^1.11.2",
     "@eslint/js": "^9.39.4",
-    "@f12io/prettier-plugin-maple": "^0.0.10",
+    "@f12io/prettier-plugin-maple": "^0.0.12",
     "@types/node": "^20.19.43",
     "@types/picomatch": "^4.0.3",
     "@types/vscode": "^1.80.0",

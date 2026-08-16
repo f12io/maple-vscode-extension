@@ -596,8 +596,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-      c-blue
-      p-2
+      c-blue p-2
       m-",
     "colors": [
       {
@@ -758,9 +757,7 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "
-        bgc-red
-        p-2
-        o-50
+        bgc-red p-2 o-50
       ",
     "colors": [
       {

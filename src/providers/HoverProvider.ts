@@ -2,9 +2,12 @@ import { convert, parseClass, StringHelper } from '@f12io/maple';
 // The standalone build with an explicit plugin keeps prettier bundler-friendly
 // (the default entry resolves its parsers dynamically at runtime).
 import {
+  getAliasName,
   getParamSubstituteRegex,
+  isAliasMarker,
   PARAM_FALLBACK_REGEX,
   PARAM_REMOVE_REGEX,
+  parseMapleToken,
 } from '@f12io/maple-language-core';
 import * as postcssPlugin from 'prettier/plugins/postcss';
 import * as prettier from 'prettier/standalone';
@@ -13,11 +16,6 @@ import { AliasCache } from '../helpers/alias-cache';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
 import { logError } from '../helpers/logger';
-import {
-  getAliasName,
-  isAliasMarker,
-  parseMapleToken,
-} from '../helpers/maple-parser';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 function formatCss(css: string): Promise<string> {

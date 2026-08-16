@@ -1,5 +1,9 @@
-import { convert, parseClass } from '@f12io/maple';
-import { ABBREVIATIONS, BUILTIN_ALIASES } from '../mapleEngine/data';
+import {
+  ABBREVIATIONS,
+  BUILTIN_ALIASES,
+  convert,
+  parseClass,
+} from '@f12io/maple';
 
 export interface MapleTokenInfo {
   activeWord: string;

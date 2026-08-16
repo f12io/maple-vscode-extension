@@ -1,25 +1,23 @@
 import { BUILTIN_ALIASES, parseClass, StringHelper } from '@f12io/maple';
 import {
   ALIAS_REGEX,
+  checkConverted,
+  getAliasName,
+  getUtilKey,
+  isAliasDefinition,
+  isAliasMarker,
+  isVariable,
   MAPLE_CLASS_REGEX,
   MAPLE_COMMA_SPLIT_REGEX,
   MAPLE_PARAMS_SPLIT_REGEX,
   MAPLE_UNDERSCORE_SPLIT_REGEX,
+  stripQuotes,
 } from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
 import { getHighlightingMode, isExtensionEnabled } from '../helpers/config';
 import { isFileExcluded } from '../helpers/exclude';
-import { getUtilKey } from '../helpers/get-util-key';
 import { safeRun } from '../helpers/logger';
-import {
-  checkConverted,
-  getAliasName,
-  isAliasDefinition,
-  isAliasMarker,
-  isVariable,
-  stripQuotes,
-} from '../helpers/maple-parser';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 export const tokenTypes = [

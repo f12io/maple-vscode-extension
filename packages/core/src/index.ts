@@ -42,3 +42,15 @@ export {
   type DirectiveMatch,
   type OptInRegion,
 } from './extractor.helper';
+export { getUtilKey } from './intelligence/get-util-key';
+export {
+  checkConverted,
+  getAliasName,
+  isAliasDefinition,
+  isAliasMarker,
+  isVariable,
+  parseMapleToken,
+  stripImportant,
+  stripQuotes,
+  type MapleTokenInfo,
+} from './intelligence/maple-parser';

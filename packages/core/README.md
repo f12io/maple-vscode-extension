@@ -22,6 +22,11 @@ and [@f12io/prettier-plugin-maple](https://www.npmjs.com/package/@f12io/prettier
   engine: wraps class lists by property group, preserves ternary and
   concatenation structure, and upgrades string delimiters only when the host
   language allows multi-line strings.
+- **`parseMapleToken` / `checkConverted` / `getUtilKey`** and the small class
+  predicates (`isAliasMarker`, `isAliasDefinition`, `isVariable`,
+  `stripImportant`, `stripQuotes`, `getAliasName`) — the shared class-token
+  parsing primitives used by semantic highlighting, completions, hover and
+  diagnostics.
 
 ## Usage
 

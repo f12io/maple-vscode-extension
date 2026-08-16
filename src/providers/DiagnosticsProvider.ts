@@ -5,20 +5,20 @@ import {
   COLOR_MIN_TONE,
   PROP_TYPE_COLOR,
 } from '@f12io/maple';
-import { MAPLE_CLASS_REGEX } from '@f12io/maple-language-core';
-import * as vscode from 'vscode';
-import { AliasCache } from '../helpers/alias-cache';
-import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
-import { isFileExcluded } from '../helpers/exclude';
-import { safeRun } from '../helpers/logger';
 import {
   checkConverted,
   getAliasName,
   isAliasDefinition,
   isAliasMarker,
+  MAPLE_CLASS_REGEX,
   parseMapleToken,
   stripQuotes,
-} from '../helpers/maple-parser';
+} from '@f12io/maple-language-core';
+import * as vscode from 'vscode';
+import { AliasCache } from '../helpers/alias-cache';
+import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
+import { isFileExcluded } from '../helpers/exclude';
+import { safeRun } from '../helpers/logger';
 import { LanguageServiceRegistry } from '../services/LanguageServiceRegistry';
 
 /** Delay before re-linting a document after the user stops typing. */

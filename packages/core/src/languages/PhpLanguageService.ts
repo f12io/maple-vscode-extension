@@ -1,4 +1,8 @@
-import { skipStringLiteral } from '../extractor.helper';
+import {
+  DEFAULT_COMMENT_SYNTAXES,
+  skipStringLiteral,
+} from '../extractor.helper';
+import { CommentSyntax } from '../LanguageService';
 import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
@@ -11,6 +15,12 @@ interface PhpConcatSegment {
 
 export class PhpLanguageService extends HtmlLanguageService {
   languageIds = ['php'];
+
+  // `#` opens a comment, except in `#[Attribute]`
+  public commentSyntaxes: Array<CommentSyntax> = [
+    ...DEFAULT_COMMENT_SYNTAXES,
+    { open: '#', notFollowedBy: '[' },
+  ];
 
   public getMultilineStringDelimiters(
     rawQuote: string,

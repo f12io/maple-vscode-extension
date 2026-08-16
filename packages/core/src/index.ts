@@ -25,16 +25,20 @@ export * from './regex';
 export * from './language-definitions';
 export {
   findClosingQuote,
+  findDirectives,
   findOptInRegions,
   getDisabledBlocks,
   getExactWordRangeAtPosition,
   getTagNameBackwards,
+  hasDirective,
   isCommentedOut,
+  isDirectiveInMarkupText,
   isLineDisabled,
   isQuote,
   MAX_SCAN_LENGTH,
   pushInstance,
   shouldSkipMatch,
   skipStringLiteral,
+  type DirectiveMatch,
   type OptInRegion,
 } from './extractor.helper';

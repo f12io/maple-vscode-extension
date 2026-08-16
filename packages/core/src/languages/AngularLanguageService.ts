@@ -1,4 +1,4 @@
-import { findClosingQuote } from '../extractor.helper';
+import { activateCommentSyntaxes, findClosingQuote } from '../extractor.helper';
 import { MapleRegion } from '../LanguageService';
 import {
   ANGULAR_VUE_EXPR_REGEX,
@@ -12,9 +12,8 @@ export class AngularLanguageService extends BaseLanguageService {
   languageIds = ['html', 'typescript'];
 
   public collectRegions(text: string): Array<MapleRegion> {
-    // Note: the base attribute/opt-in regions are contributed by
-    // HtmlLanguageService in the same composite; this service adds only the
-    // Angular-specific constructs.
+    activateCommentSyntaxes(this.commentSyntaxes);
+
     const regions: Array<MapleRegion> = [];
 
     // Template expressions: [ngClass]="...", [class.x]="..."

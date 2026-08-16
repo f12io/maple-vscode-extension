@@ -4,11 +4,17 @@ import {
   STANDARD_ATTR_REGEX,
 } from '../regex';
 import {
+  activateCommentSyntaxes,
+  DEFAULT_COMMENT_SYNTAXES,
   extractStringLiterals,
   extractUnquotedObjectKeys,
   findClosingQuote,
   findOptInRegions,
   getDisabledBlocks,
+  hasDirective,
+  isCommentedOut,
+  isDirectiveInMarkupText,
+  isInsideStringLiteral,
   MAX_SCAN_LENGTH,
   pushInstance,
   shouldSkipMatch,
@@ -16,6 +22,7 @@ import {
 } from '../extractor.helper';
 import {
   ClassInstance,
+  CommentSyntax,
   dedupeInstancesByStart,
   ILanguageService,
   MapleRegion,
@@ -48,8 +55,13 @@ export interface InterpolationContext {
 export abstract class BaseLanguageService implements ILanguageService {
   abstract languageIds: Array<string>;
 
+  /** Overridden by languages with comment syntaxes of their own */
+  public commentSyntaxes: Array<CommentSyntax> = DEFAULT_COMMENT_SYNTAXES;
+
   public extractClasses(text: string): Array<ClassInstance> {
-    if (text.includes('maple-disable-file')) {
+    activateCommentSyntaxes(this.commentSyntaxes);
+
+    if (hasDirective(text, 'maple-disable-file')) {
       return [];
     }
 
@@ -83,6 +95,8 @@ export abstract class BaseLanguageService implements ILanguageService {
    * opt-in comments).
    */
   public collectRegions(text: string): Array<MapleRegion> {
+    activateCommentSyntaxes(this.commentSyntaxes);
+
     const regions: Array<MapleRegion> = [];
 
     // Standard class attributes: class="...", className='...'
@@ -112,6 +126,18 @@ export abstract class BaseLanguageService implements ILanguageService {
 
     // Opt-in objects: /* maple */ { 'c-red': cond, p2: true }
     for (const match of text.matchAll(OPT_IN_OBJECT_START_REGEX)) {
+      if (isInsideStringLiteral(text, match.index)) continue;
+      if (isCommentedOut(text, match.index)) continue;
+      if (
+        isDirectiveInMarkupText(
+          text,
+          match.index,
+          match.index + match[0].length,
+        )
+      ) {
+        continue;
+      }
+
       const openBrace = match.index + match[0].length - 1;
       const end = this.parseBalancedExpression(text, openBrace);
       if (end === -1) continue;

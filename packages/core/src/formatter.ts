@@ -1,7 +1,13 @@
 import { parseClass } from '@f12io/maple';
-import { getTagNameBackwards } from './extractor.helper';
+import {
+  findEnclosingStringLiteral,
+  getDisabledBlocks,
+  getTagNameBackwards,
+  hasDirective,
+  shouldSkipMatch,
+} from './extractor.helper';
 import { INDENT_WHITESPACE_REGEX } from './regex';
-import { ILanguageService, Token } from './LanguageService';
+import { ILanguageService, MapleRegion, Token } from './LanguageService';
 import { LanguageServiceRegistry } from './registry';
 
 /** A plain text replacement, editor-agnostic. Offsets refer to the input text. */
@@ -264,6 +270,24 @@ export function formatClasses(
 }
 
 /**
+ * True when a region sits inside a quoted string that cannot hold a raw
+ * newline — markup quoted in a `'…'` or `"…"` literal, as in
+ * `const s = 'see <div class="a b c d e">x</div>';`. Wrapping the classes
+ * there would put a newline inside that literal and break the file.
+ *
+ * The attribute's own quotes are not such a literal: they enclose the region
+ * immediately (`start - 1`), whereas a hosting string starts further out.
+ * Template literals are excluded because they hold newlines legally, which is
+ * what makes an Angular inline template formattable.
+ */
+function isTrappedInAStringLiteral(text: string, region: MapleRegion): boolean {
+  const enclosing = findEnclosingStringLiteral(text, region.start);
+  if (enclosing === undefined) return false;
+  if (enclosing.start >= region.start - 1) return false;
+  return text[enclosing.start] !== '`';
+}
+
+/**
  * Computes formatting replacements for every maple region in the document —
  * class attributes, opt-in expressions, and framework-specific regions — as
  * plain offsets, usable from any host (VS Code, Prettier, CLI).
@@ -273,8 +297,13 @@ export function computeFormattingEdits(
   service: ILanguageService,
   maxClassesPerLine: number,
 ): Array<TextReplacement> {
+  // Comment directives govern formatting exactly as they govern extraction:
+  // a file the author opted out of must come back untouched.
+  if (hasDirective(text, 'maple-disable-file')) return [];
+
   const edits: Array<TextReplacement> = [];
   const indentUnit = detectIndentUnit(text);
+  const disabledBlocks = getDisabledBlocks(text);
 
   // The same regions extraction consumes; when regions overlap (e.g.
   // /* maple */ clsx(...), or clsx inside a className expression) the
@@ -285,6 +314,8 @@ export function computeFormattingEdits(
 
   for (const region of regions) {
     if (region.start < lastKeptEnd) continue;
+    if (shouldSkipMatch(text, region.anchor, disabledBlocks)) continue;
+    if (isTrappedInAStringLiteral(text, region)) continue;
     lastKeptEnd = region.end;
 
     const allowMultiline = region.allowMultilineLiterals !== false;
@@ -397,7 +428,9 @@ export function applyTextEdits(
   let result = text;
   for (const edit of sorted) {
     result =
-      result.substring(0, edit.start) + edit.newText + result.substring(edit.end);
+      result.substring(0, edit.start) +
+      edit.newText +
+      result.substring(edit.end);
   }
   return result;
 }

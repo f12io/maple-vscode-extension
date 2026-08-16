@@ -1,23 +1,29 @@
 import {
   ClassInstance,
+  CommentSyntax,
   ILanguageService,
   StringExtractionCallback,
   StringLiteralMatch,
 } from './LanguageService';
 
 import {
-  DISABLE_REGEX,
-  ENABLE_REGEX,
+  CLOSING_TAG_START_REGEX,
+  getDirectiveRegexes,
   MAPLE_CLASS_REGEX_NON_GLOBAL,
   OBJECT_KEY_REGEX,
+  OPENING_TAG_START_REGEX,
   OPT_IN_COMMENT_REGEX,
   START_COMMENT_STAR_REGEX,
   START_TAG_NAME_REGEX,
   TOKEN_SPLIT_REGEX,
+  VOID_ELEMENTS,
 } from './regex';
 
+/** `"`, `'`, `` ` `` — as codes, for scanners that work off charCodeAt */
+const QUOTE_CHAR_CODES = [0x22, 0x27, 0x60];
+
 export function isQuote(char: string): boolean {
-  return char === '"' || char === "'" || char === '`';
+  return QUOTE_CHAR_CODES.includes(char.charCodeAt(0));
 }
 
 /**
@@ -26,6 +32,9 @@ export function isQuote(char: string): boolean {
  * (e.g. an unterminated attribute in a huge minified file).
  */
 export const MAX_SCAN_LENGTH = 200_000;
+
+/** Enough to read a tag name and its terminator when probing markup. */
+const MAX_TAG_NAME_LENGTH = 64;
 
 /**
  * Skips a quoted string literal. `index` must hold the opening quote (`'` or
@@ -117,58 +126,456 @@ export function getTagNameBackwards(
   return undefined;
 }
 
-export function isCommentedOut(text: string, index: number): boolean {
-  const lastNewline = text.lastIndexOf('\n', index);
-  const lineToMatch = text.substring(lastNewline + 1, index);
-  if (lineToMatch.includes('//')) return true;
-  if (lineToMatch.includes('<!--')) return true;
-  if (START_COMMENT_STAR_REGEX.test(lineToMatch)) return true;
+/**
+ * Comment syntaxes bucketed by the char code they open with, so the line
+ * scanner tests only the ones that could start here instead of the whole set.
+ * Keyed by the syntax array itself, which each language service owns and
+ * reuses.
+ */
+const syntaxIndexCache = new WeakMap<
+  Array<CommentSyntax>,
+  Map<number, Array<CommentSyntax>>
+>();
 
-  const lastSlashStar = lineToMatch.lastIndexOf('/*');
-  if (lastSlashStar !== -1) {
-    const lastStarSlash = lineToMatch.lastIndexOf('*/');
-    if (lastStarSlash < lastSlashStar) {
-      return true;
+interface CommentRange {
+  start: number;
+  end: number;
+}
+
+/** Shared, never mutated — most lines hold no comment at all */
+const NO_COMMENT_RANGES: ReadonlyArray<CommentRange> = Object.freeze([]);
+
+function getSyntaxIndex(
+  syntaxes: Array<CommentSyntax>,
+): Map<number, Array<CommentSyntax>> {
+  const cached = syntaxIndexCache.get(syntaxes);
+  if (cached) return cached;
+
+  const index = new Map<number, Array<CommentSyntax>>();
+  for (const syntax of syntaxes) {
+    const code = syntax.open.charCodeAt(0);
+    const bucket = index.get(code);
+    if (bucket) bucket.push(syntax);
+    else index.set(code, [syntax]);
+  }
+
+  syntaxIndexCache.set(syntaxes, index);
+  return index;
+}
+
+/**
+ * The spans of `line` that sit inside a comment.
+ *
+ * Quoted strings are skipped, so a URL's `//`, or a `/*` sitting in an
+ * attribute value, is not read as a comment opener, and a comment that closes
+ * mid-line (`<!-- note --> <div class="p-4">`) covers only its own span. Once
+ * an unterminated string is reached the rest of the line is inside it, so no
+ * further comment can open.
+ */
+function computeCommentRanges(
+  line: string,
+  syntaxes: Array<CommentSyntax>,
+): ReadonlyArray<CommentRange> {
+  // A JSDoc continuation line comments out everything on it. The trailing
+  // separator in the pattern keeps Angular's structural directives
+  // (`*ngIf="cond" class="p-4"`) out of this branch.
+  if (START_COMMENT_STAR_REGEX.test(line)) {
+    return [{ start: 0, end: line.length }];
+  }
+
+  // Quick reject: a handful of native substring scans beat walking the line
+  // character by character, and almost no line holds an opener at all
+  let mayHaveComment = false;
+  for (const syntax of syntaxes) {
+    if (line.includes(syntax.open)) {
+      mayHaveComment = true;
+      break;
     }
+  }
+  if (!mayHaveComment) return NO_COMMENT_RANGES;
+
+  const index = getSyntaxIndex(syntaxes);
+  const ranges: Array<CommentRange> = [];
+  let i = 0;
+
+  outer: while (i < line.length) {
+    const charCode = line.charCodeAt(i);
+
+    if (
+      charCode === QUOTE_CHAR_CODES[0] ||
+      charCode === QUOTE_CHAR_CODES[1] ||
+      charCode === QUOTE_CHAR_CODES[2]
+    ) {
+      const end = skipStringLiteral(line, i);
+      if (end >= line.length) return ranges;
+      i = end;
+      continue;
+    }
+
+    const candidates = index.get(charCode);
+    if (candidates === undefined) {
+      i++;
+      continue;
+    }
+
+    for (const syntax of candidates) {
+      if (!line.startsWith(syntax.open, i)) continue;
+
+      const next = line[i + syntax.open.length];
+      if (syntax.notFollowedBy !== undefined && next === syntax.notFollowedBy) {
+        continue;
+      }
+
+      if (syntax.close === undefined) {
+        ranges.push({ start: i, end: line.length });
+        return ranges;
+      }
+
+      const close = line.indexOf(syntax.close, i + syntax.open.length);
+      if (close === -1) {
+        ranges.push({ start: i, end: line.length });
+        return ranges;
+      }
+
+      ranges.push({ start: i, end: close + syntax.close.length });
+      i = close + syntax.close.length;
+      continue outer;
+    }
+
+    i++;
+  }
+
+  return ranges;
+}
+
+/**
+ * The spans of `line` covered by a string literal that both opens and closes
+ * on it.
+ *
+ * Only closed literals count. An unterminated quote is how a multi-line
+ * template opens (`` template: ` ``), and the markup inside one is real
+ * markup — directives written there still apply.
+ */
+function computeStringRanges(line: string): ReadonlyArray<CommentRange> {
+  if (
+    !QUOTE_CHAR_CODES.some((code) => line.includes(String.fromCharCode(code)))
+  )
+    return NO_COMMENT_RANGES;
+
+  const ranges: Array<CommentRange> = [];
+  let i = 0;
+
+  while (i < line.length) {
+    if (isQuote(line[i])) {
+      const end = skipStringLiteral(line, i);
+      if (end >= line.length) break; // unterminated
+      ranges.push({ start: i, end });
+      i = end;
+      continue;
+    }
+    i++;
+  }
+
+  return ranges;
+}
+
+interface LineInfo {
+  start: number;
+  line: string;
+  commentRanges: ReadonlyArray<CommentRange>;
+  /** Lazily filled by `isLineDisabled` */
+  disabled?: boolean;
+  /** Lazily filled by `isInsideStringLiteral` — only directives need it */
+  stringRanges?: ReadonlyArray<CommentRange>;
+}
+
+/**
+ * Comment syntaxes shared by every supported language: JavaScript-family
+ * comments (which appear in scripts everywhere) and HTML comments (which
+ * appear in every template dialect). Languages add their own on top.
+ */
+export const DEFAULT_COMMENT_SYNTAXES: Array<CommentSyntax> = [
+  { open: '//' },
+  { open: '/*', close: '*/' },
+  { open: '<!--', close: '-->' },
+];
+
+/**
+ * The syntaxes in force for the extraction currently running. A language
+ * service activates its own before it walks a document, so `#` reads as a
+ * comment in PHP without doing the same to Angular's `#ref` or Svelte's
+ * `{#if}`.
+ */
+let activeCommentSyntaxes = DEFAULT_COMMENT_SYNTAXES;
+
+export function activateCommentSyntaxes(syntaxes: Array<CommentSyntax>) {
+  if (syntaxes === activeCommentSyntaxes) return;
+  activeCommentSyntaxes = syntaxes;
+  lineInfoCache = undefined; // cached ranges were scanned with the old set
+}
+
+/**
+ * One-entry cache of the line surrounding the last queried position.
+ *
+ * Both line checks run for every class instance, and a minified document is
+ * a single line as long as the file, so rescanning per instance is quadratic.
+ * Instances arrive in near document order, making a single slot enough — and
+ * exactly right for the one-line case, where every lookup hits it. Strings
+ * are immutable, so an entry can only go stale when `text` itself changes.
+ */
+let lineInfoCache: { text: string; info: LineInfo } | undefined;
+
+function getLineInfo(text: string, index: number): LineInfo {
+  const start = text.lastIndexOf('\n', index) + 1;
+
+  const cached = lineInfoCache;
+  if (cached?.text === text && cached.info.start === start) {
+    return cached.info;
+  }
+
+  let end = text.indexOf('\n', start);
+  if (end === -1) end = text.length;
+
+  const line = text.substring(start, end);
+  const info: LineInfo = {
+    start,
+    line,
+    commentRanges: computeCommentRanges(line, activeCommentSyntaxes),
+  };
+
+  lineInfoCache = { text, info };
+  return info;
+}
+
+export function isCommentedOut(text: string, index: number): boolean {
+  const info = getLineInfo(text, index);
+  const offset = index - info.start;
+
+  for (const range of info.commentRanges) {
+    // Strict bounds: a position at the opener has nothing open before it, and
+    // one at the closer is already past the comment
+    if (offset > range.start && offset < range.end) return true;
   }
 
   return false;
 }
 
-export function isLineDisabled(text: string, index: number): boolean {
-  const lastNewline = text.lastIndexOf('\n', index);
-  let nextNewline = text.indexOf('\n', index);
-  if (nextNewline === -1) nextNewline = text.length;
+/**
+ * The string literal closed on this line that contains `index`, in document
+ * offsets, or undefined. The range spans the quotes themselves.
+ */
+export function findEnclosingStringLiteral(
+  text: string,
+  index: number,
+): { start: number; end: number } | undefined {
+  const info = getLineInfo(text, index);
+  info.stringRanges ??= computeStringRanges(info.line);
 
-  const fullLine = text.substring(lastNewline + 1, nextNewline);
-
-  if (fullLine.includes('maple-disable-line')) return true;
-
-  if (lastNewline !== -1) {
-    const prevNewline = text.lastIndexOf('\n', lastNewline - 1);
-    const prevLine = text.substring(prevNewline + 1, lastNewline);
-    if (prevLine.includes('maple-disable-next-line')) return true;
+  const offset = index - info.start;
+  for (const range of info.stringRanges) {
+    if (offset > range.start && offset < range.end) {
+      return { start: info.start + range.start, end: info.start + range.end };
+    }
   }
 
-  return false;
+  return undefined;
+}
+
+/**
+ * True when `index` sits inside a string literal closed on the same line —
+ * `const doc = '/* maple-disable *' + '/'` is documentation data, not a
+ * directive the file is issuing.
+ */
+export function isInsideStringLiteral(text: string, index: number): boolean {
+  return findEnclosingStringLiteral(text, index) !== undefined;
+}
+
+/** Index of the `>` ending the tag at `open`, or -1. Skips quoted values. */
+function findTagEnd(text: string, open: number): number {
+  const limit = Math.min(text.length, open + MAX_SCAN_LENGTH);
+  let i = open + 1;
+
+  while (i < limit) {
+    if (isQuote(text[i])) {
+      i = skipStringLiteral(text, i);
+      continue;
+    }
+    if (text[i] === '>') return i;
+    i++;
+  }
+
+  return -1;
+}
+
+/**
+ * Name of the first element that *closes* after `from` without having opened
+ * after it — the element whose text `from` sits in — or undefined when the
+ * scan runs out of document first.
+ *
+ * Elements opening in between are counted, so a directive followed by a
+ * sibling (`… <span>n</span></code>`) still resolves to the enclosing `code`.
+ * Sequences that only look like tags (`a < b`, `Array<string>`) can raise the
+ * depth but never report a close, so code is never mistaken for markup.
+ */
+function findEnclosingCloseTag(text: string, from: number): string | undefined {
+  const limit = Math.min(text.length, from + MAX_SCAN_LENGTH);
+  let depth = 0;
+  let i = from;
+
+  while (i < limit) {
+    const open = text.indexOf('<', i);
+    if (open === -1 || open >= limit) return undefined;
+
+    const probe = text.substring(open, open + MAX_TAG_NAME_LENGTH);
+
+    const closing = CLOSING_TAG_START_REGEX.exec(probe);
+    if (closing) {
+      if (depth === 0) return closing[1];
+      depth--;
+      i = open + closing[0].length;
+      continue;
+    }
+
+    const opening = OPENING_TAG_START_REGEX.exec(probe);
+    if (!opening) {
+      i = open + 1;
+      continue;
+    }
+
+    const tagEnd = findTagEnd(text, open);
+    if (tagEnd === -1) return undefined;
+
+    const selfClosing =
+      text[tagEnd - 1] === '/' || VOID_ELEMENTS.has(opening[1].toLowerCase());
+    if (!selfClosing) depth++;
+
+    i = tagEnd + 1;
+  }
+
+  return undefined;
+}
+
+export function isDirectiveInMarkupText(
+  text: string,
+  start: number,
+  end: number,
+): boolean {
+  let before = start - 1;
+  while (before >= 0 && text[before].trim() === '') before--;
+  let after = end;
+  while (after < text.length && text[after].trim() === '') after++;
+  if (text[before] === '{' && text[after] === '}') return false;
+
+  const enclosing = findEnclosingCloseTag(text, end);
+  if (enclosing === undefined) return false;
+
+  // That element must also have opened before the directive
+  const openIndex = text.lastIndexOf(`<${enclosing}`, start);
+  if (openIndex === -1) return false;
+
+  const charAfterName = text[openIndex + enclosing.length + 1];
+  return charAfterName === undefined || /[\s/>]/.test(charAfterName);
+}
+
+export interface DirectiveMatch {
+  start: number;
+  end: number;
+}
+
+export function findDirectives(
+  haystack: string,
+  name: string,
+  context: { text: string; offset: number } = { text: haystack, offset: 0 },
+): Array<DirectiveMatch> {
+  // Every comment form embeds the bare name, so this rejects the common case
+  // without running a single regex.
+  if (!haystack.includes(name)) return [];
+
+  const { markup, script } = getDirectiveRegexes(name);
+  const matches: Array<DirectiveMatch> = [];
+
+  for (const match of haystack.matchAll(markup)) {
+    const start = context.offset + match.index;
+    // A directive quoted inside another comment, or inside a string literal,
+    // is documentation about the directive rather than a use of it
+    if (isCommentedOut(context.text, start)) continue;
+    if (isInsideStringLiteral(context.text, start)) continue;
+    matches.push({ start, end: start + match[0].length });
+  }
+
+  for (const match of haystack.matchAll(script)) {
+    const start = context.offset + match.index;
+    const end = start + match[0].length;
+    // Twig's `{# ... #}` is matched by both forms; keep it once
+    if (matches.some((m) => start >= m.start && start < m.end)) continue;
+    if (isCommentedOut(context.text, start)) continue;
+    if (isInsideStringLiteral(context.text, start)) continue;
+    if (isDirectiveInMarkupText(context.text, start, end)) continue;
+    matches.push({ start, end });
+  }
+
+  return matches.sort((a, b) => a.start - b.start);
+}
+
+export function hasDirective(text: string, name: string): boolean {
+  return findDirectives(text, name).length > 0;
+}
+
+/** Honored occurrences of a directive on the line starting at `lineStart`. */
+function hasDirectiveOnLine(
+  text: string,
+  lineStart: number,
+  line: string,
+  name: string,
+): boolean {
+  return findDirectives(line, name, { text, offset: lineStart }).length > 0;
+}
+
+function computeLineDisabled(text: string, info: LineInfo): boolean {
+  if (hasDirectiveOnLine(text, info.start, info.line, 'maple-disable-line')) {
+    return true;
+  }
+
+  if (info.start === 0) return false;
+
+  const prevEnd = info.start - 1;
+  const prevStart = text.lastIndexOf('\n', prevEnd - 1) + 1;
+  const prevLine = text.substring(prevStart, prevEnd);
+
+  return hasDirectiveOnLine(
+    text,
+    prevStart,
+    prevLine,
+    'maple-disable-next-line',
+  );
+}
+
+export function isLineDisabled(text: string, index: number): boolean {
+  const info = getLineInfo(text, index);
+
+  if (info.disabled === undefined) {
+    info.disabled = computeLineDisabled(text, info);
+
+    lineInfoCache = { text, info };
+  }
+
+  return info.disabled;
 }
 
 export function getDisabledBlocks(
   text: string,
 ): Array<{ start: number; end: number }> {
   const blocks: Array<{ start: number; end: number }> = [];
-  const disableMatches = [...text.matchAll(DISABLE_REGEX)];
-  const enableMatches = [...text.matchAll(ENABLE_REGEX)];
+  const disableMatches = findDirectives(text, 'maple-disable');
+  const enableMatches = findDirectives(text, 'maple-enable');
 
   let currentEnd = 0;
   for (const disableMatch of disableMatches) {
-    const start = disableMatch.index;
+    const start = disableMatch.start;
     if (start < currentEnd) continue;
 
-    const enableMatch = enableMatches.find((m) => m.index > start);
-    const end = enableMatch
-      ? enableMatch.index + enableMatch[0].length
-      : text.length;
+    const enableMatch = enableMatches.find((m) => m.start > start);
+    const end = enableMatch ? enableMatch.end : text.length;
     blocks.push({ start, end });
     currentEnd = end;
   }
@@ -256,6 +663,15 @@ export function findOptInRegions(
 
   for (const match of text.matchAll(OPT_IN_COMMENT_REGEX)) {
     if (match.index < currentEnd) continue;
+    // An opt-in comment quoted as documentation — in a string, in another
+    // comment, or printed inside markup — is just text
+    if (isInsideStringLiteral(text, match.index)) continue;
+    if (isCommentedOut(text, match.index)) continue;
+    if (
+      isDirectiveInMarkupText(text, match.index, match.index + match[0].length)
+    ) {
+      continue;
+    }
 
     let i = match.index + match[0].length;
     while (i < text.length && text[i].trim() === '') i++;
@@ -406,4 +822,8 @@ export function getExactWordRangeAtPosition(
   }
 
   return { wordRange: finalRange, currentWord: finalWord };
+}
+
+export function isCvaCall(functionName: string | undefined): boolean {
+  return functionName?.toLowerCase() === 'cva';
 }

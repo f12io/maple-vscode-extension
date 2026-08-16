@@ -54,10 +54,65 @@ export const ALIAS_REGEX = new RegExp(
 );
 
 // ============================================================================
-// Disable / Enable Comments
+// Comment Directives
 // ============================================================================
-export const DISABLE_REGEX = /\/\*\s*maple-disable\s*\*\//g;
-export const ENABLE_REGEX = /\/\*\s*maple-enable\s*\*\//g;
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const directiveRegexCache = new Map<
+  string,
+  { markup: RegExp; script: RegExp }
+>();
+
+export function getDirectiveRegexes(name: string): {
+  markup: RegExp;
+  script: RegExp;
+} {
+  const cached = directiveRegexCache.get(name);
+  if (cached) return cached;
+
+  const n = escapeRegex(name);
+  const regexes = {
+    markup: new RegExp(
+      // html-family <!-- -->, twig {# #}, razor @* *@
+      `<!--\\s*${n}\\s*-->|\\{#\\s*${n}\\s*#\\}|@\\*\\s*${n}\\s*\\*@`,
+      'g',
+    ),
+    script: new RegExp(
+      // block comment (js, ts, jsx, php, css) and line comment (js, ts, php)
+      `/\\*\\s*${n}\\s*\\*/|(?://|#)[^\\S\\n]*${n}(?![\\w-])`,
+      'g',
+    ),
+  };
+
+  directiveRegexCache.set(name, regexes);
+  return regexes;
+}
+
+/** Matches a closing tag at the start of the string, capturing its name. */
+export const CLOSING_TAG_START_REGEX = /^<\/([a-zA-Z][\w.:-]*)/;
+
+/** Matches an opening tag at the start of the string, capturing its name. */
+export const OPENING_TAG_START_REGEX = /^<([a-zA-Z][\w.:-]*)/;
+
+/** HTML elements that never take a closing tag. */
+export const VOID_ELEMENTS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
 
 // ============================================================================
 // HTML Parsing
@@ -76,8 +131,12 @@ export const MAPLE_SCRIPT_REGEX =
 /** Matches a word characters sequence preceded by whitespace at start of string */
 export const START_TAG_NAME_REGEX = /^\s*([a-zA-Z0-9\-]+)/;
 
-/** Matches an asterisk after optional whitespace at the start of string */
-export const START_COMMENT_STAR_REGEX = /^\s*\*/;
+/**
+ * Matches a JSDoc continuation line: an asterisk after optional whitespace,
+ * followed by a separator. The separator is what distinguishes ` * text` from
+ * Angular's ` *ngIf="cond" class="p-4"`, whose classes are live code.
+ */
+export const START_COMMENT_STAR_REGEX = /^\s*\*(?:[\s/*]|$)/;
 
 /** Splits a string by quotes and whitespace for word tokenization */
 export const TOKEN_SPLIT_REGEX = /(["'`\s])/;
@@ -85,8 +144,6 @@ export const TOKEN_SPLIT_REGEX = /(["'`\s])/;
 // ============================================================================
 // Formatter Regexes
 // ============================================================================
-
-
 
 /** Matches the start of a string literal tagged with maple and captures its quote */
 
@@ -134,13 +191,11 @@ export const JSX_EXPR_START_REGEX = new RegExp(
   'gi',
 );
 
-/** 6. Utility functions: clsx(...), classNames(...), cva(...) */
-export const UTILITY_FUNC_START_REGEX = /(?:clsx|classNames|cva)\s*\(/gi;
+/** 6. Utility functions: clsx(...), classNames(...), cva(...); captures the name */
+export const UTILITY_FUNC_START_REGEX = /(clsx|classNames|cva)\s*\(/gi;
 
 /** 7. Explicit opt-in comment marking the following expression as maple */
 export const OPT_IN_COMMENT_REGEX = /\/\*\s*maple\s*\*\//g;
 
 /** 8. Explicit opt-in comments for objects */
 export const OPT_IN_OBJECT_START_REGEX = /\/\*\s*maple\s*\*\/\s*\{/gi;
-
-

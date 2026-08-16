@@ -88,8 +88,21 @@ export interface Token {
   hasInterpolation?: boolean;
 }
 
+export interface CommentSyntax {
+  open: string;
+  /** omitted means the comment runs to the end of the line. */
+  close?: string;
+  /** guards openers that are only a comment in some contexts (PHP's `#` opens a comment, but `#[` opens an attribute) */
+  notFollowedBy?: string;
+}
+
 export interface ILanguageService {
   languageIds: Array<string>;
+  /**
+   * Comment delimiters this language recognizes, used to tell commented-out
+   * markup and quoted directives from live code.
+   */
+  commentSyntaxes: Array<CommentSyntax>;
   extractClasses(text: string): Array<ClassInstance>;
   /**
    * Reports every maple region in the document. Single implementation per

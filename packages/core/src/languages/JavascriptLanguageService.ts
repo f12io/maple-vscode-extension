@@ -1,3 +1,4 @@
+import { isCvaCall } from '../extractor.helper';
 import { UTILITY_FUNC_START_REGEX } from '../regex';
 import { MapleRegion } from '../LanguageService';
 import {
@@ -21,7 +22,10 @@ export class JavascriptLanguageService extends BaseLanguageService {
         end: end - 1,
         kind: 'expression',
         anchor: match.index,
-        includeObjectKeys: true,
+        // clsx/classNames take `{ 'c-red': cond }`, where the key is the
+        // class. cva's keys are its schema (`variants`, the variant names),
+        // so reading them would report structure as utilities.
+        includeObjectKeys: !isCvaCall(match[1]),
       });
     }
     return regions;
@@ -163,4 +167,3 @@ export class JavascriptLanguageService extends BaseLanguageService {
     );
   }
 }
-

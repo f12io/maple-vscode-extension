@@ -862,24 +862,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "variants",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "intent",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "primary",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
     "classValue": "bgc-blue-500 c-white",
     "colors": [
       {
@@ -917,12 +899,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
     ],
-    "warnings": [],
-  },
-  {
-    "classValue": "secondary",
-    "colors": [],
-    "tokens": [],
     "warnings": [],
   },
   {
@@ -2232,24 +2208,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
-    "classValue": "variants",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "intent",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
-    "classValue": "primary",
-    "colors": [],
-    "tokens": [],
-    "warnings": [],
-  },
-  {
     "classValue": "c-white fw-bold",
     "colors": [
       {
@@ -2283,12 +2241,6 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
         "type": "maple-value",
       },
     ],
-    "warnings": [],
-  },
-  {
-    "classValue": "secondary",
-    "colors": [],
-    "tokens": [],
     "warnings": [],
   },
   {

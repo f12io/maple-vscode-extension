@@ -1,3 +1,4 @@
+import { isCvaCall } from '../extractor.helper';
 import { MapleRegion } from '../LanguageService';
 import {
   JSX_EXPR_START_REGEX,
@@ -39,7 +40,7 @@ export class SvelteLanguageService extends HtmlLanguageService {
           end: end - 1,
           kind: 'expression',
           anchor: match.index,
-          includeObjectKeys: true,
+          includeObjectKeys: !isCvaCall(match[1]),
         });
       }
     }

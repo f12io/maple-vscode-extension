@@ -1,5 +1,8 @@
-import { skipStringLiteral } from '../extractor.helper';
-import { StringLiteralMatch } from '../LanguageService';
+import {
+  DEFAULT_COMMENT_SYNTAXES,
+  skipStringLiteral,
+} from '../extractor.helper';
+import { CommentSyntax, StringLiteralMatch } from '../LanguageService';
 import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
 
@@ -8,6 +11,11 @@ const MEMBER_ACCESS_REGEX = /^\.\w+/;
 
 export class RazorLanguageService extends HtmlLanguageService {
   languageIds = ['razor', 'aspnetcorerazor'];
+
+  public commentSyntaxes: Array<CommentSyntax> = [
+    ...DEFAULT_COMMENT_SYNTAXES,
+    { open: '@*', close: '*@' },
+  ];
 
   public getRenderedClassText(word: string): string {
     // Razor renders the @@ escape as a single literal @

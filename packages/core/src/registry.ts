@@ -1,5 +1,6 @@
 import {
   ClassInstance,
+  CommentSyntax,
   dedupeInstancesByStart,
   ILanguageService,
 } from './LanguageService';
@@ -21,6 +22,18 @@ class CompositeLanguageService implements ILanguageService {
     private services: Array<ILanguageService>,
   ) {
     this.languageIds = [languageId];
+  }
+
+  get commentSyntaxes() {
+    // Each service activates its own while it runs; this reports the union so
+    // callers asking the composite see everything the language recognizes
+    const seen = new Map<string, CommentSyntax>();
+    for (const service of this.services) {
+      for (const syntax of service.commentSyntaxes) {
+        if (!seen.has(syntax.open)) seen.set(syntax.open, syntax);
+      }
+    }
+    return [...seen.values()];
   }
 
   extractClasses(text: string): Array<ClassInstance> {

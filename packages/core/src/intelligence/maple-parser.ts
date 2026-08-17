@@ -54,10 +54,18 @@ export function stripQuotes(word: string): { word: string; offset: number } {
 
 const convertCache = new Map<string, boolean>();
 
+/**
+ * The convertibility gate: whether the engine can turn `cls` into CSS. This
+ * runs over every word a user types, so results are cached (bounded LRU).
+ */
 export function checkConverted(cls: string): boolean {
   let isConverted = convertCache.get(cls);
   if (isConverted === undefined) {
-    isConverted = !!convert(cls);
+    try {
+      isConverted = !!convert(cls);
+    } catch {
+      isConverted = false;
+    }
     if (convertCache.size > 5000) {
       const firstKey = convertCache.keys().next().value;
       if (firstKey !== undefined) convertCache.delete(firstKey);

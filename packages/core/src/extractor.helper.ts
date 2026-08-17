@@ -758,25 +758,57 @@ export function extractStringLiterals(
   }
 }
 
-export function getExactWordRangeAtPosition(
-  document: any,
-  position: any,
-): { wordRange: any | undefined; currentWord: string } {
-  const wordRange = document.getWordRangeAtPosition(
-    position,
-    MAPLE_CLASS_REGEX_NON_GLOBAL,
+/** The class token under a cursor, and the span it would replace. */
+export interface WordAtOffset {
+  word: string;
+  start: number;
+  end: number;
+}
+
+/**
+ * The maple class token the cursor sits in, in document offsets.
+ *
+ * The search is confined to the cursor's line, then the enclosing class-shaped
+ * match is split on quotes and whitespace so the cursor lands on exactly one
+ * token — `class="bgc-|"` yields `bgc-`, not `class="bgc-"`. When the cursor
+ * is on a quote or between tokens there is nothing to replace, and the span
+ * collapses to the cursor itself.
+ */
+export function getExactWordAtOffset(
+  text: string,
+  offset: number,
+): WordAtOffset {
+  const empty: WordAtOffset = { word: '', start: offset, end: offset };
+
+  const lineStart = text.lastIndexOf('\n', offset - 1) + 1;
+  const lineBreak = text.indexOf('\n', offset);
+  const line = text.substring(
+    lineStart,
+    lineBreak === -1 ? text.length : lineBreak,
   );
-  const currentWord = wordRange ? document.getText(wordRange) : '';
+  const cursorOnLine = offset - lineStart;
 
-  if (!wordRange) {
-    return { wordRange: undefined, currentWord: '' };
+  let matchStart = -1;
+  let matchEnd = -1;
+  for (const match of line.matchAll(
+    new RegExp(MAPLE_CLASS_REGEX_NON_GLOBAL.source, 'g'),
+  )) {
+    const start = match.index;
+    const end = start + match[0].length;
+    if (cursorOnLine >= start && cursorOnLine <= end) {
+      matchStart = start;
+      matchEnd = end;
+      break;
+    }
   }
+  if (matchStart === -1) return empty;
 
-  const cursorOffsetInWord = position.character - wordRange.start.character;
-  const tokens = currentWord.split(TOKEN_SPLIT_REGEX);
+  const cursorOffsetInWord = cursorOnLine - matchStart;
+  const tokens = line.substring(matchStart, matchEnd).split(TOKEN_SPLIT_REGEX);
   let currentOffset = 0;
 
-  let finalRange = wordRange;
+  let finalStart = matchStart;
+  let finalEnd = matchEnd;
   let finalWord = '';
 
   for (const token of tokens) {
@@ -784,44 +816,38 @@ export function getExactWordRangeAtPosition(
     const end = currentOffset + token.length;
 
     if (cursorOffsetInWord > start && cursorOffsetInWord <= end) {
-      if (!isQuote(token) && token.trim() !== '') {
-        finalWord = token;
-        finalRange = wordRange.with(
-          wordRange.start.translate(0, start),
-          wordRange.start.translate(0, end),
-        );
-      } else {
-        finalRange = undefined;
-        finalWord = '';
-      }
+      if (isQuote(token) || token.trim() === '') return empty;
+      finalWord = token;
+      finalStart = matchStart + start;
+      finalEnd = matchStart + end;
       break;
     } else if (cursorOffsetInWord === 0 && start === 0) {
       if (!isQuote(token) && token.trim() !== '') {
         finalWord = token;
-        finalRange = wordRange.with(
-          wordRange.start.translate(0, start),
-          wordRange.start.translate(0, end),
-        );
+        finalStart = matchStart + start;
+        finalEnd = matchStart + end;
         break;
       }
     }
     currentOffset = end;
   }
 
-  if (finalWord && finalRange) {
-    // Strip trailing HTML characters if it still bled (e.g. `bgc-red>`)
-    const cleanWord = finalWord.replace(/[><]+$/, '').replace(/<![\-]*$/, '');
-    if (cleanWord !== finalWord) {
-      const diff = finalWord.length - cleanWord.length;
-      finalRange = finalRange.with(
-        undefined,
-        finalRange.end.translate(0, -diff),
-      );
-      finalWord = cleanWord;
-    }
+  // The cursor sits between tokens (say, right before a closing quote): there
+  // is no word, and nothing of the enclosing match should be replaced.
+  if (!finalWord) return empty;
+
+  // Strip trailing HTML characters if it still bled (e.g. `bgc-red>`)
+  const cleanWord = finalWord.replace(/[><]+$/, '').replace(/<![\-]*$/, '');
+  if (cleanWord !== finalWord) {
+    finalEnd -= finalWord.length - cleanWord.length;
+    finalWord = cleanWord;
   }
 
-  return { wordRange: finalRange, currentWord: finalWord };
+  return {
+    word: finalWord,
+    start: lineStart + finalStart,
+    end: lineStart + finalEnd,
+  };
 }
 
 export function isCvaCall(functionName: string | undefined): boolean {

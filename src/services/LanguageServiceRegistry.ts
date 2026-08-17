@@ -18,7 +18,15 @@ export class LanguageServiceRegistry {
   public static getServiceForDocument(
     doc: vscode.TextDocument,
   ): ILanguageService | undefined {
-    let languageId = doc.languageId;
+    return CoreRegistry.getService(this.resolveLanguageId(doc));
+  }
+
+  /**
+   * The language id core should be asked for. Needed on its own by the APIs
+   * that take a language id rather than a service.
+   */
+  public static resolveLanguageId(doc: vscode.TextDocument): string {
+    const languageId = doc.languageId;
 
     if (languageId === 'html') {
       const fileName = doc.fileName || doc.uri?.fsPath || '';
@@ -28,11 +36,11 @@ export class LanguageServiceRegistry {
         extLanguageId !== 'html' &&
         CoreRegistry.isSupported(extLanguageId)
       ) {
-        languageId = extLanguageId;
+        return extLanguageId;
       }
     }
 
-    return CoreRegistry.getService(languageId);
+    return languageId;
   }
 
   public static isSupported(languageId: string): boolean {

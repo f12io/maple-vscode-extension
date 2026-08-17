@@ -28,6 +28,7 @@ describe('MapleCompletionProvider', () => {
         return text;
       },
       offsetAt: () => 16,
+      positionAt: (offset: number) => new vscode.Position(0, offset),
       getWordRangeAtPosition: () => new vscode.Range(0, 12, 0, 16),
       lineAt: () => ({ text: '<div class="bgc-"></div>' }),
       uri: { fsPath: '/test/file.html' },
@@ -55,6 +56,11 @@ describe('MapleCompletionProvider', () => {
         item.label === 'bgc-red' || item.insertText === 'bgc-red',
     );
     expect(hasRed).toBe(true);
+
+    // Items replace the class token under the cursor
+    const range = result.items[0].range as vscode.Range;
+    expect(range.start.character).toBe(12);
+    expect(range.end.character).toBe(16);
   });
 
   it('should not provide items outside class attribute', () => {

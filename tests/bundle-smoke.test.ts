@@ -113,6 +113,24 @@ class MarkdownString {
   appendMarkdown() {}
   appendCodeblock() {}
 }
+class CompletionItem {
+  insertText?: string;
+  filterText?: string;
+  detail?: string;
+  documentation?: unknown;
+  sortText?: string;
+  range?: Range;
+  constructor(
+    public label: string,
+    public kind?: number,
+  ) {}
+}
+class CompletionList {
+  constructor(
+    public items: Array<CompletionItem> = [],
+    public isIncomplete = false,
+  ) {}
+}
 
 const config: Record<string, unknown> = {
   'maple.enabled': true,
@@ -192,6 +210,15 @@ const vscodeStub: Record<string, unknown> = {
   Diagnostic,
   Hover,
   MarkdownString,
+  CompletionItem,
+  CompletionList,
+  CompletionItemKind: {
+    Variable: 5,
+    Property: 9,
+    Value: 11,
+    Keyword: 13,
+    Color: 15,
+  },
   DiagnosticSeverity: { Error: 0, Warning: 1, Information: 2, Hint: 3 },
   Uri: { file: (p: string) => ({ scheme: 'file', fsPath: p }) },
   window: {
@@ -327,6 +354,26 @@ describe('bundle smoke test', () => {
       new CancellationTokenSource().token,
     );
     expect(hover).not.toBeNull();
+  });
+
+  it('produces completions for the fixture', () => {
+    const completionProvider = registeredProviders.completion as {
+      provideCompletionItems: (
+        doc: unknown,
+        pos: Position,
+        token: unknown,
+        ctx: unknown,
+      ) => CompletionList | undefined;
+    };
+    const offset = text.indexOf('c-white') + 2;
+    const result = completionProvider.provideCompletionItems(
+      document,
+      document.positionAt(offset),
+      new CancellationTokenSource().token,
+      {},
+    );
+
+    expect(result?.items.length).toBeGreaterThan(0);
   });
 
   it('logs no swallowed provider errors to the output channel', () => {

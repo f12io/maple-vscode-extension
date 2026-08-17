@@ -80,6 +80,7 @@ export default defineConfig([
     files: [
       'eslint.config.mjs',
       'esbuild.mjs',
+      'packages/*/build.mjs',
       'scripts/**/*.mjs',
       '__mocks__/**/*.js',
     ],

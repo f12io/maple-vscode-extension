@@ -28,7 +28,7 @@ export {
   findDirectives,
   findOptInRegions,
   getDisabledBlocks,
-  getExactWordRangeAtPosition,
+  getExactWordAtOffset,
   getTagNameBackwards,
   hasDirective,
   isCommentedOut,
@@ -41,8 +41,31 @@ export {
   skipStringLiteral,
   type DirectiveMatch,
   type OptInRegion,
+  type WordAtOffset,
 } from './extractor.helper';
+export * from './intelligence/data';
+export {
+  generateFractionValues,
+  generateSpacingValues,
+  getCompletions,
+  type MapleCompletion,
+  type MapleCompletionKind,
+} from './intelligence/completions';
 export { getUtilKey } from './intelligence/get-util-key';
+export {
+  getHoverInfo,
+  type MapleAliasExpansion,
+  type MapleHover,
+} from './intelligence/hover';
+export {
+  computeSemanticTokens,
+  MAPLE_TOKEN_COLORS_DARK_PLUS,
+  MAPLE_TOKEN_SCOPES,
+  MAPLE_TOKEN_TYPES,
+  type MapleSemanticToken,
+  type MapleTokenType,
+} from './intelligence/semantic-tokens';
+export type { IntelligenceContext } from './intelligence/types';
 export {
   checkConverted,
   getAliasName,

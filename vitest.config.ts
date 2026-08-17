@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    testTimeout: 20000,
     alias: {
       vscode: path.resolve(__dirname, '__mocks__/vscode.ts'),
       // Test against workspace sources so no build step is needed

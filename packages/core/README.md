@@ -22,6 +22,18 @@ and [@f12io/prettier-plugin-maple](https://www.npmjs.com/package/@f12io/prettier
   engine: wraps class lists by property group, preserves ternary and
   concatenation structure, and upgrades string delimiters only when the host
   language allows multi-line strings.
+- **`computeSemanticTokens(text, { languageId, localAliases })`** — offset-based
+  highlighting tokens for every maple class in a document, region gating
+  included, plus the `MAPLE_TOKEN_SCOPES` / `MAPLE_TOKEN_COLORS_DARK_PLUS`
+  reference tables so hosts colorize identically.
+- **`getCompletions(text, offset, ctx)`** — the suggestions for the class being
+  typed at an offset: prefixes and full property keys, pseudo-classes, media
+  and container queries, aliases, named colors with tones and opacities,
+  spacing steps and fractions, gradient functions and stops. Returns `null`
+  when the offset is outside every maple region.
+- **`getHoverInfo(text, offset, ctx)`** — the class under an offset, its
+  generated CSS, and the expansion behind an alias usage (parameters
+  substituted, prefixes re-attached). Pretty-printing is left to the host.
 - **`parseMapleToken` / `checkConverted` / `getUtilKey`** and the small class
   predicates (`isAliasMarker`, `isAliasDefinition`, `isVariable`,
   `stripImportant`, `stripQuotes`, `getAliasName`) — the shared class-token

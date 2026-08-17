@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { getHighlightingMode } from '../helpers/config';
 import { safeRun } from '../helpers/logger';
 import {
-  MapleSemanticTokensProvider,
+  getDocumentSemanticTokens,
+  getTokenTypeIndex,
   semanticTokenIndexes,
 } from './SemanticTokensProvider';
 
@@ -26,7 +27,6 @@ const DECORATION_COLORS: Record<number, string> = {
 
 export class DecorationsManager {
   private decorationTypes = new Map<number, vscode.TextEditorDecorationType>();
-  private semanticProvider: MapleSemanticTokensProvider;
   private timeout: NodeJS.Timeout | undefined = undefined;
   private documentSelector: ReadonlyArray<string>;
 
@@ -34,7 +34,6 @@ export class DecorationsManager {
     context: vscode.ExtensionContext,
     documentSelector: ReadonlyArray<string>,
   ) {
-    this.semanticProvider = new MapleSemanticTokensProvider();
     this.documentSelector = documentSelector;
 
     for (const [tokenType, themeColor] of Object.entries(DECORATION_COLORS)) {
@@ -110,16 +109,9 @@ export class DecorationsManager {
       return;
     }
 
-    const tokenSource = new vscode.CancellationTokenSource();
+    const tokens = getDocumentSemanticTokens(document);
 
-    // Call the existing semantic token provider
-    const semanticTokensResult = this.semanticProvider.provideDocumentSemanticTokens(
-      document,
-      tokenSource.token,
-    ) as vscode.SemanticTokens | undefined;
-    tokenSource.dispose();
-
-    if (!semanticTokensResult?.data || semanticTokensResult.data.length === 0) {
+    if (tokens.length === 0) {
       // Clear decorations if no tokens are returned
       for (const decorationType of this.decorationTypes.values()) {
         editor.setDecorations(decorationType, []);
@@ -127,39 +119,21 @@ export class DecorationsManager {
       return;
     }
 
-    const data = semanticTokensResult.data;
     const rangesByType = new Map<number, Array<vscode.Range>>();
 
     for (const key of this.decorationTypes.keys()) {
       rangesByType.set(key, []);
     }
 
-    let currentLine = 0;
-    let currentChar = 0;
-
-    for (let i = 0; i < data.length; i += 5) {
-      const deltaLine = data[i];
-      const deltaChar = data[i + 1];
-      const length = data[i + 2];
-      const tokenType = data[i + 3];
-
-      if (deltaLine > 0) {
-        currentLine += deltaLine;
-        currentChar = deltaChar;
-      } else {
-        currentChar += deltaChar;
-      }
-
-      const range = new vscode.Range(
-        currentLine,
-        currentChar,
-        currentLine,
-        currentChar + length,
-      );
-
-      const ranges = rangesByType.get(tokenType);
+    for (const token of tokens) {
+      const ranges = rangesByType.get(getTokenTypeIndex(token.type));
       if (ranges) {
-        ranges.push(range);
+        ranges.push(
+          new vscode.Range(
+            document.positionAt(token.start),
+            document.positionAt(token.start + token.length),
+          ),
+        );
       }
     }
 

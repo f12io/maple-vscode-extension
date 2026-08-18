@@ -210,6 +210,11 @@
           "default": true,
           "description": "Enable diagnostics (linting/errors) for Maple CSS."
         },
+        "maple.features.quickFix": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer quick fixes (Cmd/Ctrl+. on a Maple warning) for Maple diagnostics. Requires 'maple.features.diagnostics'."
+        },
         "maple.features.autoComplete": {
           "type": "boolean",
           "default": true,

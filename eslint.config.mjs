@@ -67,9 +67,8 @@ export default defineConfig([
   },
   // Node Environment (Build, Scripts, Tests, Configs, Source)
   {
-    files: [
-      '**/*.{ts,js,mjs}',
-    ],languageOptions: {
+    files: ['**/*.{ts,js,mjs}'],
+    languageOptions: {
       globals: globals.node,
     },
     rules: {
@@ -82,7 +81,6 @@ export default defineConfig([
       'esbuild.mjs',
       'packages/*/build.mjs',
       'scripts/**/*.mjs',
-      '__mocks__/**/*.js',
     ],
     extends: [tseslint.configs.disableTypeChecked],
   },

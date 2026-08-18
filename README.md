@@ -9,6 +9,7 @@ The official [VS Code extension](https://marketplace.visualstudio.com/items?item
 - **Syntax Highlighting**: Beautiful semantic highlighting that distinguishes utilities, properties, and values, making your classes easier to read.
 - **Color Picker**: Live color swatches and the native VS Code color picker for any color utility.
 - **Diagnostics & Linting**: Real-time warnings for invalid shades, broken syntax, or conflicting utilities.
+- **Quick Fixes**: Press `Cmd/Ctrl+.` on a Maple warning to apply the correction — reposition a misplaced `!`, or drop one of two conflicting utilities.
 - **Multi-line Class Formatter**: A specialized formatter that cleanly wraps your utility classes into multiple lines, grouped automatically by their property type.
 
 ## Getting Started
@@ -36,6 +37,7 @@ You can customize almost every aspect of the extension to fit your workflow.
 - `maple.features.hoverHelp` _(default: `true`)_: Toggle CSS hover tooltips.
 - `maple.features.colorPicker` _(default: `true`)_: Toggle live color swatches.
 - `maple.features.diagnostics` _(default: `true`)_: Toggle real-time linting and conflict warnings.
+- `maple.features.quickFix` _(default: `true`)_: Toggle quick fixes on Maple warnings. Requires `maple.features.diagnostics`.
 - `maple.features.highlighting` _(default: `"on"`)_: Configure semantic syntax highlighting. Options: `"on"`, `"minimal"`, `"off"`.
 
 ### Formatter Settings
@@ -52,6 +54,15 @@ Two layout rules apply on top of that limit:
 - **Blank lines you write are kept.** Each run of classes between blank lines is formatted on its own and never merges with its neighbours, so you can group classes for readability.
 
 > **Prettier Users**: Because Prettier aggressively squashes HTML classes, formatting them in VS Code can cause conflicts and flickering on save. If you actively use Prettier and "Format on Save", install [@f12io/prettier-plugin-maple](https://www.npmjs.com/package/@f12io/prettier-plugin-maple) instead of enabling the built-in formatter — it applies the same Maple layout inside Prettier's own pass (HTML class attributes, JSX/TS constructs, clsx/cva calls, and opt-in strings), so one formatter produces the final state.
+
+## Quick Fixes
+
+Where a warning has one unambiguous correction, the lightbulb offers it:
+
+- **Misplaced `!`**: `&:hover:!o-100` → **Replace with `!&:hover:o-100`**. This one is marked preferred, so `editor.action.autoFix` applies it directly.
+- **Conflicting utilities**: `p-4 p-8` → **Remove `p-4`** / **Remove `p-8`**, depending on which class you invoke the fix from. Since either class is a valid thing to keep, this one is never applied automatically.
+
+Warnings whose correction would be a guess — an out-of-range shade, an unknown class — deliberately offer nothing.
 
 ## Comment Directives
 

@@ -47,7 +47,8 @@ export function isExtensionEnabled(document?: vscode.TextDocument): boolean {
 }
 
 export function isFeatureEnabled(
-  featureName: 'diagnostics' | 'autoComplete' | 'colorPicker' | 'hoverHelp',
+  featureName:
+    'diagnostics' | 'quickFix' | 'autoComplete' | 'colorPicker' | 'hoverHelp',
 ): boolean {
   return vscode.workspace
     .getConfiguration('maple.features')

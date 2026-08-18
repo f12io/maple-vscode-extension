@@ -20,3 +20,7 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+# The vscode mock is consumed as TypeScript (vitest aliases it); a compiled
+# copy next to it would shadow the source on a path import.
+__mocks__/*.js
+__mocks__/*.js.map

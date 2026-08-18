@@ -191,3 +191,58 @@ export class DiagnosticRelatedInformation {
     public readonly message: string,
   ) {}
 }
+
+export enum DiagnosticSeverity {
+  Error = 0,
+  Warning = 1,
+  Information = 2,
+  Hint = 3,
+}
+
+export class Diagnostic {
+  public source?: string;
+  public code?: string | number;
+  public relatedInformation?: Array<DiagnosticRelatedInformation>;
+  constructor(
+    public readonly range: Range,
+    public readonly message: string,
+    public readonly severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+  ) {}
+}
+
+export class CodeActionKind {
+  static readonly QuickFix = new CodeActionKind('quickfix');
+  static readonly SourceFixAll = new CodeActionKind('source.fixAll');
+  constructor(public readonly value: string) {}
+
+  append(parts: string): CodeActionKind {
+    return new CodeActionKind(`${this.value}.${parts}`);
+  }
+}
+
+/** Records the edits an action asks for, so tests can assert on them. */
+export class WorkspaceEdit {
+  public readonly edits: Array<{
+    uri: unknown;
+    range: Range;
+    newText: string;
+  }> = [];
+
+  replace(uri: unknown, range: Range, newText: string): void {
+    this.edits.push({ uri, range, newText });
+  }
+
+  delete(uri: unknown, range: Range): void {
+    this.edits.push({ uri, range, newText: '' });
+  }
+}
+
+export class CodeAction {
+  public edit?: WorkspaceEdit;
+  public diagnostics?: Array<Diagnostic>;
+  public isPreferred?: boolean;
+  constructor(
+    public readonly title: string,
+    public readonly kind?: CodeActionKind,
+  ) {}
+}

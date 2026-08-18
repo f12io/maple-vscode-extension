@@ -108,6 +108,28 @@ class Diagnostic {
 class Hover {
   constructor(public contents: unknown) {}
 }
+class CodeActionKind {
+  static QuickFix = new CodeActionKind('quickfix');
+  constructor(public value: string) {}
+}
+class WorkspaceEdit {
+  edits: Array<{ uri: unknown; range: Range; newText: string }> = [];
+  replace(uri: unknown, range: Range, newText: string) {
+    this.edits.push({ uri, range, newText });
+  }
+  delete(uri: unknown, range: Range) {
+    this.edits.push({ uri, range, newText: '' });
+  }
+}
+class CodeAction {
+  edit?: WorkspaceEdit;
+  diagnostics?: Array<Diagnostic>;
+  isPreferred?: boolean;
+  constructor(
+    public title: string,
+    public kind?: CodeActionKind,
+  ) {}
+}
 class MarkdownString {
   constructor(public value = '') {}
   appendMarkdown() {}
@@ -137,6 +159,7 @@ const config: Record<string, unknown> = {
   'maple.exclude': ['**/node_modules/**', '**/.git/**'],
   'maple.features.highlighting': 'on',
   'maple.features.diagnostics': true,
+  'maple.features.quickFix': true,
   'maple.features.autoComplete': true,
   'maple.features.colorPicker': true,
   'maple.features.hoverHelp': true,
@@ -219,6 +242,9 @@ const vscodeStub: Record<string, unknown> = {
   CancellationTokenSource,
   Diagnostic,
   Hover,
+  CodeAction,
+  CodeActionKind,
+  WorkspaceEdit,
   MarkdownString,
   CompletionItem,
   CompletionList,
@@ -281,6 +307,10 @@ const vscodeStub: Record<string, unknown> = {
     },
     registerColorProvider: (_sel: unknown, provider: unknown) => {
       registeredProviders.color = provider;
+      return { dispose() {} };
+    },
+    registerCodeActionsProvider: (_sel: unknown, provider: unknown) => {
+      registeredProviders.codeActions = provider;
       return { dispose() {} };
     },
     createDiagnosticCollection: () => ({
@@ -394,6 +424,55 @@ describe('bundle smoke test', () => {
     );
 
     expect(result?.items.length).toBeGreaterThan(0);
+  });
+
+  it('offers a quick fix for a fixable diagnostic', () => {
+    const provider = registeredProviders.codeActions as {
+      provideCodeActions: (
+        doc: unknown,
+        range: Range,
+        ctx: unknown,
+        token: unknown,
+      ) => Array<CodeAction>;
+    };
+
+    // A one-line document of its own: the razor fixture is deliberately clean.
+    const fixableText = '<div class="p-4!"></div>';
+    const fixablePath = path.join(path.dirname(FIXTURE), 'fixable.html');
+    const fixableDocument = {
+      languageId: 'html',
+      fileName: fixablePath,
+      version: 1,
+      uri: {
+        scheme: 'file',
+        fsPath: fixablePath,
+        toString: () => 'file://' + fixablePath,
+      },
+      getText: (range?: Range) =>
+        range
+          ? fixableText.slice(range.start.character, range.end.character)
+          : fixableText,
+      positionAt: (offset: number) => new Position(0, offset),
+      offsetAt: (pos: Position) => pos.character,
+    };
+
+    const diagnostic = new Diagnostic(
+      new Range(0, 12, 0, 16),
+      "Invalid usage of '!'.",
+      1,
+    );
+    diagnostic.source = 'Maple';
+
+    const actions = provider.provideCodeActions(
+      fixableDocument,
+      new Range(0, 12, 0, 16),
+      { diagnostics: [diagnostic] },
+      new CancellationTokenSource().token,
+    );
+
+    expect(actions).toHaveLength(1);
+    expect(actions[0].title).toBe("Replace with '!p-4'");
+    expect(actions[0].edit?.edits[0].newText).toBe('!p-4');
   });
 
   it('logs no swallowed provider errors to the output channel', () => {

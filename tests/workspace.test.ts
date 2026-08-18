@@ -85,25 +85,6 @@ describe('Workspace Highlights and Colors', () => {
         languageId: langId,
       } as unknown as vscode.TextDocument;
 
-      // Mock vscode API needed for diagnostics
-      (vscode as any).DiagnosticSeverity = {
-        Error: 0,
-        Warning: 1,
-        Information: 2,
-        Hint: 3,
-      };
-      (vscode as any).Diagnostic = class Diagnostic {
-        range: any;
-        message: string;
-        severity: number;
-        source?: string;
-        constructor(range: any, message: string, severity: number) {
-          this.range = range;
-          this.message = message;
-          this.severity = severity;
-        }
-      };
-
       const token = {} as vscode.CancellationToken;
 
       const semanticProvider = new MapleSemanticTokensProvider();

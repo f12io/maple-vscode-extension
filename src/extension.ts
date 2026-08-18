@@ -6,6 +6,7 @@ import {
   isFeatureEnabled,
 } from './helpers/config';
 import { initLogger } from './helpers/logger';
+import { MapleCodeActionProvider } from './providers/CodeActionProvider';
 import { MapleColorProvider } from './providers/ColorProvider';
 import { MapleCompletionProvider } from './providers/CompletionProvider';
 import { DecorationsManager } from './providers/DecorationsManager';
@@ -46,6 +47,17 @@ export function activate(context: vscode.ExtensionContext) {
       documentSelector,
       new MapleCompletionProvider(),
       ...COMPLETION_TRIGGER_CHARACTERS,
+    ),
+  );
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider(
+      documentSelector,
+      new MapleCodeActionProvider(),
+      {
+        providedCodeActionKinds:
+          MapleCodeActionProvider.providedCodeActionKinds,
+      },
     ),
   );
 

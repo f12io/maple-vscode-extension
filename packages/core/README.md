@@ -41,6 +41,17 @@ and [@f12io/prettier-plugin-maple](https://www.npmjs.com/package/@f12io/prettier
   ready-to-display `message`, and an optional `fix` containing the corrected
   class when unambiguous. Only the most specific problem is reported, allowing
   callers to filter out host template expressions by `code`.
+- **`getDiagnostics(text, ctx)`** — returns all validation issues and utility
+  conflicts for Maple classes across a document, in document order. Handles
+  region detection, template interpolations, and aliases automatically. Issues
+  are returned as warnings with character offsets and related conflict spans,
+  making them easy for editor adapters to display.
+- **`getDocumentColors(text, ctx)`** — finds all colors in color-bearing classes
+  (such as `bgc-accent-500`, `c=[#f97316]`, and shadow colors) and returns their
+  sRGB values with document ranges for editor color pickers.
+- **`getColorPresentations(text, span, color)`** — provides replacement text
+  options when a color is picked in the editor, matching the document's existing
+  format and returning the exact range to replace.
 - **`parseMapleToken` / `checkConverted` / `getUtilKey`** and the small class
   predicates (`isAliasMarker`, `isAliasDefinition`, `isVariable`,
   `stripImportant`, `stripQuotes`, `getAliasName`) — the shared class-token

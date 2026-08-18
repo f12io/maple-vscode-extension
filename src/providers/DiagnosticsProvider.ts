@@ -1,12 +1,4 @@
-import { buildRule } from '@f12io/maple';
-import {
-  checkConverted,
-  isAliasDefinition,
-  MAPLE_CLASS_REGEX,
-  parseMapleToken,
-  stripQuotes,
-  validateClass,
-} from '@f12io/maple-language-core';
+import { getDiagnostics } from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
 import { isExtensionEnabled, isFeatureEnabled } from '../helpers/config';
@@ -41,158 +33,37 @@ function doRefreshDiagnostics(
     return;
   }
 
-  const diagnostics: Array<vscode.Diagnostic> = [];
-  const text = doc.getText();
+  const toRange = (span: { start: number; end: number }) =>
+    new vscode.Range(doc.positionAt(span.start), doc.positionAt(span.end));
 
-  const languageService = LanguageServiceRegistry.getServiceForDocument(doc);
-  if (!languageService) {
-    mapleDiagnostics.set(doc.uri, []);
-    return;
-  }
+  const issues = getDiagnostics(doc.getText(), {
+    languageId: LanguageServiceRegistry.resolveLanguageId(doc),
+    localAliases: AliasCache.getAliases(doc.uri),
+  });
 
-  const classInstances = languageService.extractClasses(text);
+  const diagnostics = issues.map((issue) => {
+    const diagnostic = new vscode.Diagnostic(
+      toRange(issue),
+      issue.message,
+      vscode.DiagnosticSeverity.Warning,
+    );
+    diagnostic.source = 'Maple';
+    diagnostic.code = issue.code;
 
-  for (const instance of classInstances) {
-    const classValue = instance.value;
-    const seenSelectors = new Map<
-      string,
-      { range: vscode.Range; isAdded: boolean }
-    >();
-
-    const tokens = languageService.tokenizeClassesWithIndices(classValue);
-
-    for (const token of tokens) {
-      if (token.value.includes('${') || token.hasInterpolation) continue;
-
-      // An alias definition (`--alias-name=u1;u2;u3`) is a single token, but the
-      // class regex splits it on ';'. Those fragments are the alias body, not
-      // utilities applied to this element, so they get their own conflict scope:
-      // they must not clash with the element's own classes or with other aliases.
-      const isAliasDefinitionToken = isAliasDefinition(
-        stripQuotes(token.value).word,
+    // A conflict is reported on every class taking part in it, so each one
+    // points at the others.
+    if (issue.related) {
+      diagnostic.relatedInformation = issue.related.map(
+        (span) =>
+          new vscode.DiagnosticRelatedInformation(
+            new vscode.Location(doc.uri, toRange(span)),
+            issue.message,
+          ),
       );
-      const aliasBodySelectors = new Map<
-        string,
-        { range: vscode.Range; isAdded: boolean }
-      >();
-
-      for (const wordMatch of token.value.matchAll(MAPLE_CLASS_REGEX)) {
-        let cls = wordMatch[0];
-
-        // Check if this class is cut off at the end of the extracted instance by an interpolation
-        const wordEndOffset = token.start + wordMatch.index + cls.length;
-        if (wordEndOffset === classValue.length) {
-          const nextSlice = text
-            .substring(instance.end, instance.end + 5)
-            .trim();
-          if (
-            nextSlice.startsWith('${') ||
-            nextSlice.startsWith('@(') ||
-            nextSlice.startsWith('<?') ||
-            nextSlice.startsWith('{') ||
-            /^['"`]\s*[\.\+]/.test(nextSlice) // Matches: ' . or " + etc. (string concatenation)
-          ) {
-            continue; // Skip this token, it was cut off by an expression
-          }
-        }
-
-        const stripped = stripQuotes(cls);
-        cls = stripped.word;
-
-        if (cls.length === 0) continue;
-
-        const { isMapleIntent } = parseMapleToken(cls);
-
-        if (!isMapleIntent) {
-          continue;
-        }
-
-        // Host-only rule: razor variables and expressions are not maple
-        // classes, and the engine cannot tell them apart from a typo.
-        const isRazorExpression =
-          (doc.languageId === 'razor' ||
-            doc.languageId === 'aspnetcorerazor') &&
-          (cls.startsWith('@') || cls.includes('(') || cls.includes(')'));
-
-        const issue = validateClass(cls, {
-          tagName: instance.tagName,
-          localAliases: AliasCache.getAliases(doc.uri),
-        });
-
-        const hasError =
-          !!issue && !(issue.code === 'unknown-class' && isRazorExpression);
-        const errorMsg = issue?.message ?? '';
-
-        if (hasError) {
-          const startIdx = instance.start + token.start + wordMatch.index;
-          const endIdx = startIdx + cls.length;
-
-          const range = new vscode.Range(
-            doc.positionAt(startIdx),
-            doc.positionAt(endIdx),
-          );
-
-          const diagnostic = new vscode.Diagnostic(
-            range,
-            errorMsg,
-            vscode.DiagnosticSeverity.Warning,
-          );
-          diagnostic.source = 'Maple';
-          diagnostics.push(diagnostic);
-        } else if (isMapleIntent) {
-          // If it's valid, check for conflicts
-          const converted = checkConverted(cls);
-          if (converted) {
-            const rule = buildRule(cls);
-            const conflictKey = rule?.parsed?.conflictKey;
-
-            if (conflictKey) {
-              const startIdx = instance.start + token.start + wordMatch.index;
-              const endIdx = startIdx + cls.length;
-              const range = new vscode.Range(
-                doc.positionAt(startIdx),
-                doc.positionAt(endIdx),
-              );
-
-              // The first fragment of an alias definition is the `--alias-name=`
-              // declaration itself, which still belongs to the element scope so a
-              // duplicated alias name is reported.
-              const scope =
-                isAliasDefinitionToken && wordMatch.index > 0
-                  ? aliasBodySelectors
-                  : seenSelectors;
-
-              const previousSelector = scope.get(conflictKey);
-              if (previousSelector) {
-                if (!previousSelector.isAdded) {
-                  previousSelector.isAdded = true;
-                  scope.set(conflictKey, previousSelector);
-
-                  const firstDiagnostic = new vscode.Diagnostic(
-                    previousSelector.range,
-                    `Conflicted utility usage: '${conflictKey}'`,
-                    vscode.DiagnosticSeverity.Warning,
-                  );
-                  firstDiagnostic.source = 'Maple';
-                  diagnostics.push(firstDiagnostic);
-                }
-
-                const diagnostic = new vscode.Diagnostic(
-                  range,
-                  `Conflicted utility usage: '${conflictKey}'`,
-                  vscode.DiagnosticSeverity.Warning,
-                );
-                diagnostic.source = 'Maple';
-                diagnostics.push(diagnostic);
-              } else {
-                scope.set(conflictKey, { range, isAdded: false });
-              }
-            }
-          }
-        }
-      }
     }
-  }
+
+    return diagnostic;
+  });
 
   mapleDiagnostics.set(doc.uri, diagnostics);
 }

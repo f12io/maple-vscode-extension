@@ -1,11 +1,11 @@
 import { convert, parseClass, StringHelper } from '@f12io/maple';
 import {
-  ALIAS_REGEX,
   getParamSubstituteRegex,
   PARAM_FALLBACK_REGEX,
   PARAM_REMOVE_REGEX,
 } from '../regex';
 import { LanguageServiceRegistry } from '../registry';
+import { collectAliasDefinitions } from './aliases';
 import { getAliasName, isAliasMarker, parseMapleToken } from './maple-parser';
 import type { IntelligenceContext } from './types';
 
@@ -29,25 +29,6 @@ export interface MapleHover {
   css: string;
   /** Set when the class is a usage of a known alias. */
   alias?: MapleAliasExpansion;
-}
-
-/** Alias definitions usable in `text`: in-document, then host-supplied. */
-function collectAliases(
-  text: string,
-  hostAliases: ReadonlyMap<string, string> | undefined,
-): Map<string, string> {
-  const aliases = new Map<string, string>();
-
-  for (const match of text.matchAll(ALIAS_REGEX)) {
-    aliases.set(match[1], match[2]);
-  }
-  // The host's own source (a workspace scan) wins: it sees definitions the
-  // document cannot, and is what the editor resolves against elsewhere.
-  if (hostAliases) {
-    for (const [name, body] of hostAliases) aliases.set(name, body);
-  }
-
-  return aliases;
 }
 
 /** `@card(space:8,4)` → `{ space: '8', '1': '4' }`, positional keys by index. */
@@ -139,7 +120,7 @@ function getAliasHover(
   if (!isAliasMarker(rawAliasBase)) return null;
 
   const name = getAliasName(rawAliasBase);
-  const aliasBody = collectAliases(text, ctx.localAliases).get(name);
+  const aliasBody = collectAliasDefinitions(text, ctx.localAliases).get(name);
   if (aliasBody === undefined) return null;
 
   // parseMapleToken may append '=' to activeWord, so strip it before params

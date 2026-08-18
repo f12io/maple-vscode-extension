@@ -52,6 +52,14 @@ describe('published bundles', () => {
     expect(core.getHoverInfo(FIXTURE, 25, { languageId: 'html' })).not.toBe(
       null,
     );
+    expect(
+      core.getDiagnostics('<div class="p-4 p-8"></div>', {
+        languageId: 'html',
+      }),
+    ).toHaveLength(2);
+    expect(
+      core.getDocumentColors(FIXTURE, { languageId: 'html' }),
+    ).toHaveLength(1);
   });
 
   it('works when imported as ESM', async () => {
@@ -64,6 +72,9 @@ describe('published bundles', () => {
     expect(
       core.getCompletions('<div class="p-"></div>', 14, { languageId: 'html' }),
     ).not.toBeNull();
+    expect(
+      core.getDocumentColors(FIXTURE, { languageId: 'html' }),
+    ).toHaveLength(1);
   });
 
   it('agrees between the two builds', async () => {
@@ -73,6 +84,9 @@ describe('published bundles', () => {
 
     expect(esm.computeSemanticTokens(FIXTURE, ctx)).toEqual(
       cjs.computeSemanticTokens(FIXTURE, ctx),
+    );
+    expect(esm.getDocumentColors(FIXTURE, ctx)).toEqual(
+      cjs.getDocumentColors(FIXTURE, ctx),
     );
   });
 
@@ -103,5 +117,8 @@ describe('published bundles', () => {
     expect(types).toContain('getCompletions');
     expect(types).toContain('getHoverInfo');
     expect(types).toContain('validateClass');
+    expect(types).toContain('getDiagnostics');
+    expect(types).toContain('getDocumentColors');
+    expect(types).toContain('getColorPresentations');
   });
 });

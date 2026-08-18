@@ -1,12 +1,12 @@
 import { BUILTIN_ALIASES, parseClass, StringHelper } from '@f12io/maple';
 import {
-  ALIAS_REGEX,
   MAPLE_CLASS_REGEX,
   MAPLE_COMMA_SPLIT_REGEX,
   MAPLE_PARAMS_SPLIT_REGEX,
   MAPLE_UNDERSCORE_SPLIT_REGEX,
 } from '../regex';
 import { LanguageServiceRegistry } from '../registry';
+import { collectAliasNames } from './aliases';
 import { getUtilKey } from './get-util-key';
 import {
   checkConverted,
@@ -115,23 +115,6 @@ export const MAPLE_TOKEN_COLORS_DARK_PLUS: Record<MapleTokenType, string> = {
   important: '569CD6',
   aliasParamKey: '9CDCFE',
 };
-
-/** Collects the alias names usable in `text`: in-document plus host-supplied. */
-function collectAliasNames(
-  text: string,
-  hostAliases: ReadonlyMap<string, string> | undefined,
-): Set<string> {
-  const names = new Set<string>();
-
-  for (const match of text.matchAll(ALIAS_REGEX)) {
-    names.add(match[1]);
-  }
-  if (hostAliases) {
-    for (const name of hostAliases.keys()) names.add(name);
-  }
-
-  return names;
-}
 
 /**
  * Tokenizes every maple class in `text` into offset-based semantic tokens,

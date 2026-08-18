@@ -51,6 +51,19 @@ export {
   type MapleCompletion,
   type MapleCompletionKind,
 } from './intelligence/completions';
+export {
+  getColorPresentations,
+  getDocumentColors,
+  type MapleColor,
+  type MapleColorPresentation,
+  type MapleColorSpan,
+} from './intelligence/colors';
+export {
+  getDiagnostics,
+  type MapleDiagnostic,
+  type MapleDiagnosticCode,
+  type MapleDiagnosticSpan,
+} from './intelligence/diagnostics';
 export { getUtilKey } from './intelligence/get-util-key';
 export {
   getHoverInfo,

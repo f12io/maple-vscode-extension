@@ -177,3 +177,17 @@ export class EventEmitter<T> {
   fire(data?: T): void {}
   dispose(): void {}
 }
+
+export class Location {
+  constructor(
+    public readonly uri: any,
+    public readonly range: Range,
+  ) {}
+}
+
+export class DiagnosticRelatedInformation {
+  constructor(
+    public readonly location: Location,
+    public readonly message: string,
+  ) {}
+}

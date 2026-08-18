@@ -46,7 +46,7 @@ export class AliasCache {
    * Looks up the workspace folder the document belongs to.
    */
   public static getAliases(uri: vscode.Uri): Map<string, string> {
-    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    const folder = this.resolveFolder(uri);
     if (!folder) {
       return new Map<string, string>();
     }
@@ -62,6 +62,15 @@ export class AliasCache {
       }
     }
     return allAliases;
+  }
+
+  private static resolveFolder(
+    uri: vscode.Uri,
+  ): vscode.WorkspaceFolder | undefined {
+    const folder = vscode.workspace.getWorkspaceFolder(uri);
+    if (folder || uri.scheme === 'file') return folder;
+
+    return vscode.workspace.getWorkspaceFolder(vscode.Uri.file(uri.fsPath));
   }
 
   private static async scanAllWorkspaces() {

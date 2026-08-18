@@ -184,6 +184,7 @@ const document = {
 };
 
 const decorationsLog = new Map<number, Array<Range>>();
+const diffPaneDecorationsLog = new Map<number, Array<Range>>();
 let decorationTypeCounter = 0;
 const outputLog: Array<string> = [];
 const diagnosticsStore = new Map<string, Array<Diagnostic>>();
@@ -192,6 +193,15 @@ const editor = {
   document,
   setDecorations(decorationType: { __key: number }, ranges: Array<Range>) {
     decorationsLog.set(decorationType.__key, ranges);
+  },
+};
+
+// Stands in for the non-active pane of a diff: visible, showing the same
+// document, but never the active editor.
+const diffPaneEditor = {
+  document,
+  setDecorations(decorationType: { __key: number }, ranges: Array<Range>) {
+    diffPaneDecorationsLog.set(decorationType.__key, ranges);
   },
 };
 
@@ -223,7 +233,7 @@ const vscodeStub: Record<string, unknown> = {
   Uri: { file: (p: string) => ({ scheme: 'file', fsPath: p }) },
   window: {
     activeTextEditor: editor,
-    visibleTextEditors: [editor],
+    visibleTextEditors: [editor, diffPaneEditor],
     createOutputChannel: () => ({
       appendLine: (l: string) => outputLog.push(l),
       dispose() {},
@@ -233,6 +243,7 @@ const vscodeStub: Record<string, unknown> = {
       dispose() {},
     }),
     onDidChangeActiveTextEditor: () => ({ dispose() {} }),
+    onDidChangeVisibleTextEditors: () => ({ dispose() {} }),
     showInformationMessage() {},
     showWarningMessage() {},
   },
@@ -326,12 +337,21 @@ describe('bundle smoke test', () => {
   });
 
   it('renders decorations for the razor fixture', () => {
-    // DecorationsManager decorates the active editor during activation
+    // DecorationsManager decorates every visible editor during activation
     const totalRanges = [...decorationsLog.values()].reduce(
       (sum, ranges) => sum + ranges.length,
       0,
     );
     expect(decorationTypeCounter).toBeGreaterThan(0);
+    expect(totalRanges).toBeGreaterThan(0);
+  });
+
+  it('decorates a visible editor that is not the active one', () => {
+    // Both panes of a diff are visible editors; only one can be active
+    const totalRanges = [...diffPaneDecorationsLog.values()].reduce(
+      (sum, ranges) => sum + ranges.length,
+      0,
+    );
     expect(totalRanges).toBeGreaterThan(0);
   });
 

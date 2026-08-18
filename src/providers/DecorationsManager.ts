@@ -28,6 +28,7 @@ const DECORATION_COLORS: Record<number, string> = {
 export class DecorationsManager {
   private decorationTypes = new Map<number, vscode.TextEditorDecorationType>();
   private timeout: NodeJS.Timeout | undefined = undefined;
+  private pendingDocuments = new Set<vscode.TextDocument>();
   private documentSelector: ReadonlyArray<string>;
 
   constructor(
@@ -45,17 +46,16 @@ export class DecorationsManager {
       );
     }
 
-    // Register event listeners
-    let activeEditor = vscode.window.activeTextEditor;
-    if (activeEditor) {
-      this.triggerUpdateDecorations(activeEditor);
-    }
+    // Decorations live on a TextEditor, not on a document, so every visible
+    // editor needs its own pass. A diff view is two editors showing two
+    // documents side by side, and neither side is guaranteed to be the active
+    // editor - tracking only the active one leaves the other pane unpainted.
+    this.updateVisibleEditors();
 
-    vscode.window.onDidChangeActiveTextEditor(
-      (editor) => {
-        activeEditor = editor;
-        if (editor) {
-          this.triggerUpdateDecorations(editor);
+    vscode.window.onDidChangeVisibleTextEditors(
+      (editors) => {
+        for (const editor of editors) {
+          this.updateDecorations(editor);
         }
       },
       null,
@@ -64,28 +64,45 @@ export class DecorationsManager {
 
     vscode.workspace.onDidChangeTextDocument(
       (event) => {
-        if (event.document === activeEditor?.document) {
-          this.triggerUpdateDecorations(activeEditor, true);
-        }
+        this.scheduleDocumentUpdate(event.document);
       },
       null,
       context.subscriptions,
     );
   }
 
-  private triggerUpdateDecorations(
-    editor: vscode.TextEditor,
-    throttle = false,
-  ) {
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-      this.timeout = undefined;
-    }
-    if (throttle) {
-      this.timeout = setTimeout(() => this.updateDecorations(editor), 50);
-    } else {
+  /**
+   * Repaints every editor currently on screen, including both panes of a diff.
+   */
+  public updateVisibleEditors() {
+    for (const editor of vscode.window.visibleTextEditors) {
       this.updateDecorations(editor);
     }
+  }
+
+  /**
+   * Coalesces rapid edits into a single pass. Editors are resolved when the
+   * timer fires rather than when it is scheduled, so an editor closed in the
+   * meantime is never decorated after disposal.
+   */
+  private scheduleDocumentUpdate(document: vscode.TextDocument) {
+    this.pendingDocuments.add(document);
+
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+
+    this.timeout = setTimeout(() => {
+      this.timeout = undefined;
+      const documents = this.pendingDocuments;
+      this.pendingDocuments = new Set();
+
+      for (const editor of vscode.window.visibleTextEditors) {
+        if (documents.has(editor.document)) {
+          this.updateDecorations(editor);
+        }
+      }
+    }, 50);
   }
 
   public updateDecorations(editor: vscode.TextEditor) {

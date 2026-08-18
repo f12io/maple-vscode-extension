@@ -995,6 +995,14 @@
     <div class="fxcol-ss!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="@btn!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="bgc-#00f_!important"><!-- Expexted important warning --></div>
+    <div class="&:hover:!o-100">
+      <!-- Expected warning: Invalid usage of '!' (must lead the class) -->
+    </div>
+    <div class="@md:!p-4">
+      <!-- Expected warning: Invalid usage of '!' (must lead the class) -->
+    </div>
+    <div class="!&:hover:o-100"></div>
+    <div class="!@md:p-4"></div>
 
     <div class="--alias-card=p-4">
       <!-- Expected warning: Invalid alias definition -->

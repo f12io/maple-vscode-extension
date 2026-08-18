@@ -26555,6 +26555,88 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     ],
   },
   {
+    "classValue": "&:hover:!o-100",
+    "colors": [],
+    "tokens": [],
+    "warnings": [
+      "Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!&:hover:o-100').",
+    ],
+  },
+  {
+    "classValue": "@md:!p-4",
+    "colors": [],
+    "tokens": [],
+    "warnings": [
+      "Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!@md:p-4').",
+    ],
+  },
+  {
+    "classValue": "!&:hover:o-100",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "!",
+        "type": "maple-important",
+      },
+      {
+        "text": "&",
+        "type": "maple-selector-operator",
+      },
+      {
+        "text": ":hover",
+        "type": "maple-self-selector",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "o",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "100",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
+    "classValue": "!@md:p-4",
+    "colors": [],
+    "tokens": [
+      {
+        "text": "!",
+        "type": "maple-important",
+      },
+      {
+        "text": "@md",
+        "type": "maple-mediaQuery",
+      },
+      {
+        "text": ":",
+        "type": "maple-separator",
+      },
+      {
+        "text": "p",
+        "type": "maple-utility",
+      },
+      {
+        "text": "-",
+        "type": "maple-separator",
+      },
+      {
+        "text": "4",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [],
+  },
+  {
     "classValue": "--alias-card=p-4",
     "colors": [],
     "tokens": [

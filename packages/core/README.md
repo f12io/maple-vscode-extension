@@ -34,6 +34,13 @@ and [@f12io/prettier-plugin-maple](https://www.npmjs.com/package/@f12io/prettier
 - **`getHoverInfo(text, offset, ctx)`** — the class under an offset, its
   generated CSS, and the expansion behind an alias usage (parameters
   substituted, prefixes re-attached). Pretty-printing is left to the host.
+- **`validateClass(cls, { tagName, localAliases })`** — validates a single class
+  and returns a `MapleValidationIssue`, or `null` if it is valid (or not Maple).
+  The issue provides a stable `code` (`invalid-shade`, `important-not-leading`,
+  `important-literal`, `alias-definition-scope`, `unknown-class`), a
+  ready-to-display `message`, and an optional `fix` containing the corrected
+  class when unambiguous. Only the most specific problem is reported, allowing
+  callers to filter out host template expressions by `code`.
 - **`parseMapleToken` / `checkConverted` / `getUtilKey`** and the small class
   predicates (`isAliasMarker`, `isAliasDefinition`, `isVariable`,
   `stripImportant`, `stripQuotes`, `getAliasName`) — the shared class-token

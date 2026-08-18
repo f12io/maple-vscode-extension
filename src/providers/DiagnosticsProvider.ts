@@ -1,18 +1,11 @@
-import {
-  buildRule,
-  BUILTIN_ALIASES,
-  COLOR_MAX_TONE,
-  COLOR_MIN_TONE,
-  PROP_TYPE_COLOR,
-} from '@f12io/maple';
+import { buildRule } from '@f12io/maple';
 import {
   checkConverted,
-  getAliasName,
   isAliasDefinition,
-  isAliasMarker,
   MAPLE_CLASS_REGEX,
   parseMapleToken,
   stripQuotes,
+  validateClass,
 } from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
 import { AliasCache } from '../helpers/alias-cache';
@@ -108,96 +101,27 @@ function doRefreshDiagnostics(
 
         if (cls.length === 0) continue;
 
-        const { activeWord, isMapleIntent } = parseMapleToken(cls);
+        const { isMapleIntent } = parseMapleToken(cls);
 
         if (!isMapleIntent) {
           continue;
         }
 
-        let hasError = false;
-        let errorMsg = '';
+        // Host-only rule: razor variables and expressions are not maple
+        // classes, and the engine cannot tell them apart from a typo.
+        const isRazorExpression =
+          (doc.languageId === 'razor' ||
+            doc.languageId === 'aspnetcorerazor') &&
+          (cls.startsWith('@') || cls.includes('(') || cls.includes(')'));
 
-        if (isMapleIntent) {
-          // Let the engine validate the syntax
-          const converted = checkConverted(cls);
+        const issue = validateClass(cls, {
+          tagName: instance.tagName,
+          localAliases: AliasCache.getAliases(doc.uri),
+        });
 
-          const rule = buildRule(cls);
-
-          let isShadeError = false;
-          if (rule?.parsed?.propType === PROP_TYPE_COLOR) {
-            const parts = rule.parsed.utilVal.split('-');
-            if (parts.length > 1) {
-              const tonePart = parts[parts.length - 1];
-              const tone = parseInt(tonePart.split('/')[0]);
-              if (
-                !isNaN(tone) &&
-                (tone < COLOR_MIN_TONE || tone > COLOR_MAX_TONE)
-              ) {
-                hasError = true;
-                errorMsg = `Invalid shade: '${tone}'. Must be between ${COLOR_MIN_TONE} and ${COLOR_MAX_TONE}.`;
-                isShadeError = true;
-              }
-            }
-          }
-
-          if (isShadeError) {
-            // already set
-          } else if (cls.endsWith('!')) {
-            hasError = true;
-            errorMsg = `Invalid usage of '!'. To mark a utility as important, the exclamation mark must be placed at the beginning (e.g., '!${cls.slice(0, -1)}').`;
-          } else if (
-            rule?.parsed?.utilOp === '-' &&
-            !rule.parsed.utilVal.startsWith('[') &&
-            rule.parsed.utilVal.includes('_!important')
-          ) {
-            hasError = true;
-            errorMsg = `Invalid usage of '!important'. Use '=' operator or '[]' brackets for string literals.`;
-          } else if (
-            // `activeWord` covers prefixed definitions (`@md:--alias-card=...`),
-            // the raw class covers bodies that carry selectors
-            // (`--alias-x=^:is(p,.\@p1)>:{utility}`), where the engine folds the
-            // `--alias-x=` part into the prefix chain and it disappears from
-            // `activeWord`.
-            (isAliasDefinition(activeWord) && activeWord.includes('=')) ||
-            (isAliasDefinition(cls) && cls.includes('='))
-          ) {
-            if (instance.tagName && instance.tagName !== 'html') {
-              hasError = true;
-              errorMsg = `Maple aliases can only be defined on the 'html' element. Found on '${instance.tagName}'.`;
-            }
-          } else if (!converted) {
-            // Check if it's a valid alias before flagging as invalid.
-            // Unescape activeWord in case parseClass fell back to propKeyKebab
-            const unescapedWord = activeWord.replace(/\\/g, '');
-            const rawAliasBase = unescapedWord
-              .replace(/=$/, '')
-              .replace(/\(.*\)$/, '');
-            const aliasName = getAliasName(rawAliasBase);
-            let isAlias = false;
-
-            if (
-              isAliasMarker(rawAliasBase) &&
-              AliasCache.getAliases(doc.uri).has(aliasName)
-            ) {
-              isAlias = true;
-            } else if (BUILTIN_ALIASES[aliasName]) {
-              isAlias = true;
-            }
-
-            if (!isAlias) {
-              if (
-                (doc.languageId === 'razor' ||
-                  doc.languageId === 'aspnetcorerazor') &&
-                (cls.startsWith('@') || cls.includes('(') || cls.includes(')'))
-              ) {
-                // Ignore razor variables and expressions
-              } else {
-                hasError = true;
-                errorMsg = `Invalid maple class: '${cls}'`;
-              }
-            }
-          }
-        }
+        const hasError =
+          !!issue && !(issue.code === 'unknown-class' && isRazorExpression);
+        const errorMsg = issue?.message ?? '';
 
         if (hasError) {
           const startIdx = instance.start + token.start + wordMatch.index;

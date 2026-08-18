@@ -67,6 +67,12 @@ export {
 } from './intelligence/semantic-tokens';
 export type { IntelligenceContext } from './intelligence/types';
 export {
+  validateClass,
+  type MapleValidationCode,
+  type MapleValidationIssue,
+  type ValidateClassOptions,
+} from './intelligence/validate';
+export {
   checkConverted,
   getAliasName,
   isAliasDefinition,

@@ -48,6 +48,7 @@ describe('published bundles', () => {
       core.computeSemanticTokens(FIXTURE, { languageId: 'html' }).length,
     ).toBeGreaterThan(0);
     expect(core.formatText(FIXTURE, 'html', 2)).toContain('class=');
+    expect(core.validateClass('p-4!')?.fix).toBe('!p-4');
     expect(core.getHoverInfo(FIXTURE, 25, { languageId: 'html' })).not.toBe(
       null,
     );
@@ -101,5 +102,6 @@ describe('published bundles', () => {
     expect(types).toContain('computeSemanticTokens');
     expect(types).toContain('getCompletions');
     expect(types).toContain('getHoverInfo');
+    expect(types).toContain('validateClass');
   });
 });

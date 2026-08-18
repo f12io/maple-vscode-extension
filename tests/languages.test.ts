@@ -629,3 +629,142 @@ describe('Formatter safety', () => {
     });
   });
 });
+
+/**
+ * A string literal concatenated into a class expression is not a class list
+ * of its own: the whitespace at its edges is the separator between its last
+ * class and the one the neighbour contributes. Both directions of change are
+ * silent corruption — dropping the space welds two classes into one
+ * (`'p-4 ' + x()` renders `p-4gr`), adding one splits a class in two
+ * (`'bgc-red-' + shade()` renders `bgc-red- 500`).
+ *
+ * Samples are quoted rather than written between backticks for the same
+ * reason `jsxExpr` exists: a template literal holding markup is formattable,
+ * so the maple prettier plugin would rewrite the samples in this file.
+ */
+describe('whitespace at a concatenation seam', () => {
+  const format = (languageId: string, text: string) =>
+    formatText(text, languageId, 4);
+
+  const bound = (attr: string, expr: string) =>
+    '<div ' + attr + '="' + expr + '"></div>';
+
+  const seams = [
+    ['html', bound('[class]', "'p-4 sm:p-6 ' + (full() ? 'gr' : 'fxrow-sc')")],
+    ['html', bound('[ngClass]', "'p-4 ' + x()")],
+    ['html', bound('[class]', "a() + ' gr ' + b()")],
+    // A literal that is nothing but the separator has no class list to format
+    ['html', bound('[class]', "a() + ' ' + b()")],
+    ['vue', bound(':class', "'p-4 ' + x")],
+    ['twig', bound('class', "{{ 'p-4 ' ~ x }}")],
+    ['razor', '<div class="@("p-4 " + x)"></div>'],
+    ['svelte', "<div class={'p-4 ' + x}></div>"],
+    [
+      'javascriptreact',
+      "<div className={'p-4 sm:p-6 ' + (full ? 'gr' : 'fxrow-sc')} />",
+    ],
+    ['typescriptreact', "<div className={clsx('p-4 ', x, ' gr ')} />"],
+    // The trim applied to every literal in the region, maple token or not
+    ['typescriptreact', "<div className={'not-a-maple-token ' + y()} />"],
+    ['javascript', "const c = /* maple */ 'p-4 ' + x();"],
+    ['typescript', "const c = clsx('p-4 ', x, ' gr ');"],
+    ['php', "<?php $c = /* maple */ 'p-4 ' . $x; ?>"],
+  ] as const;
+
+  it.each(seams)('%s keeps the separator the author wrote', (lang, text) => {
+    expect(format(lang, text)).toBe(text);
+  });
+
+  it('keeps the separator when the literal wraps onto several lines', () => {
+    // The newline the wrapped form closes with separates classes just as the
+    // space did, so no second separator is added
+    const text = "<div className={'p-1 p-2 p-3 p-4 p-5 ' + x} />";
+    expect(format('typescriptreact', text)).toBe(
+      '<div className={`\n  p-1 p-2 p-3 p-4\n  p-5\n` + x} />',
+    );
+  });
+
+  const glued = [
+    [
+      'typescriptreact',
+      "<div className={'p-1 p-2 p-3 p-4 bgc-red-' + shade} />",
+      '<div className={`\n  p-1 p-2 p-3 p-4\n  bgc-red-` + shade} />',
+    ],
+    [
+      'svelte',
+      "<div class={'p-1 p-2 p-3 p-4 bgc-red-' + shade}></div>",
+      '<div class={`\n  p-1 p-2 p-3 p-4\n  bgc-red-` + shade}></div>',
+    ],
+    [
+      'javascript',
+      "const c = /* maple */ 'p-1 p-2 p-3 p-4 bgc-red-' + shade;",
+      'const c = /* maple */ `\n  p-1 p-2 p-3 p-4\n  bgc-red-` + shade;',
+    ],
+    [
+      'php',
+      "<?php $c = /* maple */ 'p-1 p-2 p-3 p-4 bgc-red-' . $shade; ?>",
+      "<?php $c = /* maple */ '\n  p-1 p-2 p-3 p-4\n  bgc-red-' . $shade; ?>",
+    ],
+    // A seam on the opening edge is protected the same way
+    [
+      'typescriptreact',
+      "<div className={x + 'p-1 p-2 p-3 p-4 p-5'} />",
+      '<div className={x + `p-1 p-2 p-3 p-4\n  p-5\n`} />',
+    ],
+  ] as const;
+
+  it.each(glued)(
+    '%s wraps a glued seam without separating it',
+    (lang, text, expected) => {
+      expect(format(lang, text)).toBe(expected);
+    },
+  );
+
+  it('wraps a call argument, whose edges are no seam', () => {
+    // clsx joins its arguments with a space; a comma concatenates nothing
+    const text = "const c = clsx('p-1 p-2 p-3 p-4 p-5', x);";
+    expect(format('javascript', text)).toBe(
+      'const c = clsx(`\n  p-1 p-2 p-3 p-4\n  p-5\n`, x);',
+    );
+  });
+
+  it.each([
+    ['html', ['+']],
+    ['vue', ['+']],
+    ['svelte', ['+']],
+    ['javascript', ['+']],
+    ['typescript', ['+']],
+    ['typescriptreact', ['+']],
+    ['razor', ['+']],
+    // `.` is PHP's operator, `~` is twig's; both keep `+` because the file
+    // also holds the markup's script
+    ['php', ['.', '+']],
+    ['twig', ['~', '+']],
+  ] as const)(
+    '%s names the operators that concatenate onto a literal',
+    (lang, operators) => {
+      expect(service(lang).concatenationOperators).toEqual([...operators]);
+    },
+  );
+
+  it('reads a member access as no seam, JavaScript concatenating with +', () => {
+    const text = "const c = /* maple */ 'p-1 p-2 p-3 p-4 p-5'.trim();";
+    expect(format('javascript', text)).toBe(
+      'const c = /* maple */ `\n  p-1 p-2 p-3 p-4\n  p-5\n`.trim();',
+    );
+  });
+
+  it('still trims and collapses a whole class list', () => {
+    expect(format('html', '<div class="  p-4   sm:p-6  "></div>')).toBe(
+      '<div class="p-4 sm:p-6"></div>',
+    );
+  });
+
+  it.each([...seams, ...glued.map(([lang, text]) => [lang, text] as const)])(
+    '%s formatting is idempotent',
+    (lang, text) => {
+      const once = format(lang, text);
+      expect(format(lang, once)).toBe(once);
+    },
+  );
+});

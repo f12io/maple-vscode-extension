@@ -2,6 +2,7 @@ import {
   DEFAULT_COMMENT_SYNTAXES,
   skipStringLiteral,
 } from '../extractor.helper';
+import { preserveEdgeWhitespace } from '../formatter.helper';
 import { CommentSyntax, StringLiteralMatch } from '../LanguageService';
 import { InterpolationContext, InterpolationMatch } from './BaseLanguageService';
 import { HtmlLanguageService } from './HtmlLanguageService';
@@ -288,15 +289,15 @@ export class RazorLanguageService extends HtmlLanguageService {
 
     const exprIndent = baseIndent + indentUnit;
 
-    const formattedConsequent = formatClassesFn(
+    // An arm can be concatenated onto by the surrounding expression, so the
+    // whitespace it opens or closes with is a class separator, not padding.
+    const formattedConsequent = preserveEdgeWhitespace(
       consequentContent,
-      exprIndent,
-      maxClassesPerLine,
+      formatClassesFn(consequentContent, exprIndent, maxClassesPerLine),
     );
-    const formattedAlternate = formatClassesFn(
+    const formattedAlternate = preserveEdgeWhitespace(
       alternateContent,
-      exprIndent,
-      maxClassesPerLine,
+      formatClassesFn(alternateContent, exprIndent, maxClassesPerLine),
     );
 
     // Always return the reconstructed ternary to enforce consistent spacing (e.g., spaces around `?` and `:`)

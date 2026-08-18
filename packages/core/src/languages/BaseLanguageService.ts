@@ -1,9 +1,4 @@
 import {
-  MAPLE_INTERPOLATION_REGEX,
-  OPT_IN_OBJECT_START_REGEX,
-  STANDARD_ATTR_REGEX,
-} from '../regex';
-import {
   activateCommentSyntaxes,
   DEFAULT_COMMENT_SYNTAXES,
   extractStringLiterals,
@@ -20,6 +15,7 @@ import {
   shouldSkipMatch,
   skipStringLiteral,
 } from '../extractor.helper';
+import { preserveEdgeWhitespace } from '../formatter.helper';
 import {
   ClassInstance,
   CommentSyntax,
@@ -29,6 +25,11 @@ import {
   StringLiteralMatch,
   Token,
 } from '../LanguageService';
+import {
+  MAPLE_INTERPOLATION_REGEX,
+  OPT_IN_OBJECT_START_REGEX,
+  STANDARD_ATTR_REGEX,
+} from '../regex';
 
 export interface InterpolationMatch {
   innerExprStart: number;
@@ -57,6 +58,13 @@ export abstract class BaseLanguageService implements ILanguageService {
 
   /** Overridden by languages with comment syntaxes of their own */
   public commentSyntaxes: Array<CommentSyntax> = DEFAULT_COMMENT_SYNTAXES;
+
+  /**
+   * JavaScript's concatenation operator, which C# and the Angular and Vue
+   * template expression languages share. Overridden by languages that
+   * concatenate with something else.
+   */
+  public concatenationOperators: Array<string> = ['+'];
 
   public extractClasses(text: string): Array<ClassInstance> {
     activateCommentSyntaxes(this.commentSyntaxes);
@@ -474,10 +482,12 @@ export abstract class BaseLanguageService implements ILanguageService {
       [],
       (value, offset, _text, _matchIndex, literal) => {
         const innerIndent = baseIndent + indentUnit;
-        const formatted = formatClassesFn(
+        // The literal is an operand of the interpolated expression: the
+        // whitespace at its edges separates its classes from the ones the
+        // expression concatenates onto it, so it survives formatting.
+        const formatted = preserveEdgeWhitespace(
           value,
-          innerIndent,
-          maxClassesPerLine,
+          formatClassesFn(value, innerIndent, maxClassesPerLine),
         );
 
         if (formatted === value) return;
@@ -518,9 +528,7 @@ export abstract class BaseLanguageService implements ILanguageService {
 
   protected parseTernaryArms(
     expr: string,
-  ):
-    | { condition: string; consequent: string; alternate: string }
-    | undefined {
+  ): { condition: string; consequent: string; alternate: string } | undefined {
     let i = 0;
     let questionIndex = -1;
     let ternaryDepth = 0;

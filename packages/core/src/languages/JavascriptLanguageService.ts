@@ -1,4 +1,5 @@
 import { isCvaCall } from '../extractor.helper';
+import { preserveEdgeWhitespace } from '../formatter.helper';
 import { UTILITY_FUNC_START_REGEX } from '../regex';
 import { MapleRegion } from '../LanguageService';
 import {
@@ -144,15 +145,15 @@ export class JavascriptLanguageService extends BaseLanguageService {
     const alternateContent = alternateStr.slice(1, -1);
     const exprIndent = baseIndent + indentUnit;
 
-    const formattedConsequent = formatClassesFn(
+    // An arm can be concatenated onto by the surrounding expression, so the
+    // whitespace it opens or closes with is a class separator, not padding.
+    const formattedConsequent = preserveEdgeWhitespace(
       consequentContent,
-      exprIndent,
-      maxClassesPerLine,
+      formatClassesFn(consequentContent, exprIndent, maxClassesPerLine),
     );
-    const formattedAlternate = formatClassesFn(
+    const formattedAlternate = preserveEdgeWhitespace(
       alternateContent,
-      exprIndent,
-      maxClassesPerLine,
+      formatClassesFn(alternateContent, exprIndent, maxClassesPerLine),
     );
 
     // Always return the reconstructed ternary to enforce consistent spacing

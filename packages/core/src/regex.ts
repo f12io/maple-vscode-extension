@@ -156,6 +156,12 @@ export const STRING_LITERAL_REGEX = /(["'`])([\s\S]*?)\1/g;
 /** Matches whitespace at the start of a string for indentation */
 export const INDENT_WHITESPACE_REGEX = /^\s*/;
 
+/** Matches the run of whitespace a string opens with, if any */
+export const LEADING_WHITESPACE_REGEX = /^\s+/;
+
+/** Matches the run of whitespace a string closes with, if any */
+export const TRAILING_WHITESPACE_REGEX = /\s+$/;
+
 // ============================================================================
 // Attribute & Expression Matchers (Class Extraction)
 // ============================================================================

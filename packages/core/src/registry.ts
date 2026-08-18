@@ -36,6 +36,16 @@ class CompositeLanguageService implements ILanguageService {
     return [...seen.values()];
   }
 
+  get concatenationOperators() {
+    // A file written in one language holds the constructs of every service
+    // that claims it, so it can be concatenated with any of their operators
+    const seen = new Set<string>();
+    for (const service of this.services) {
+      for (const operator of service.concatenationOperators) seen.add(operator);
+    }
+    return [...seen];
+  }
+
   extractClasses(text: string): Array<ClassInstance> {
     const instances: Array<ClassInstance> = [];
     for (const service of this.services) {

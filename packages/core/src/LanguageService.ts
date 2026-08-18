@@ -103,6 +103,11 @@ export interface ILanguageService {
    * markup and quoted directives from live code.
    */
   commentSyntaxes: Array<CommentSyntax>;
+  /**
+   * String concatenation operators for this language (e.g. `+`, `.`, `~`),
+   * used by the formatter to detect literal seams and preserve edge whitespace.
+   */
+  concatenationOperators: Array<string>;
   extractClasses(text: string): Array<ClassInstance>;
   /**
    * Reports every maple region in the document. Single implementation per

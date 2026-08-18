@@ -22,6 +22,9 @@ export class PhpLanguageService extends HtmlLanguageService {
     { open: '#', notFollowedBy: '[' },
   ];
 
+  // `.` is PHP's; `+` because a php file also holds the markup's script
+  public concatenationOperators: Array<string> = ['.', '+'];
+
   public getMultilineStringDelimiters(
     rawQuote: string,
     content: string,

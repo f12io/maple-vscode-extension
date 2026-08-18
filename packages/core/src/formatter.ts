@@ -6,8 +6,9 @@ import {
   hasDirective,
   shouldSkipMatch,
 } from './extractor.helper';
-import { INDENT_WHITESPACE_REGEX } from './regex';
+import { findLiteralSeams, preserveEdgeWhitespace } from './formatter.helper';
 import { ILanguageService, MapleRegion, Token } from './LanguageService';
+import { INDENT_WHITESPACE_REGEX } from './regex';
 import { LanguageServiceRegistry } from './registry';
 
 /** A plain text replacement, editor-agnostic. Offsets refer to the input text. */
@@ -384,10 +385,18 @@ export function computeFormattingEdits(
         literal.contentEnd,
       );
 
-      const formatted = formatClassesFn(
+      const seams = findLiteralSeams(
+        text,
+        region.start,
+        region.end,
+        literal.start,
+        literal.endIndex,
+        service.concatenationOperators,
+      );
+      const formatted = preserveEdgeWhitespace(
         innerString,
-        baseIndent,
-        maxClassesPerLine,
+        formatClassesFn(innerString, baseIndent, maxClassesPerLine),
+        seams,
       );
       if (formatted === innerString) continue;
 

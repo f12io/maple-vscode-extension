@@ -11,4 +11,8 @@ export class TwigLanguageService extends HtmlLanguageService {
     ...DEFAULT_COMMENT_SYNTAXES,
     { open: '{#', close: '#}' },
   ];
+
+  // `~` is twig's; `+` is arithmetic there, but a twig file also holds the
+  // markup's script
+  public concatenationOperators: Array<string> = ['~', '+'];
 }

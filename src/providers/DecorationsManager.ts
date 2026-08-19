@@ -1,5 +1,10 @@
+import {
+  MAPLE_TOKEN_THEME_COLORS,
+  MAPLE_TOKEN_TYPES,
+  type MapleTokenType,
+} from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
-import { getHighlightingMode } from '../helpers/config';
+import { getColorOverride, getHighlightingMode } from '../helpers/config';
 import { safeRun } from '../helpers/logger';
 import {
   getDocumentSemanticTokens,
@@ -7,23 +12,18 @@ import {
   semanticTokenIndexes,
 } from './SemanticTokensProvider';
 
-// Decoration colors mapped to ANSI terminal theme colors for rich, theme-aware
-// text highlighting that won't be overwritten by Svelte/Vue semantic tokens.
-const DECORATION_COLORS: Record<number, string> = {
-  [semanticTokenIndexes.mapleMediaQuery]: 'terminal.ansiBrightMagenta',
-  [semanticTokenIndexes.mapleUtility]: 'terminal.ansiBrightCyan',
-  [semanticTokenIndexes.mapleValue]: 'terminal.ansiBrightGreen',
-  [semanticTokenIndexes.mapleParentSelector]: 'terminal.ansiBrightBlue',
-  [semanticTokenIndexes.mapleSelfSelector]: 'terminal.ansiBrightBlue',
-  [semanticTokenIndexes.mapleChildSelector]: 'terminal.ansiBrightBlue',
-  [semanticTokenIndexes.mapleSelectorOperator]: 'terminal.ansiMagenta',
-  [semanticTokenIndexes.mapleSeparator]: 'terminal.ansiMagenta',
-  [semanticTokenIndexes.mapleUnderscore]: 'terminal.ansiMagenta',
-  [semanticTokenIndexes.mapleAlias]: 'terminal.ansiBrightYellow',
-  [semanticTokenIndexes.mapleVariable]: 'terminal.ansiBrightCyan',
-  [semanticTokenIndexes.mapleImportant]: 'terminal.ansiBrightRed',
-  [semanticTokenIndexes.mapleAliasParamKey]: 'terminal.ansiBrightYellow',
-};
+/**
+ * The color to paint a token type with: the user's `maple.colors.<token>`
+ * override when set, otherwise core's palette. A `#rrggbb` override is used
+ * literally; anything else is read as a theme color id, so a workspace can
+ * point a token at any color in the current theme.
+ */
+function resolveColor(type: MapleTokenType): string | vscode.ThemeColor {
+  const override = getColorOverride(type);
+  const color = override || MAPLE_TOKEN_THEME_COLORS[type];
+
+  return color.startsWith('#') ? color : new vscode.ThemeColor(color);
+}
 
 export class DecorationsManager {
   private decorationTypes = new Map<number, vscode.TextEditorDecorationType>();
@@ -37,14 +37,7 @@ export class DecorationsManager {
   ) {
     this.documentSelector = documentSelector;
 
-    for (const [tokenType, themeColor] of Object.entries(DECORATION_COLORS)) {
-      this.decorationTypes.set(
-        Number(tokenType),
-        vscode.window.createTextEditorDecorationType({
-          color: new vscode.ThemeColor(themeColor),
-        }),
-      );
-    }
+    this.buildDecorationTypes();
 
     // Decorations live on a TextEditor, not on a document, so every visible
     // editor needs its own pass. A diff view is two editors showing two
@@ -69,6 +62,37 @@ export class DecorationsManager {
       null,
       context.subscriptions,
     );
+  }
+
+  /**
+   * Creates one decoration type per token type from the current palette.
+   * Decorations are painted for every supported language and always win over
+   * semantic token colors, so this is the only place a token's color is
+   * decided.
+   */
+  private buildDecorationTypes() {
+    for (const type of MAPLE_TOKEN_TYPES) {
+      this.decorationTypes.set(
+        getTokenTypeIndex(type),
+        vscode.window.createTextEditorDecorationType({
+          color: resolveColor(type),
+        }),
+      );
+    }
+  }
+
+  /**
+   * Rebuilds the palette after `maple.colors` changes. A decoration type's
+   * color is fixed at creation, so overrides only take effect by disposing the
+   * old types and painting again.
+   */
+  public reloadColors() {
+    for (const decorationType of this.decorationTypes.values()) {
+      decorationType.dispose();
+    }
+    this.decorationTypes.clear();
+    this.buildDecorationTypes();
+    this.updateVisibleEditors();
   }
 
   /**

@@ -45,7 +45,7 @@ let baseColorOklch: Record<string, OklchCoords> | undefined;
  *
  * Built on first use rather than at import: it runs two color conversions per
  * named color, which a host that never opens a color picker should not pay
- * for — the browser playground loads this module for its diagnostics too.
+ * for.
  */
 function getBaseColorOklch(): Record<string, OklchCoords> {
   if (baseColorOklch) return baseColorOklch;

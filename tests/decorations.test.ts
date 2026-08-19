@@ -54,10 +54,13 @@ vi.mock('vscode', async (importOriginal) => {
   };
 });
 
+const colorOverrides = new Map<string, string>();
+
 vi.mock('../src/helpers/config', () => ({
   isExtensionEnabled: () => true,
   isFeatureEnabled: () => true,
   getHighlightingMode: () => 'on',
+  getColorOverride: (tokenType: string) => colorOverrides.get(tokenType) ?? '',
 }));
 
 vi.mock('../src/helpers/exclude', () => ({
@@ -70,6 +73,10 @@ vi.mock('../src/helpers/alias-cache', () => ({
 
 const { DecorationsManager } =
   await import('../src/providers/DecorationsManager');
+const { MAPLE_TOKEN_THEME_COLORS, MAPLE_TOKEN_TYPES } =
+  await import('@f12io/maple-language-core');
+const { getTokenTypeIndex } =
+  await import('../src/providers/SemanticTokensProvider');
 
 const TEXT = '<div class="d-flex p-4 bgc-red-500 hover:c-white"></div>';
 
@@ -192,5 +199,68 @@ describe('DecorationsManager editor tracking', () => {
     vi.runAllTimers();
 
     expect(closing.log.size).toBe(0);
+  });
+});
+
+/** The color option every decoration type was created with, in legend order. */
+function paintedColors(manager: {
+  decorationTypes: Map<number, { options: { color: unknown } }>;
+}): Map<number, unknown> {
+  const colors = new Map<number, unknown>();
+  for (const [index, type] of manager.decorationTypes) {
+    colors.set(index, type.options.color);
+  }
+  return colors;
+}
+
+describe('DecorationsManager palette', () => {
+  beforeEach(() => {
+    windowState.visibleTextEditors = [];
+    windowState.visibleEditorsHandlers = [];
+    workspaceState.documentChangeHandlers = [];
+    colorOverrides.clear();
+    vi.useRealTimers();
+  });
+
+  it("paints core's palette, one decoration per token type", () => {
+    const colors = paintedColors(createManager() as never);
+
+    expect(colors.size).toBe(MAPLE_TOKEN_TYPES.length);
+    for (const type of MAPLE_TOKEN_TYPES) {
+      expect(colors.get(getTokenTypeIndex(type))).toEqual({
+        id: MAPLE_TOKEN_THEME_COLORS[type],
+      });
+    }
+  });
+
+  it('applies a maple.colors override over the default', () => {
+    colorOverrides.set('utility', '#FF0000');
+    colorOverrides.set('alias', 'editorWarning.foreground');
+
+    const colors = paintedColors(createManager() as never);
+
+    // A hex override paints literally; anything else is a theme color id.
+    expect(colors.get(getTokenTypeIndex('utility'))).toBe('#FF0000');
+    expect(colors.get(getTokenTypeIndex('alias'))).toEqual({
+      id: 'editorWarning.foreground',
+    });
+    expect(colors.get(getTokenTypeIndex('value'))).toEqual({
+      id: MAPLE_TOKEN_THEME_COLORS.value,
+    });
+  });
+
+  it('repaints with the new palette when overrides change', () => {
+    const editor = createEditor(createDocument());
+    windowState.visibleTextEditors = [editor];
+
+    const manager = createManager();
+    colorOverrides.set('utility', '#00FF00');
+    editor.log.clear();
+    manager.reloadColors();
+
+    expect(
+      paintedColors(manager as never).get(getTokenTypeIndex('utility')),
+    ).toBe('#00FF00');
+    expect(rangeCount(editor)).toBeGreaterThan(0);
   });
 });

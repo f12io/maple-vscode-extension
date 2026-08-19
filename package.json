@@ -244,6 +244,84 @@
           "type": "number",
           "default": 4,
           "description": "Maximum number of classes to allow on a single line before wrapping. Set to 1 to force each class on its own line."
+        },
+        "maple.colors.mediaQuery": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for media queries. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightMagenta`)."
+        },
+        "maple.colors.utility": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for utility keys. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightCyan`)."
+        },
+        "maple.colors.value": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for utility values. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightGreen`)."
+        },
+        "maple.colors.parentSelector": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for parent selectors. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightBlue`)."
+        },
+        "maple.colors.selfSelector": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for self selectors. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightBlue`)."
+        },
+        "maple.colors.childSelector": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for child selectors. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightBlue`)."
+        },
+        "maple.colors.selectorOperator": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for selector operators. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiMagenta`)."
+        },
+        "maple.colors.separator": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for separators. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiMagenta`)."
+        },
+        "maple.colors.underscore": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for underscores. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiMagenta`)."
+        },
+        "maple.colors.alias": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for alias names. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightYellow`)."
+        },
+        "maple.colors.variable": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for CSS variables. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightCyan`)."
+        },
+        "maple.colors.important": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for the important marker. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightRed`)."
+        },
+        "maple.colors.aliasParamKey": {
+          "type": "string",
+          "default": "",
+          "pattern": "^$|^#[0-9a-fA-F]{6}$|^[A-Za-z][\\w.]*$",
+          "markdownDescription": "Override the highlight color for alias parameter keys. Accepts a `#rrggbb` hex value or a theme color id. Leave empty for the default (`terminal.ansiBrightYellow`)."
         }
       }
     }

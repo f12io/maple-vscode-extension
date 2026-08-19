@@ -72,8 +72,9 @@ export {
 } from './intelligence/hover';
 export {
   computeSemanticTokens,
-  MAPLE_TOKEN_COLORS_DARK_PLUS,
+  MAPLE_TOKEN_COLORS,
   MAPLE_TOKEN_SCOPES,
+  MAPLE_TOKEN_THEME_COLORS,
   MAPLE_TOKEN_TYPES,
   type MapleSemanticToken,
   type MapleTokenType,

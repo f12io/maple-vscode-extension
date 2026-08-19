@@ -1,4 +1,8 @@
-import { HEAD_TAG_REGEX, MAPLE_SCRIPT_REGEX } from '@f12io/maple-language-core';
+import {
+  HEAD_TAG_REGEX,
+  MAPLE_SCRIPT_REGEX,
+  type MapleTokenType,
+} from '@f12io/maple-language-core';
 import * as vscode from 'vscode';
 
 export function isExtensionExplicitlyDisabled(): boolean {
@@ -59,4 +63,15 @@ export function getHighlightingMode(): 'off' | 'minimal' | 'on' {
   return vscode.workspace
     .getConfiguration('maple.features')
     .get<'off' | 'minimal' | 'on'>('highlighting', 'on');
+}
+
+/**
+ * The user's color override for a token type, or `''` when unset. A `#rrggbb`
+ * value paints literally; any other value is a theme color id.
+ */
+export function getColorOverride(tokenType: MapleTokenType): string {
+  return vscode.workspace
+    .getConfiguration('maple.colors')
+    .get<string>(tokenType, '')
+    .trim();
 }

@@ -16,6 +16,7 @@ import {
 } from './providers/DiagnosticsProvider';
 import { registerFormatterProvider } from './providers/FormatterProvider';
 import { MapleHoverProvider } from './providers/HoverProvider';
+import { invalidateSemanticTokenCache } from './providers/SemanticTokensProvider';
 
 const COMPLETION_TRIGGER_CHARACTERS = [
   '"',
@@ -106,16 +107,24 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     AliasCache.onDidUpdateAliases.event(() => {
+      // New alias definitions change what tokenizes, and the cache is keyed by
+      // document version, which a workspace scan does not move.
+      invalidateSemanticTokenCache();
       if (isExtensionExplicitlyDisabled()) return;
       refreshVisibleEditors();
     }),
   );
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('maple.colors')) {
+        decorationsManager.reloadColors();
+      }
       if (
         e.affectsConfiguration('maple.enabled') ||
-        e.affectsConfiguration('maple.features')
+        e.affectsConfiguration('maple.features') ||
+        e.affectsConfiguration('maple.exclude')
       ) {
+        invalidateSemanticTokenCache();
         updateColorProvider();
         refreshVisibleEditors();
       }

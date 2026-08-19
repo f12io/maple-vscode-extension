@@ -40,6 +40,21 @@ You can customize almost every aspect of the extension to fit your workflow.
 - `maple.features.quickFix` _(default: `true`)_: Toggle quick fixes on Maple warnings. Requires `maple.features.diagnostics`.
 - `maple.features.highlighting` _(default: `"on"`)_: Configure semantic syntax highlighting. Options: `"on"`, `"minimal"`, `"off"`.
 
+### Highlight Colors
+
+Maple highlights classes using your theme's terminal palette (e.g., cyan for utilities, green for values). Because highlighting uses editor decorations, VS Code's `editor.semanticTokenColorCustomizations` does not apply. Use this setting instead:
+
+- `maple.colors.<token>` _(default: empty)_: Custom token color. Accepts a hex code (`#rrggbb`) or a theme color ID (e.g., `editorWarning.foreground`).
+
+The token types are `mediaQuery`, `utility`, `value`, `parentSelector`, `selfSelector`, `childSelector`, `selectorOperator`, `separator`, `underscore`, `alias`, `variable`, `important`, and `aliasParamKey`.
+
+```json
+{
+  "maple.colors.utility": "#29B8DB",
+  "maple.colors.alias": "editorWarning.foreground"
+}
+```
+
 ### Formatter Settings
 
 The extension includes a built-in formatter specifically for Maple classes (triggered via the **`Maple: Format Classes`** command).

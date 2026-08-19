@@ -97,23 +97,71 @@ export const MAPLE_TOKEN_SCOPES: Record<MapleTokenType, Array<string>> = {
 };
 
 /**
- * Dark-plus colors for the scopes above, for hosts that theme by explicit
- * color instead of scope (Monaco).
+ * The Maple palette: token type -> VS Code terminal color name.
+ *
+ * This is the single source of truth for token color. Hosts that can resolve
+ * theme color names (VS Code) should use these, so colors follow the user's
+ * theme. Hosts that cannot (Monaco has no `terminal.ansi*` names in its
+ * bundle) use `MAPLE_TOKEN_COLORS`, which is the same palette as hex.
  */
-export const MAPLE_TOKEN_COLORS_DARK_PLUS: Record<MapleTokenType, string> = {
-  mediaQuery: 'C586C0',
-  utility: '9CDCFE',
-  value: 'CE9178',
-  parentSelector: 'D7BA7D',
-  selfSelector: 'D7BA7D',
-  childSelector: 'D7BA7D',
-  selectorOperator: 'D4D4D4',
-  separator: 'D4D4D4',
-  underscore: '808080',
-  alias: 'DCDCAA',
-  variable: '4FC1FF',
-  important: '569CD6',
-  aliasParamKey: '9CDCFE',
+export const MAPLE_TOKEN_THEME_COLORS: Record<MapleTokenType, string> = {
+  mediaQuery: 'terminal.ansiBrightMagenta',
+  utility: 'terminal.ansiBrightCyan',
+  value: 'terminal.ansiBrightGreen',
+  parentSelector: 'terminal.ansiBrightBlue',
+  selfSelector: 'terminal.ansiBrightBlue',
+  childSelector: 'terminal.ansiBrightBlue',
+  selectorOperator: 'terminal.ansiMagenta',
+  separator: 'terminal.ansiMagenta',
+  underscore: 'terminal.ansiMagenta',
+  alias: 'terminal.ansiBrightYellow',
+  variable: 'terminal.ansiBrightCyan',
+  important: 'terminal.ansiBrightRed',
+  aliasParamKey: 'terminal.ansiBrightYellow',
+};
+
+/**
+ * VS Code's `terminalColorRegistry` defaults for the names above.
+ *
+ * Light is not a darkened dark - the two are unrelated values, and a dark-only
+ * table renders bright yellow on white in a light theme. VS Code gives
+ * `ansiMagenta` and `ansiBrightMagenta` the same light value; that is upstream
+ * behaviour and is kept as-is.
+ */
+const TERMINAL_COLOR_DEFAULTS: Record<string, { dark: string; light: string }> =
+  {
+    'terminal.ansiMagenta': { dark: '#BC3FBC', light: '#BC05BC' },
+    'terminal.ansiBrightRed': { dark: '#F14C4C', light: '#CD3131' },
+    'terminal.ansiBrightGreen': { dark: '#23D18B', light: '#14CE14' },
+    'terminal.ansiBrightYellow': { dark: '#F5F543', light: '#B5BA00' },
+    'terminal.ansiBrightBlue': { dark: '#3B8EEA', light: '#0451A5' },
+    'terminal.ansiBrightMagenta': { dark: '#D670D6', light: '#BC05BC' },
+    'terminal.ansiBrightCyan': { dark: '#29B8DB', light: '#0598BC' },
+  };
+
+function resolvePalette(
+  variant: 'dark' | 'light',
+): Record<MapleTokenType, string> {
+  const palette = {} as Record<MapleTokenType, string>;
+
+  for (const type of MAPLE_TOKEN_TYPES) {
+    palette[type] =
+      TERMINAL_COLOR_DEFAULTS[MAPLE_TOKEN_THEME_COLORS[type]][variant];
+  }
+
+  return palette;
+}
+
+/**
+ * `MAPLE_TOKEN_THEME_COLORS` as plain hex, for hosts that cannot resolve a
+ * theme color name. Generated from the mapping, so the two cannot drift.
+ */
+export const MAPLE_TOKEN_COLORS: {
+  dark: Record<MapleTokenType, string>;
+  light: Record<MapleTokenType, string>;
+} = {
+  dark: resolvePalette('dark'),
+  light: resolvePalette('light'),
 };
 
 /**

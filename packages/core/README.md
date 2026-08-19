@@ -24,8 +24,11 @@ and [@f12io/prettier-plugin-maple](https://www.npmjs.com/package/@f12io/prettier
   language allows multi-line strings.
 - **`computeSemanticTokens(text, { languageId, localAliases })`** — offset-based
   highlighting tokens for every maple class in a document, region gating
-  included, plus the `MAPLE_TOKEN_SCOPES` / `MAPLE_TOKEN_COLORS_DARK_PLUS`
-  reference tables so hosts colorize identically.
+  included, plus the palette so hosts colorize identically:
+  `MAPLE_TOKEN_THEME_COLORS` (token -> VS Code terminal color name, for hosts
+  that resolve theme colors) and `MAPLE_TOKEN_COLORS.dark` / `.light` (the same
+  palette as hex, for hosts that cannot, such as Monaco).
+  `MAPLE_TOKEN_SCOPES` remains for `semanticTokenScopes` registration.
 - **`getCompletions(text, offset, ctx)`** — the suggestions for the class being
   typed at an offset: prefixes and full property keys, pseudo-classes, media
   and container queries, aliases, named colors with tones and opacities,

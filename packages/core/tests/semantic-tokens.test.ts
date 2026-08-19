@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeSemanticTokens,
-  MAPLE_TOKEN_COLORS_DARK_PLUS,
+  MAPLE_TOKEN_COLORS,
   MAPLE_TOKEN_SCOPES,
+  MAPLE_TOKEN_THEME_COLORS,
   MAPLE_TOKEN_TYPES,
   type IntelligenceContext,
   type MapleSemanticToken,
@@ -241,11 +242,52 @@ describe('computeSemanticTokens', () => {
     it('covers every token type', () => {
       for (const type of MAPLE_TOKEN_TYPES) {
         expect(MAPLE_TOKEN_SCOPES[type].length).toBeGreaterThan(0);
-        expect(MAPLE_TOKEN_COLORS_DARK_PLUS[type]).toMatch(/^[0-9A-F]{6}$/);
       }
       expect(Object.keys(MAPLE_TOKEN_SCOPES)).toHaveLength(
         MAPLE_TOKEN_TYPES.length,
       );
+    });
+  });
+
+  describe('palette', () => {
+    it('names a terminal color for every token type', () => {
+      for (const type of MAPLE_TOKEN_TYPES) {
+        expect(MAPLE_TOKEN_THEME_COLORS[type]).toMatch(/^terminal\.ansi/);
+      }
+      expect(Object.keys(MAPLE_TOKEN_THEME_COLORS)).toHaveLength(
+        MAPLE_TOKEN_TYPES.length,
+      );
+    });
+
+    it('resolves both variants to hex for every token type', () => {
+      for (const type of MAPLE_TOKEN_TYPES) {
+        expect(MAPLE_TOKEN_COLORS.dark[type]).toMatch(/^#[0-9A-F]{6}$/);
+        expect(MAPLE_TOKEN_COLORS.light[type]).toMatch(/^#[0-9A-F]{6}$/);
+      }
+    });
+
+    it('is one palette written twice: same name, same hex', () => {
+      // Two token types sharing a terminal color must share both hex values,
+      // which is what generating the tables from the mapping guarantees.
+      for (const a of MAPLE_TOKEN_TYPES) {
+        for (const b of MAPLE_TOKEN_TYPES) {
+          if (MAPLE_TOKEN_THEME_COLORS[a] !== MAPLE_TOKEN_THEME_COLORS[b])
+            continue;
+          expect(MAPLE_TOKEN_COLORS.dark[a]).toBe(MAPLE_TOKEN_COLORS.dark[b]);
+          expect(MAPLE_TOKEN_COLORS.light[a]).toBe(MAPLE_TOKEN_COLORS.light[b]);
+        }
+      }
+    });
+
+    it('ships light values that differ from dark', () => {
+      // A dark-only table renders bright yellow on white in a light theme.
+      expect(MAPLE_TOKEN_COLORS.light.alias).toBe('#B5BA00');
+      expect(MAPLE_TOKEN_COLORS.dark.alias).toBe('#F5F543');
+    });
+
+    it('matches the colors the VS Code extension paints', () => {
+      expect(MAPLE_TOKEN_THEME_COLORS.utility).toBe('terminal.ansiBrightCyan');
+      expect(MAPLE_TOKEN_COLORS.dark.utility).toBe('#29B8DB');
     });
   });
 });

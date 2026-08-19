@@ -61,12 +61,55 @@ export function getTokenTypeIndex(type: MapleTokenType): number {
   return TOKEN_TYPE_INDEXES[type];
 }
 
+interface CacheEntry {
+  version: number;
+  epoch: number;
+  tokens: Array<MapleSemanticToken>;
+}
+
+const tokenCache = new WeakMap<vscode.TextDocument, CacheEntry>();
+
+/**
+ * Bumped whenever something outside the document text changes the result:
+ * settings, or the alias definitions a workspace scan found. Document version
+ * alone cannot see those.
+ */
+let cacheEpoch = 0;
+
+/** Drops every cached tokenization. Call when settings or aliases change. */
+export function invalidateSemanticTokenCache() {
+  cacheEpoch++;
+}
+
 /**
  * Runs core's tokenizer over a document, applying the extension's own gates
  * (enablement, exclusions, highlighting mode) and alias sources. Shared by the
  * semantic tokens provider and the decorations fallback.
+ *
+ * The result is cached per document version: one edit repaints every visible
+ * editor showing that document, and a diff view is two of them, so the same
+ * version would otherwise be tokenized once per pane and again for the tokens
+ * provider.
  */
 export function getDocumentSemanticTokens(
+  document: vscode.TextDocument,
+): Array<MapleSemanticToken> {
+  const cached = tokenCache.get(document);
+  if (cached?.epoch === cacheEpoch && cached.version === document.version) {
+    return cached.tokens;
+  }
+
+  const tokens = computeDocumentSemanticTokens(document);
+  tokenCache.set(document, {
+    version: document.version,
+    epoch: cacheEpoch,
+    tokens,
+  });
+
+  return tokens;
+}
+
+function computeDocumentSemanticTokens(
   document: vscode.TextDocument,
 ): Array<MapleSemanticToken> {
   if (

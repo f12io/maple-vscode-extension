@@ -1,5 +1,10 @@
 import { coco, createCoco, namedColors, parse } from '@f12io/coco';
-import { ABBREVIATIONS, COLOR_MAX_TONE, COLOR_MIN_TONE } from '@f12io/maple';
+import {
+  COLOR_MAX_TONE,
+  COLOR_MIN_TONE,
+  PROP_TYPE_COLOR,
+  PropertyHelper,
+} from '@f12io/maple';
 
 const COLOR_MID_TONE = COLOR_MIN_TONE + (COLOR_MAX_TONE - COLOR_MIN_TONE) / 2;
 
@@ -145,28 +150,25 @@ export const cocoWithResolver = createCoco({
   },
 });
 
-let colorUtilKeys: Set<string> | undefined;
+/**
+ * Properties that hold a color without being color-typed: a shadow or a
+ * gradient is a list whose parts happen to include one.
+ */
+const SOFT_COLOR_PROPERTIES = new Set([
+  'background-image',
+  'box-shadow',
+  'text-shadow',
+]);
 
-/** Whether a utility key takes a color value (`bgc`, `c`, `bd-c`, …). */
-export function isColorUtilKey(utilKey: string): boolean {
-  if (!colorUtilKeys) {
-    const keys = new Set<string>();
-    for (const [abbr, propValue] of Object.entries(ABBREVIATIONS)) {
-      const p = propValue.toLowerCase();
-      if (
-        p.includes('color') ||
-        p.includes('background') ||
-        p.includes('fill') ||
-        p.includes('stroke') ||
-        p.includes('shadow')
-      ) {
-        keys.add(abbr);
-        keys.add(propValue);
-        keys.add(propValue.replace(/([A-Z])/g, '-$1').toLowerCase());
-      }
-    }
-    colorUtilKeys = keys;
-  }
-
-  return colorUtilKeys.has(utilKey);
+/**
+ * Whether a property's value can hold a color.
+ */
+export function isColorProperty(
+  propKeyKebab: string,
+  propKeyCamel: string,
+): boolean {
+  return (
+    SOFT_COLOR_PROPERTIES.has(propKeyKebab) ||
+    PropertyHelper.resolveType(propKeyKebab, propKeyCamel) === PROP_TYPE_COLOR
+  );
 }

@@ -76,6 +76,40 @@ describe('getDocumentColors', () => {
     expect(spans(text, html(text))).toEqual(['blue-500', 'white']);
   });
 
+  it('reports the value of a variable definition', () => {
+    const text = '<div class="--brand=oklch(0.560_0.025_260)">';
+    const colors = html(text);
+
+    expect(spans(text, colors)).toEqual(['oklch(0.560_0.025_260)']);
+    expect(rgb(colors[0].color)).toBe('108,117,132,1');
+  });
+
+  it('reports a named color and a hex in a variable definition', () => {
+    expect(
+      spans(
+        '<div class="--brand=red-500">',
+        html('<div class="--brand=red-500">'),
+      ),
+    ).toEqual(['red-500']);
+    expect(
+      spans(
+        '<div class="--brand=#f97316">',
+        html('<div class="--brand=#f97316">'),
+      ),
+    ).toEqual(['#f97316']);
+  });
+
+  it('reports every color of a multi-part variable value', () => {
+    const text = '<div class="--shadow=0_0_4px_black">';
+
+    expect(spans(text, html(text))).toEqual(['black']);
+  });
+
+  it('ignores a variable that holds no color', () => {
+    expect(html('<div class="--gap=16px">')).toEqual([]);
+    expect(html('<div class="--fallback=var(--y)">')).toEqual([]);
+  });
+
   it('finds colors in every host language', () => {
     const jsx = '<div className="bgc-red-500">';
 
@@ -159,6 +193,49 @@ describe('getColorPresentations', () => {
 
     for (const presentation of presentations) {
       expect(presentation.insertText.startsWith('[')).toBe(true);
+    }
+  });
+
+  it('writes a variable body bare, with no brackets', () => {
+    // A variable holds a raw CSS value, so no notation needs bracketing.
+    const text = '<div class="--brand=oklch(0.560_0.025_260)">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, 'oklch(0.560_0.025_260)'),
+      orange,
+    );
+
+    for (const presentation of presentations) {
+      expect(presentation.insertText).toBe(presentation.label);
+    }
+  });
+
+  it('offers the named form in a variable body', () => {
+    const text = '<div class="--brand=oklch(0.560_0.025_260)">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, 'oklch(0.560_0.025_260)'),
+      orange,
+    );
+
+    // oklch leads, since that is what the document already says.
+    expect(presentations[0].label.startsWith('oklch')).toBe(true);
+    expect(presentations.map((p) => p.label)).toHaveLength(4);
+    expect(presentations.some((p) => /^[a-z]+-\d+$/.test(p.label))).toBe(true);
+  });
+
+  it('keeps bracketing a color inside an alias body', () => {
+    const text = '<html class="--alias-btn=bgc-[#112233]">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, '#112233'),
+      orange,
+    );
+
+    const named = presentations.find((p) => /^[a-z]+-\d+$/.test(p.label));
+    expect(named?.insertText).toBe(named?.label);
+    for (const presentation of presentations.filter((p) => p !== named)) {
+      expect(presentation.insertText).toBe(`[${presentation.label}]`);
     }
   });
 

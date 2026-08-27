@@ -26317,7 +26317,12 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "--bg=black",
-    "colors": [],
+    "colors": [
+      {
+        "color": "rgba(0, 0, 0, 1)",
+        "text": "black",
+      },
+    ],
     "tokens": [
       {
         "text": "--bg",
@@ -26359,7 +26364,12 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
   },
   {
     "classValue": "--bg=black_!important",
-    "colors": [],
+    "colors": [
+      {
+        "color": "rgba(0, 0, 0, 1)",
+        "text": "black",
+      },
+    ],
     "tokens": [
       {
         "text": "--bg",

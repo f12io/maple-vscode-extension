@@ -1,19 +1,30 @@
 import { coco } from '@f12io/coco';
 import {
   buildRule,
+  CHAR_CLOSE_BRACKET,
+  CHAR_OPEN_BRACKET,
+  CHAR_OPEN_PAREN,
   COLOR_MAX_TONE,
   COLOR_MIN_TONE,
+  REF_CHAR_ALIAS_PARTS,
+  REF_CHAR_COLOR_SHADE,
+  REF_CHAR_CUSTOM,
+  REF_CHAR_FUNCTION_COMMA,
+  REF_CHAR_SPACE,
+  REF_CHAR_VALUE_PARTS,
   REGEX_COLOR_TOKEN,
   REGEX_RESERVED_KEYWORDS,
   StringHelper,
 } from '@f12io/maple';
+import { getExactWordAtOffset } from '../extractor.helper';
 import { MAPLE_CLASS_REGEX } from '../regex';
 import { LanguageServiceRegistry } from '../registry';
 import {
   cocoWithResolver,
   findNamedColorAndTone,
-  isColorUtilKey,
+  isColorProperty,
 } from './color-palette';
+import { isAliasDefinition, isVariable } from './maple-parser';
 import type { IntelligenceContext } from './types';
 
 /** sRGB with each channel in 0-1, the shape both editors expect. */
@@ -49,7 +60,21 @@ export interface MapleColorPresentation {
 const RGB_REGEX = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/;
 
 /** Operators a `name-tone` color may follow; elsewhere it needs brackets. */
-const NAMED_COLOR_OPERATORS = new Set(['-', '_', '|', '(']);
+const NAMED_COLOR_OPERATORS = new Set([
+  REF_CHAR_COLOR_SHADE,
+  REF_CHAR_SPACE,
+  REF_CHAR_FUNCTION_COMMA,
+  String.fromCharCode(CHAR_OPEN_PAREN),
+]);
+
+/** Whether `value` is a bracketed literal (`[#f97316]`). */
+function isBracketed(value: string): boolean {
+  return (
+    value.length > 1 &&
+    value.charCodeAt(0) === CHAR_OPEN_BRACKET &&
+    value.charCodeAt(value.length - 1) === CHAR_CLOSE_BRACKET
+  );
+}
 
 /**
  * Splits a color value into the individual colors it holds, with their
@@ -59,21 +84,21 @@ const NAMED_COLOR_OPERATORS = new Set(['-', '_', '|', '(']);
 function getTokens(valueStr: string): Array<{ part: string; offset: number }> {
   const tokens: Array<{ part: string; offset: number }> = [];
 
-  const commaParts = StringHelper.split(valueStr, ',');
+  const commaParts = StringHelper.split(valueStr, REF_CHAR_VALUE_PARTS);
   let currentCommaOffset = 0;
 
   for (const cPart of commaParts) {
     const cIdx = valueStr.indexOf(cPart, currentCommaOffset);
     currentCommaOffset = cIdx + cPart.length;
 
-    const pipeParts = StringHelper.split(cPart, '|');
+    const pipeParts = StringHelper.split(cPart, REF_CHAR_FUNCTION_COMMA);
     let currentPipeOffset = 0;
 
     for (const pPart of pipeParts) {
       const pIdx = cPart.indexOf(pPart, currentPipeOffset);
       currentPipeOffset = pIdx + pPart.length;
 
-      const spaceParts = StringHelper.split(pPart, '_');
+      const spaceParts = StringHelper.split(pPart, REF_CHAR_SPACE);
       let currentSpaceOffset = 0;
 
       for (const sPart of spaceParts) {
@@ -93,7 +118,7 @@ function getTokens(valueStr: string): Array<{ part: string; offset: number }> {
 
 /** A tone outside the palette is a mistake, not a color to preview. */
 function isValidColorTone(colorStr: string): boolean {
-  if (colorStr.startsWith('[') && colorStr.endsWith(']')) return true;
+  if (isBracketed(colorStr)) return true;
 
   const colorMatch = REGEX_COLOR_TOKEN.exec(colorStr);
   if (colorMatch) {
@@ -110,6 +135,49 @@ function isValidColorTone(colorStr: string): boolean {
   return true;
 }
 
+function collectValueColors(
+  valueStr: string,
+  absoluteOffset: number,
+  out: Array<MapleColorSpan>,
+): void {
+  for (const token of getTokens(valueStr)) {
+    const colorPart = token.part;
+    const tokenAbsoluteOffset = absoluteOffset + token.offset;
+
+    if (isBracketed(colorPart)) {
+      // One character stripped from the front, so the offset moves by one.
+      collectValueColors(
+        StringHelper.removeBrackets(colorPart),
+        tokenAbsoluteOffset + 1,
+        out,
+      );
+      continue;
+    }
+
+    if (!isValidColorTone(colorPart)) continue;
+
+    const rgbString = cocoWithResolver(
+      colorPart.replaceAll(REF_CHAR_SPACE, ' '),
+      'rgb',
+    );
+    if (!rgbString) continue;
+
+    const rgbMatch = RGB_REGEX.exec(rgbString);
+    if (!rgbMatch) continue;
+
+    out.push({
+      start: tokenAbsoluteOffset,
+      end: tokenAbsoluteOffset + colorPart.length,
+      color: {
+        red: parseFloat(rgbMatch[1]) / 255,
+        green: parseFloat(rgbMatch[2]) / 255,
+        blue: parseFloat(rgbMatch[3]) / 255,
+        alpha: rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1,
+      },
+    });
+  }
+}
+
 /** Every color inside one utility, pushed onto `out` with document offsets. */
 function collectUtilityColors(
   utilStr: string,
@@ -119,53 +187,20 @@ function collectUtilityColors(
   const rule = buildRule(utilStr);
   if (!rule?.parsed) return;
 
-  const utilKey = rule.parsed.utilKey;
-  const value = rule.parsed.utilVal;
-  if (!utilKey || !value || !isColorUtilKey(utilKey)) return;
+  const { utilKey, utilVal: value, propKeyKebab, propKeyCamel } = rule.parsed;
+  if (!utilKey || !value || !isColorProperty(propKeyKebab, propKeyCamel))
+    return;
 
-  const processTokens = (valueStr: string, absoluteOffset: number) => {
-    for (const token of getTokens(valueStr)) {
-      const colorPart = token.part;
-      const tokenAbsoluteOffset = absoluteOffset + token.offset;
-
-      if (colorPart.startsWith('[') && colorPart.endsWith(']')) {
-        processTokens(
-          colorPart.substring(1, colorPart.length - 1),
-          tokenAbsoluteOffset + 1,
-        );
-        continue;
-      }
-
-      if (!isValidColorTone(colorPart)) continue;
-
-      const rgbString = cocoWithResolver(colorPart.replace(/_/g, ' '), 'rgb');
-      if (!rgbString) continue;
-
-      const rgbMatch = RGB_REGEX.exec(rgbString);
-      if (!rgbMatch) continue;
-
-      out.push({
-        start: tokenAbsoluteOffset,
-        end: tokenAbsoluteOffset + colorPart.length,
-        color: {
-          red: parseFloat(rgbMatch[1]) / 255,
-          green: parseFloat(rgbMatch[2]) / 255,
-          blue: parseFloat(rgbMatch[3]) / 255,
-          alpha: rgbMatch[4] ? parseFloat(rgbMatch[4]) : 1,
-        },
-      });
-    }
-  };
-
-  processTokens(value, absoluteIndex + utilStr.lastIndexOf(value));
+  collectValueColors(value, absoluteIndex + utilStr.lastIndexOf(value), out);
 }
 
 /**
  * Every color literal in `text`, so a host can render a swatch next to it.
  *
  * Region discovery is handled here, like everywhere else: only classes inside
- * maple regions are considered. Both the value of a color utility
- * (`bgc-accent-500`, `c=[#f97316]`) and the utilities in an alias body are
+ * maple regions are considered. The value of a color utility
+ * (`bgc-accent-500`, `c=[#f97316]`), the utilities in an alias body, and the
+ * value of a variable definition (`--brand=oklch(0.56_0.02_260)`) are all
  * reported.
  */
 export function getDocumentColors(
@@ -192,16 +227,27 @@ export function getDocumentColors(
 
       if (word.length === 0) continue;
 
-      // An alias body holds utilities of its own, each with its own colors.
-      if (word.startsWith('--') && word.includes('=')) {
-        const equalsIdx = word.indexOf('=');
-        const utilities = word.substring(equalsIdx + 1).split(';');
+      const equalsIdx = word.indexOf(REF_CHAR_CUSTOM);
+
+      if (isAliasDefinition(word) && equalsIdx !== -1) {
+        // An alias body holds utilities of its own, each with its own colors.
+        const utilities = word
+          .substring(equalsIdx + 1)
+          .split(REF_CHAR_ALIAS_PARTS);
 
         let currentOffset = wordOffset + equalsIdx + 1;
         for (const util of utilities) {
           collectUtilityColors(util, currentOffset, colors);
-          currentOffset += util.length + 1; // +1 for the ';' character
+          currentOffset += util.length + REF_CHAR_ALIAS_PARTS.length;
         }
+      } else if (isVariable(word) && equalsIdx !== -1) {
+        // A variable body is a raw CSS value, not a utility: there is no key
+        // to tell us it holds a color, so the resolver decides token by token.
+        collectValueColors(
+          word.substring(equalsIdx + 1),
+          wordOffset + equalsIdx + 1,
+          colors,
+        );
       } else {
         collectUtilityColors(word, wordOffset, colors);
       }
@@ -212,13 +258,26 @@ export function getDocumentColors(
 }
 
 /**
+ * Whether the literal at `offset` is the body of a variable definition
+ * (`--brand=oklch(...)`) rather than a utility value.
+ *
+ * A variable body is a raw CSS value, so it takes neither the brackets nor
+ * the operator rules a utility value does.
+ */
+function isVariableBody(text: string, offset: number): boolean {
+  const { word } = getExactWordAtOffset(text, offset);
+  return isVariable(word) && word.includes(REF_CHAR_CUSTOM);
+}
+
+/**
  * The ways `color` can be written in place of the literal at `span`, best
  * first, for a host's color picker.
  *
  * The notation already in the document leads: a `#hex` stays hex, an
  * `oklch(...)` stays oklch. `name-tone` is only offered where the syntax
  * accepts it — after `-`, `_`, `|` or `(` — since it cannot be bracketed, and
- * every other notation is bracketed so the result stays a legal class.
+ * every other notation is bracketed so the result stays a legal class. In a
+ * variable body every notation is written bare, brackets and all rules off.
  */
 export function getColorPresentations(
   text: string,
@@ -249,15 +308,19 @@ export function getColorPresentations(
 
   const hexStr = coco(rgbaStr, 'hex8') || rgbaStr;
   const oklchStrRaw = coco(rgbaStr, 'oklch');
-  const oklchStr = oklchStrRaw ? oklchStrRaw.replace(/ /g, '_') : '';
+  const oklchStr = oklchStrRaw
+    ? oklchStrRaw.replaceAll(' ', REF_CHAR_SPACE)
+    : '';
 
   const { start, end } = span;
+
+  const inVariableBody = isVariableBody(text, start);
 
   const isSurroundedByBrackets =
     start > 0 &&
     end < text.length &&
-    text[start - 1] === '[' &&
-    text[end] === ']';
+    text.charCodeAt(start - 1) === CHAR_OPEN_BRACKET &&
+    text.charCodeAt(end) === CHAR_CLOSE_BRACKET;
 
   // Replacing a bracketed literal with a named color has to take the brackets
   // with it, so the edit covers them.
@@ -270,13 +333,13 @@ export function getColorPresentations(
   } else if (!isSurroundedByBrackets && start > 0) {
     operatorChar = text[start - 1];
   }
-  const canUseNamedColor = NAMED_COLOR_OPERATORS.has(operatorChar);
+  const canUseNamedColor =
+    inVariableBody || NAMED_COLOR_OPERATORS.has(operatorChar);
 
   const originalText = text.substring(start, end);
-  const innerText =
-    originalText.startsWith('[') && originalText.endsWith(']')
-      ? originalText.substring(1, originalText.length - 1)
-      : originalText;
+  const innerText = isBracketed(originalText)
+    ? StringHelper.removeBrackets(originalText)
+    : originalText;
 
   let preferredFormat = 'named';
   if (innerText.startsWith('oklch')) preferredFormat = 'oklch';
@@ -324,8 +387,9 @@ export function getColorPresentations(
     return {
       label,
       // Every notation but the named one has to be bracketed to stay a legal
-      // maple value.
-      insertText: formatName === 'named' ? label : `[${label}]`,
+      // maple value — except in a variable body, which holds a raw CSS value.
+      insertText:
+        inVariableBody || formatName === 'named' ? label : `[${label}]`,
       start: editStart,
       end: editEnd,
     };

@@ -14,7 +14,7 @@ import * as esbuild from 'esbuild';
 const shared = {
   entryPoints: ['src/index.ts'],
   bundle: true,
-  target: ['node18', 'es2020'],
+  target: ['node18', 'es2021'],
   external: ['@f12io/maple', '@f12io/coco'],
   sourcemap: true,
   logLevel: 'warning',

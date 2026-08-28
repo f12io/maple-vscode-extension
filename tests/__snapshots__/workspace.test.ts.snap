@@ -26479,6 +26479,32 @@ exports[`Workspace Highlights and Colors > should generate consistent semantic t
     "warnings": [],
   },
   {
+    "classValue": "--unresolved-color=blue-500",
+    "colors": [
+      {
+        "color": "rgba(0, 0, 255, 1)",
+        "text": "blue-500",
+      },
+    ],
+    "tokens": [
+      {
+        "text": "--unresolved-color",
+        "type": "maple-variable",
+      },
+      {
+        "text": "=",
+        "type": "maple-separator",
+      },
+      {
+        "text": "blue-500",
+        "type": "maple-value",
+      },
+    ],
+    "warnings": [
+      "Invalid variable value: 'blue-500'. A shade only resolves in a utility; a variable is written to CSS as-is (e.g., '--unresolved-color=oklch(0.452_0.313_264.052)').",
+    ],
+  },
+  {
     "classValue": "-m-4!",
     "colors": [],
     "tokens": [

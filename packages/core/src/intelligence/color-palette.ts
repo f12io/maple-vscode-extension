@@ -150,6 +150,21 @@ export const cocoWithResolver = createCoco({
   },
 });
 
+/** Whether a browser resolves `value` to a color on its own (`white`). */
+export function isPlainCssColorName(value: string): boolean {
+  return namedColors[value] !== undefined;
+}
+
+/**
+ * Whether `value` is maple's own name notation (`red-700`, `red-700/50`) —
+ * a name only the resolver above reads, which CSS does not.
+ */
+export function isToneNotation(value: string): boolean {
+  return (
+    cocoWithResolver.getType(value) === 'name' && !isPlainCssColorName(value)
+  );
+}
+
 /**
  * Properties that hold a color without being color-typed: a shadow or a
  * gradient is a list whose parts happen to include one.

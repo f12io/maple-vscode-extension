@@ -210,7 +210,9 @@ describe('getColorPresentations', () => {
     }
   });
 
-  it('offers the named form in a variable body', () => {
+  it('withholds the tone notation in a variable body', () => {
+    // A variable holds raw CSS, so `orange-500` would be written through as
+    // `--brand: orange-500` and dropped by the browser.
     const text = '<div class="--brand=oklch(0.560_0.025_260)">';
     const presentations = getColorPresentations(
       text,
@@ -220,8 +222,93 @@ describe('getColorPresentations', () => {
 
     // oklch leads, since that is what the document already says.
     expect(presentations[0].label.startsWith('oklch')).toBe(true);
-    expect(presentations.map((p) => p.label)).toHaveLength(4);
-    expect(presentations.some((p) => /^[a-z]+-\d+$/.test(p.label))).toBe(true);
+    expect(presentations.map((p) => p.label)).toHaveLength(3);
+    expect(presentations.some((p) => /^[a-z]+-\d+$/.test(p.label))).toBe(false);
+  });
+
+  it('keeps the tone notation a variable body already writes', () => {
+    // Not the picker's call to change a notation the user chose, even one
+    // this loose: it only refuses to convert a variable *into* the notation.
+    const text = '<div class="--brand=blue-300">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, 'blue-300'),
+      orange,
+    );
+
+    expect(presentations[0].label).toMatch(/^[a-z]+-\d+$/);
+  });
+
+  it('does not convert a bare CSS name in a variable body into a tone', () => {
+    // `white` is legal raw CSS; `orange-500` in its place would not be.
+    const text = '<div class="--brand=white">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, 'white'),
+      orange,
+    );
+
+    expect(presentations[0].label.startsWith('oklch')).toBe(true);
+    expect(presentations.some((p) => /^[a-z]+-\d+$/.test(p.label))).toBe(false);
+  });
+
+  it('reads a notation coco knows but the picker cannot write', () => {
+    // `hsl(...)` has no presentation of its own, and it is not the picker's
+    // cue to fall back on a tone notation a variable body cannot hold.
+    const text = '<div class="--brand=hsl(10,20%,30%)">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, 'hsl(10,20%,30%)'),
+      orange,
+    );
+
+    expect(presentations[0].label.startsWith('oklch')).toBe(true);
+    expect(presentations.some((p) => /^[a-z]+-\d+$/.test(p.label))).toBe(false);
+  });
+
+  it('keeps a six-digit hex six digits', () => {
+    // An opaque `ff` the document never had is a notation change of its own.
+    const text = '<div class="c=[#112233]">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, '#112233'),
+      orange,
+    );
+
+    expect(presentations[0].label).toBe('#f97316');
+  });
+
+  it('keeps eight digits when the document already writes them', () => {
+    const text = '<div class="c=[#11223380]">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, '#11223380'),
+      orange,
+    );
+
+    expect(presentations[0].label).toBe('#f97316ff');
+  });
+
+  it('writes eight digits when the color carries alpha', () => {
+    const text = '<div class="c=[#112233]">';
+    const presentations = getColorPresentations(text, spanOf(text, '#112233'), {
+      ...orange,
+      alpha: 0.5,
+    });
+
+    expect(presentations[0].label).toBe('#f9731680');
+  });
+
+  it('still offers a bare CSS color name in a variable body', () => {
+    // `white` needs no tone, so it is legal raw CSS.
+    const text = '<div class="--brand=oklch(0.560_0.025_260)">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, 'oklch(0.560_0.025_260)'),
+      { red: 1, green: 1, blue: 1, alpha: 1 },
+    );
+
+    expect(presentations.map((p) => p.label)).toContain('white');
   });
 
   it('keeps bracketing a color inside an alias body', () => {

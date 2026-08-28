@@ -23,6 +23,8 @@ import {
   cocoWithResolver,
   findNamedColorAndTone,
   isColorProperty,
+  isPlainCssColorName,
+  isToneNotation,
 } from './color-palette';
 import { isAliasDefinition, isVariable } from './maple-parser';
 import type { IntelligenceContext } from './types';
@@ -273,11 +275,16 @@ function isVariableBody(text: string, offset: number): boolean {
  * The ways `color` can be written in place of the literal at `span`, best
  * first, for a host's color picker.
  *
- * The notation already in the document leads: a `#hex` stays hex, an
- * `oklch(...)` stays oklch. `name-tone` is only offered where the syntax
- * accepts it — after `-`, `_`, `|` or `(` — since it cannot be bracketed, and
- * every other notation is bracketed so the result stays a legal class. In a
- * variable body every notation is written bare, brackets and all rules off.
+ * The notation already in the document leads and is what a host writes back
+ * when the user only moves the picker: a `#hex` stays hex, an `oklch(...)`
+ * stays oklch, a `red-500` stays `name-tone`. The other notations follow, for
+ * a user who asks for one by name in the picker.
+ *
+ * `name-tone` is only offered where the syntax accepts it — after `-`, `_`,
+ * `|` or `(` — since it cannot be bracketed, and every other notation is
+ * bracketed so the result stays a legal class. In a variable body every
+ * notation is written bare, and the picker will not convert a value *into*
+ * `name-tone` there: a variable holds raw CSS, which the tone notation is not.
  */
 export function getColorPresentations(
   text: string,
@@ -306,7 +313,6 @@ export function getColorPresentations(
     }
   }
 
-  const hexStr = coco(rgbaStr, 'hex8') || rgbaStr;
   const oklchStrRaw = coco(rgbaStr, 'oklch');
   const oklchStr = oklchStrRaw
     ? oklchStrRaw.replaceAll(' ', REF_CHAR_SPACE)
@@ -333,19 +339,41 @@ export function getColorPresentations(
   } else if (!isSurroundedByBrackets && start > 0) {
     operatorChar = text[start - 1];
   }
-  const canUseNamedColor =
-    inVariableBody || NAMED_COLOR_OPERATORS.has(operatorChar);
 
   const originalText = text.substring(start, end);
   const innerText = isBracketed(originalText)
     ? StringHelper.removeBrackets(originalText)
     : originalText;
+  // maple writes the spaces of a CSS value as `_`; coco reads plain CSS.
+  const innerValue = innerText.replaceAll(REF_CHAR_SPACE, ' ');
+
+  const sourceType = cocoWithResolver.getType(innerValue);
 
   let preferredFormat = 'named';
-  if (innerText.startsWith('oklch')) preferredFormat = 'oklch';
-  else if (innerText.startsWith('rgb') || innerText.startsWith('rgba'))
-    preferredFormat = 'rgb';
-  else if (innerText.startsWith('#')) preferredFormat = 'hex';
+  if (sourceType === 'oklch') preferredFormat = 'oklch';
+  else if (sourceType === 'rgb') preferredFormat = 'rgb';
+  else if (sourceType === 'hex') preferredFormat = 'hex';
+
+  // coco reads every hex width as the one `hex` type, so the literal itself
+  // is the only place its alpha channel shows.
+  const sourceHexCarriesAlpha =
+    sourceType === 'hex' &&
+    (innerValue.length === 5 || innerValue.length === 9);
+
+  // An `#rrggbb` in the document stays six digits while it can: adding an
+  // opaque `ff` is a notation change the user did not ask for.
+  const hexStr =
+    color.alpha === 1 && sourceType === 'hex' && !sourceHexCarriesAlpha
+      ? hex6 || rgbaStr
+      : coco(rgbaStr, 'hex8') || rgbaStr;
+
+  // A variable body is raw CSS, and maple writes it through verbatim:
+  // `--brand=blue-300` lands in the stylesheet as `--brand: blue-300`, which
+  // no browser understands. So the picker should never convert a variable *into*
+  // the tone notation.
+  const canUseNamedColor = inVariableBody
+    ? isPlainCssColorName(namedStr) || isToneNotation(innerValue)
+    : NAMED_COLOR_OPERATORS.has(operatorChar);
 
   const colorLabels = {
     named: namedStr,

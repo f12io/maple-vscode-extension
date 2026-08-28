@@ -1,10 +1,11 @@
-import { buildRule } from '@f12io/maple';
+import { buildRule, REF_CHAR_CUSTOM } from '@f12io/maple';
 import { MAPLE_CLASS_REGEX } from '../regex';
 import { LanguageServiceRegistry } from '../registry';
 import { collectAliasDefinitions } from './aliases';
 import {
   checkConverted,
   isAliasDefinition,
+  isVariable,
   parseMapleToken,
   stripQuotes,
 } from './maple-parser';
@@ -165,8 +166,13 @@ export function getDiagnostics(
         const cls = stripped.word;
         if (cls.length === 0) continue;
 
+        // A variable definition (`--brand=red-700`) reads as no maple
+        // abbreviation, but its value is still the engine's to judge.
+        const isVariableDefinition =
+          isVariable(cls) && cls.includes(REF_CHAR_CUSTOM);
+
         const { isMapleIntent } = parseMapleToken(cls);
-        if (!isMapleIntent) continue;
+        if (!isMapleIntent && !isVariableDefinition) continue;
 
         const start =
           instance.start + token.start + wordMatch.index + stripped.offset;
@@ -192,6 +198,11 @@ export function getDiagnostics(
           });
           continue;
         }
+
+        // A variable definition takes no part in conflict detection: two
+        // definitions of one variable on an element are a cascade, not a
+        // clash.
+        if (!isMapleIntent) continue;
 
         // The class regex splits an alias definition on ';', which leaves the
         // first body utility glued to the `--alias-name=` declaration. Peel

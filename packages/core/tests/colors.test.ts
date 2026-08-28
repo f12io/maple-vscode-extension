@@ -99,6 +99,25 @@ describe('getDocumentColors', () => {
     ).toEqual(['#f97316']);
   });
 
+  it('sees past a prefix chain to what a class defines', () => {
+    // A prefix says when a class applies, never what it is.
+    for (const cls of [
+      '@dark:--brand=oklch(0.560_0.025_260)',
+      '&:hover:--brand=oklch(0.560_0.025_260)',
+      'md:--brand=oklch(0.560_0.025_260)',
+      'style=[--theme:dark]:--brand=oklch(0.560_0.025_260)',
+    ]) {
+      const text = `<html class="${cls}">`;
+      expect(spans(text, html(text))).toEqual(['oklch(0.560_0.025_260)']);
+    }
+  });
+
+  it('reports the colors of a prefixed alias body', () => {
+    const text = '<html class="@dark:--alias-btn=bgc-[#112233];c-red-500">';
+
+    expect(spans(text, html(text))).toEqual(['#112233', 'red-500']);
+  });
+
   it('reports every color of a multi-part variable value', () => {
     const text = '<div class="--shadow=0_0_4px_black">';
 
@@ -223,6 +242,23 @@ describe('getColorPresentations', () => {
     // oklch leads, since that is what the document already says.
     expect(presentations[0].label.startsWith('oklch')).toBe(true);
     expect(presentations.map((p) => p.label)).toHaveLength(3);
+    expect(presentations.some((p) => /^[a-z]+-\d+$/.test(p.label))).toBe(false);
+  });
+
+  it('writes a prefixed variable body bare too', () => {
+    // The body is a variable's either way, so neither brackets nor the shade
+    // notation come back with the prefix.
+    const text = '<html class="@dark:--brand=oklch(0.560_0.025_260)">';
+    const presentations = getColorPresentations(
+      text,
+      spanOf(text, 'oklch(0.560_0.025_260)'),
+      orange,
+    );
+
+    expect(presentations[0].label.startsWith('oklch')).toBe(true);
+    for (const presentation of presentations) {
+      expect(presentation.insertText).toBe(presentation.label);
+    }
     expect(presentations.some((p) => /^[a-z]+-\d+$/.test(p.label))).toBe(false);
   });
 

@@ -26,6 +26,26 @@ export function isVariable(word: string): boolean {
   return word.startsWith('--') && !isAliasDefinition(word);
 }
 
+/**
+ * The class without its prefix chain, and where that starts (`@dark:--bg=red`
+ * → `--bg=red` at 6).
+ *
+ * A prefix can hold both `:` and `=` of its own
+ * (`style=[--theme:dark]:--bg=red`), so splitting a class by hand gets this
+ * wrong; the engine's own parse is what says where the utility begins.
+ * Returns the raw remainder, brackets and all, so offsets into it still line
+ * up with the document.
+ */
+export function findActiveWord(word: string): { word: string; start: number } {
+  const utilKey = parseClass(word)?.utilKey;
+  if (!utilKey) return { word, start: 0 };
+
+  const start = word.lastIndexOf(utilKey);
+  if (start <= 0) return { word, start: 0 };
+
+  return { word: word.substring(start), start };
+}
+
 export function stripImportant(word: string): string {
   return word.replace(/!$/, '');
 }

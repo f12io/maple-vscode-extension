@@ -62,6 +62,58 @@ describe('validateClass', () => {
     });
   });
 
+  describe('shades in a variable', () => {
+    it('reports a shade a variable cannot resolve, with the CSS it meant', () => {
+      expect(validateClass('--brand=blue-300')).toEqual({
+        code: 'shade-in-variable',
+        fix: expect.stringMatching(/^--brand=oklch\(/),
+        message: expect.stringContaining("'blue-300'"),
+      });
+    });
+
+    it('reports one behind a prefix chain too', () => {
+      expect(validateClass('@dark:--brand=blue-300')?.fix).toMatch(
+        /^@dark:--brand=oklch\(/,
+      );
+    });
+
+    it('rewrites the value, not a prefix that carries an `=` of its own', () => {
+      expect(validateClass('style=[--theme:dark]:--brand=blue-300')?.fix).toBe(
+        `style=[--theme:dark]:--brand=${
+          validateClass('--brand=blue-300')?.fix?.split('=')[1]
+        }`,
+      );
+    });
+
+    it('rewrites only the shades, leaving the rest of the value alone', () => {
+      expect(validateClass('--shadow=0_0_4px_blue-300')?.fix).toMatch(
+        /^--shadow=0_0_4px_oklch\(/,
+      );
+      // A variable named after a color keeps its name.
+      expect(validateClass('--blue-300=blue-300')?.fix).toMatch(
+        /^--blue-300=oklch\(/,
+      );
+    });
+
+    it('accepts a value CSS resolves on its own', () => {
+      expect(validateClass('--brand=blue')).toBeNull();
+      expect(validateClass('--brand=white')).toBeNull();
+      expect(validateClass('--brand=oklch(0.8_0.1_250)')).toBeNull();
+      expect(validateClass('--brand=#112233')).toBeNull();
+    });
+
+    it('leaves a value that holds no color alone', () => {
+      expect(validateClass('--x=4')).toBeNull();
+      expect(validateClass('--font=sans-serif')).toBeNull();
+      expect(validateClass('--grid=repeat(3,1fr)')).toBeNull();
+    });
+
+    it('leaves the shade in a utility alone, in an alias body too', () => {
+      expect(validateClass('bgc-blue-300')).toBeNull();
+      expect(validateClass('--alias-btn=bgc-blue-300')).toBeNull();
+    });
+  });
+
   describe('aliases', () => {
     it('reports a usage of an alias nothing defines', () => {
       expect(validateClass('@nope')).toEqual({

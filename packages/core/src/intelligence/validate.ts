@@ -4,12 +4,21 @@ import {
   COLOR_MAX_TONE,
   COLOR_MIN_TONE,
   PROP_TYPE_COLOR,
+  REF_CHAR_CUSTOM,
+  REF_CHAR_SPACE,
 } from '@f12io/maple';
 import {
+  cocoWithResolver,
+  isToneNotation,
+  splitColorTokens,
+} from './color-palette';
+import {
   checkConverted,
+  findActiveWord,
   getAliasName,
   isAliasDefinition,
   isAliasMarker,
+  isVariable,
   parseMapleToken,
 } from './maple-parser';
 
@@ -17,6 +26,8 @@ import {
 export type MapleValidationCode =
   /** A color tone outside the palette range (`bgc-red-951`). */
   | 'invalid-shade'
+  /** The shade notation in a variable, which holds raw CSS (`--brand=red-700`). */
+  | 'shade-in-variable'
   /** The important marker sits anywhere but the front (`p-4!`, `@md:!p-4`). */
   | 'important-not-leading'
   /** `!important` written into a `-` value, where it is read as a literal. */
@@ -109,6 +120,49 @@ function getShadeIssue(
   };
 }
 
+/**
+ * The shade notation only resolves inside a utility. A variable holds a raw
+ * CSS value, which maple writes through untouched, so `--brand=red-700`
+ * reaches the stylesheet as `--brand: red-700` and the browser drops it.
+ *
+ * The fix writes the shade the engine would have rendered, in OKLCH — the
+ * notation the rest of maple's color handling speaks.
+ */
+function getVariableShadeIssue(
+  cls: string,
+  rule: ReturnType<typeof buildRule>,
+): MapleValidationIssue | null {
+  const parsed = rule?.parsed;
+  if (parsed?.utilOp !== REF_CHAR_CUSTOM) return null;
+  if (!isVariable(parsed.utilKey)) return null;
+
+  const shades = splitColorTokens(parsed.utilVal)
+    .map((token) => token.part)
+    .filter(isToneNotation);
+  if (shades.length === 0) return null;
+
+  // Only the value is rewritten: a variable may well be named after a color,
+  // and a prefix can carry an `=` of its own (`style=[--theme:dark]:`).
+  const { word: activeWord, start } = findActiveWord(cls);
+  const valueIdx = activeWord.indexOf(REF_CHAR_CUSTOM);
+  if (valueIdx === -1) return null;
+
+  let value = activeWord.substring(valueIdx + 1);
+  for (const shade of shades) {
+    const resolved = cocoWithResolver(shade, 'oklch');
+    if (!resolved) return null;
+    value = value.split(shade).join(resolved.replaceAll(' ', REF_CHAR_SPACE));
+  }
+
+  const fix = `${cls.substring(0, start + valueIdx + 1)}${value}`;
+
+  return {
+    code: 'shade-in-variable',
+    message: `Invalid variable value: '${shades[0]}'. A shade only resolves in a utility; a variable is written to CSS as-is (e.g., '${fix}').`,
+    fix,
+  };
+}
+
 /** Whether `activeWord` is a usage of an alias the host or engine defines. */
 function isKnownAlias(
   activeWord: string,
@@ -143,6 +197,15 @@ export function validateClass(
   if (cls.length === 0) return null;
 
   const { activeWord, prefixes, isMapleIntent } = parseMapleToken(cls);
+
+  // A variable definition carries no abbreviation of its own, so the intent
+  // gate below does not recognise one — but its value is still maple's to
+  // judge, and a shade there never resolves.
+  if (isVariable(cls) && cls.includes(REF_CHAR_CUSTOM)) {
+    const variableShadeIssue = getVariableShadeIssue(cls, buildRule(cls));
+    if (variableShadeIssue) return variableShadeIssue;
+  }
+
   if (!isMapleIntent) return null;
 
   const converted = checkConverted(cls);
@@ -186,6 +249,9 @@ export function validateClass(
     // The body of a definition is validated where it is expanded, not here.
     return null;
   }
+
+  const prefixedVariableShadeIssue = getVariableShadeIssue(cls, rule);
+  if (prefixedVariableShadeIssue) return prefixedVariableShadeIssue;
 
   if (converted || isKnownAlias(activeWord, options.localAliases)) return null;
 

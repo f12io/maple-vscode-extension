@@ -59,6 +59,20 @@ describe('getDiagnostics', () => {
     expect(diagnostics).toEqual([]);
   });
 
+  it('reports a shade in a variable definition, which is raw CSS', () => {
+    const text = '<html class="--brand=blue-300 p-4">';
+    const diagnostics = html(text);
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0].code).toBe('shade-in-variable');
+    expect(spans(text, diagnostics)).toEqual(['--brand=blue-300']);
+  });
+
+  it('leaves a variable out of conflict detection', () => {
+    // Two definitions of one variable are a cascade, not a clash.
+    expect(html('<html class="--brand=blue --brand=red">')).toEqual([]);
+  });
+
   describe('conflicts', () => {
     it('reports every participant, each linking the others', () => {
       const text = '<div class="p-4 m-2 p-8">';

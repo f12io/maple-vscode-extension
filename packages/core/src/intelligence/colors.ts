@@ -11,7 +11,6 @@ import {
   REF_CHAR_CUSTOM,
   REF_CHAR_FUNCTION_COMMA,
   REF_CHAR_SPACE,
-  REF_CHAR_VALUE_PARTS,
   REGEX_COLOR_TOKEN,
   REGEX_RESERVED_KEYWORDS,
   StringHelper,
@@ -25,8 +24,13 @@ import {
   isColorProperty,
   isPlainCssColorName,
   isToneNotation,
+  splitColorTokens,
 } from './color-palette';
-import { isAliasDefinition, isVariable } from './maple-parser';
+import {
+  findActiveWord,
+  isAliasDefinition,
+  isVariable,
+} from './maple-parser';
 import type { IntelligenceContext } from './types';
 
 /** sRGB with each channel in 0-1, the shape both editors expect. */
@@ -78,46 +82,6 @@ function isBracketed(value: string): boolean {
   );
 }
 
-/**
- * Splits a color value into the individual colors it holds, with their
- * offsets: `red-500,blue-500` (multiple values), `0_0_4px_black` (shadows),
- * `red|blue` (fallback chains).
- */
-function getTokens(valueStr: string): Array<{ part: string; offset: number }> {
-  const tokens: Array<{ part: string; offset: number }> = [];
-
-  const commaParts = StringHelper.split(valueStr, REF_CHAR_VALUE_PARTS);
-  let currentCommaOffset = 0;
-
-  for (const cPart of commaParts) {
-    const cIdx = valueStr.indexOf(cPart, currentCommaOffset);
-    currentCommaOffset = cIdx + cPart.length;
-
-    const pipeParts = StringHelper.split(cPart, REF_CHAR_FUNCTION_COMMA);
-    let currentPipeOffset = 0;
-
-    for (const pPart of pipeParts) {
-      const pIdx = cPart.indexOf(pPart, currentPipeOffset);
-      currentPipeOffset = pIdx + pPart.length;
-
-      const spaceParts = StringHelper.split(pPart, REF_CHAR_SPACE);
-      let currentSpaceOffset = 0;
-
-      for (const sPart of spaceParts) {
-        if (!sPart) continue;
-        const sIdx = pPart.indexOf(sPart, currentSpaceOffset);
-        currentSpaceOffset = sIdx + sPart.length;
-
-        tokens.push({
-          part: sPart,
-          offset: cIdx + pIdx + sIdx,
-        });
-      }
-    }
-  }
-  return tokens;
-}
-
 /** A tone outside the palette is a mistake, not a color to preview. */
 function isValidColorTone(colorStr: string): boolean {
   if (isBracketed(colorStr)) return true;
@@ -142,7 +106,7 @@ function collectValueColors(
   absoluteOffset: number,
   out: Array<MapleColorSpan>,
 ): void {
-  for (const token of getTokens(valueStr)) {
+  for (const token of splitColorTokens(valueStr)) {
     const colorPart = token.part;
     const tokenAbsoluteOffset = absoluteOffset + token.offset;
 
@@ -229,25 +193,29 @@ export function getDocumentColors(
 
       if (word.length === 0) continue;
 
-      const equalsIdx = word.indexOf(REF_CHAR_CUSTOM);
+      // What a class defines is the same behind a prefix chain, so the tests
+      // below read the class without one (`@dark:--brand=red-500`).
+      const { word: activeWord, start: activeStart } = findActiveWord(word);
+      const equalsIdx = activeWord.indexOf(REF_CHAR_CUSTOM);
+      const bodyOffset = wordOffset + activeStart + equalsIdx + 1;
 
-      if (isAliasDefinition(word) && equalsIdx !== -1) {
+      if (isAliasDefinition(activeWord) && equalsIdx !== -1) {
         // An alias body holds utilities of its own, each with its own colors.
-        const utilities = word
+        const utilities = activeWord
           .substring(equalsIdx + 1)
           .split(REF_CHAR_ALIAS_PARTS);
 
-        let currentOffset = wordOffset + equalsIdx + 1;
+        let currentOffset = bodyOffset;
         for (const util of utilities) {
           collectUtilityColors(util, currentOffset, colors);
           currentOffset += util.length + REF_CHAR_ALIAS_PARTS.length;
         }
-      } else if (isVariable(word) && equalsIdx !== -1) {
+      } else if (isVariable(activeWord) && equalsIdx !== -1) {
         // A variable body is a raw CSS value, not a utility: there is no key
         // to tell us it holds a color, so the resolver decides token by token.
         collectValueColors(
-          word.substring(equalsIdx + 1),
-          wordOffset + equalsIdx + 1,
+          activeWord.substring(equalsIdx + 1),
+          bodyOffset,
           colors,
         );
       } else {
@@ -268,7 +236,9 @@ export function getDocumentColors(
  */
 function isVariableBody(text: string, offset: number): boolean {
   const { word } = getExactWordAtOffset(text, offset);
-  return isVariable(word) && word.includes(REF_CHAR_CUSTOM);
+  const { word: activeWord } = findActiveWord(word);
+
+  return isVariable(activeWord) && activeWord.includes(REF_CHAR_CUSTOM);
 }
 
 /**

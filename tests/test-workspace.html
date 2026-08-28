@@ -996,6 +996,9 @@
     <div class="&[data-foo]:--bg=black"></div>
     <div class="&[data-foo]:--bg-hero-gradient=linear-gradient(blue,red)"></div>
 
+    <div class="--unresolved-color=blue-500">
+      <!-- Expected warning: Shade in variable -->
+    </div>
     <div class="-m-4!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="p-4!"><!-- Expected warning: Invalid usage of '!' --></div>
     <div class="fxcol-ss!"><!-- Expected warning: Invalid usage of '!' --></div>

@@ -4,6 +4,10 @@ import {
   COLOR_MIN_TONE,
   PROP_TYPE_COLOR,
   PropertyHelper,
+  REF_CHAR_FUNCTION_COMMA,
+  REF_CHAR_SPACE,
+  REF_CHAR_VALUE_PARTS,
+  StringHelper,
 } from '@f12io/maple';
 
 const COLOR_MID_TONE = COLOR_MIN_TONE + (COLOR_MAX_TONE - COLOR_MIN_TONE) / 2;
@@ -163,6 +167,48 @@ export function isToneNotation(value: string): boolean {
   return (
     cocoWithResolver.getType(value) === 'name' && !isPlainCssColorName(value)
   );
+}
+
+/**
+ * Splits a maple value into the individual colors it holds, with their
+ * offsets: `red-500,blue-500` (multiple values), `0_0_4px_black` (shadows),
+ * `red|blue` (fallback chains).
+ */
+export function splitColorTokens(
+  valueStr: string,
+): Array<{ part: string; offset: number }> {
+  const tokens: Array<{ part: string; offset: number }> = [];
+
+  const commaParts = StringHelper.split(valueStr, REF_CHAR_VALUE_PARTS);
+  let currentCommaOffset = 0;
+
+  for (const cPart of commaParts) {
+    const cIdx = valueStr.indexOf(cPart, currentCommaOffset);
+    currentCommaOffset = cIdx + cPart.length;
+
+    const pipeParts = StringHelper.split(cPart, REF_CHAR_FUNCTION_COMMA);
+    let currentPipeOffset = 0;
+
+    for (const pPart of pipeParts) {
+      const pIdx = cPart.indexOf(pPart, currentPipeOffset);
+      currentPipeOffset = pIdx + pPart.length;
+
+      const spaceParts = StringHelper.split(pPart, REF_CHAR_SPACE);
+      let currentSpaceOffset = 0;
+
+      for (const sPart of spaceParts) {
+        if (!sPart) continue;
+        const sIdx = pPart.indexOf(sPart, currentSpaceOffset);
+        currentSpaceOffset = sIdx + sPart.length;
+
+        tokens.push({
+          part: sPart,
+          offset: cIdx + pIdx + sIdx,
+        });
+      }
+    }
+  }
+  return tokens;
 }
 
 /**

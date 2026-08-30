@@ -364,7 +364,7 @@
   },
   "dependencies": {
     "@f12io/coco": "^3.0.0",
-    "@f12io/maple": "^2.0.24",
+    "@f12io/maple": "^2.1.0",
     "@f12io/maple-language-core": "0.1.5",
     "picomatch": "^4.0.4"
   },

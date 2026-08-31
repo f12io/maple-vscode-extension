@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@f12io/coco": "^2.1.9",
-    "@f12io/maple": "^2.0.21"
+    "@f12io/maple": "^2.1.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.1"
